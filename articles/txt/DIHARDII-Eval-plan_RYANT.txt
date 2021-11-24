@@ -9,7 +9,7 @@ dUniversity of Science and Technology of China, Hefei, China
 eElectrical Engineering Department, Indian Institute of Science, Bangalore, India
 June 18, 2019
 1 Introduction
-DIHARDIIisthesecondinaseriesofdiarizationchallengesfocusingon“hard”diarization; thatis, speaker
+DIHARD II is the second in a series of diarization challenges focusing on “hard” diarization; that is, speaker
 diarization for challenging recordings where there is an expectation that the current state-of-the-art will
 fare poorly. As with other evaluations in this series, DIHARD II is intended to both (1) support speaker
 diarization research through the creation and distribution of novel data sets and (2) measure and calibrate
@@ -33,8 +33,8 @@ out in this evaluation plan. There is no cost to participate1, though participan
 a paper to the corresponding Interspeech 2019 special session. Accepted papers will be presented at the
 special session at Interspeech 2019 in Graz, Austria in September 2019.
 1Access to the data used by tracks 1 and 2 is free to all participants. Access to the CHiME-5 audio data used by tracks 3
-and4isfreefornot-for-proﬁtorganizations. Allotherusers,regardlessofusecase,willberequiredtopurchaseacommercial
-licensetotheCHiME-5data. Formoredetails,see: https://licensing.sheffield.ac.uk/i/data/chime5.html.
+and 4 is free for not-for-proﬁt organizations. All other users, regardless of use case, will be required to purchase a commercial
+license to the CHiME-5 data. For more details, see: https://licensing.sheffield.ac.uk/i/data/chime5.html.
 1For questions not answered in this document or to join the DIHARD mailing list, please visit the DIHARD
 website (https://coml.lscp.ens.fr/dihard) or contact dihardchallenge@gmail.com.
 2 Schedule
@@ -51,8 +51,8 @@ The deadline for submission of ﬁnal system outputs corresponds to the Interspe
 deadline (July 1st, 2019 midnight Anywhere on Earth).
 3 Task
 3.1 Task deﬁnition
-Thegoal ofthechallengeisto automaticallydetectand label allspeakersegmentsineachrecordingsession.
-Smallpausesof<=200msbyaspeakerarenotconsideredtobesegmentationbreaksandshouldbebridged
+The goal of the challenge is to automatically detect and label all speaker segments in each recording session.
+Small pauses of <= 200 ms by a speaker are not considered to be segmentation breaks and should be bridged
 into a single continuous segment. A pause by a speaker is deﬁned as any segment in which that speaker
 is not producing a vocalization of any kind. By vocalization, we mean speech, including speech errors and
 infant babbling, but also vocal noise such as breaths, coughs, lipsmacks, sneezes, laughs, humming or any
@@ -63,13 +63,13 @@ Two input conditions (single channel vs. multichannel) and two speech activity d
 Two audio input conditions are considered:
 • Single channel – In the single channel condition, systems are provided with a single channel of
 audio for each recording. Depending on the recording source, this channel may be taken from a single
-distantmicrophone, asinglechannelfromadistantmicrophonearray, amixofhead-mountedorarray
+distant microphone, a single channel from a distant microphone array, a mix of head-mounted or array
 microphones, or a mix of binaural microphones.
 • Multichannel – In the multichannel condition, each recording session contains output from one or
-moredistantmicrophonearrays,eachcontainingmultiplechannels. Participantsshouldtreatthearrays
+more distant microphone arrays, each containing multiple channels. Participants should treat the arrays
 separately, producing one output per array. They are free to use as few or as many of the channels
 on each array as they wish to perform diarization. For instance, if the recording session contains 6
-2microphonearrays,eachhavingfourchannels,participantsareexpectedtoproduce6RTTMﬁles,each
+2microphone arrays, each having four channels, participants are expected to produce 6 RTTM ﬁles, each
 containing the result of their diarization system for a SINGLE array.
 The single channel and multichannel conditions use diﬀerent data sets with the former drawing data from
 DIHARD I and the latter from CHiME-5. For more information about the construction and composition
@@ -100,12 +100,12 @@ by two metrics:
 • diarization error rate (DER)
 • Jaccard error rate (JER)
 4.1 Diarization error rate
-Diarizationerrorrate(DER),introducedfortheNISTRichTranscriptionSpring2003Evaluation(RT-03S),
-isthetotalpercentageofreferencespeakertimethatisnotcorrectlyattributedtoaspeaker,where“correctly
+Diarization error rate (DER), introduced for the NIST Rich Transcription Spring 2003 Evaluation (RT-03S),
+is the total percentage of reference speaker time that is not correctly attributed to a speaker, where “correctly
 3attributed” is deﬁned in terms of an optimal mapping between the reference and system speakers. More
 concretely, DER is deﬁned as:
-FA+MISS+ERROR
-DER=
+FA + MISS + ERROR
+DER =
 TOTAL
 where
 • TOTAL is the total reference speaker time; that is, the sum of the durations of all reference speaker
@@ -113,7 +113,7 @@ segments
 • FA is the total system speaker time not attributed to a reference speaker
 • MISS is the total reference speaker time not attributed to a system speaker
 • ERROR is the total reference speaker time attributed to the wrong speaker
-ContrarytopracticeintheNISTevaluations,NOforgivenesscollarwillbeappliedtothereferencesegments
+Contrary to practice in the NIST evaluations, NO forgiveness collar will be applied to the reference segments
 prior to scoring and overlapping speech WILL be evaluated. For more details please consult section 6 of
 the RT-09 evaluation plan and the source to the NIST md-eval scoring tool2.
 4.2 Jaccard error rate
@@ -121,18 +121,18 @@ In addition to the primary metric we will score systems using Jaccard error rate
 developed for DIHARD. The Jaccard error rate is based on the Jaccard index3, a similarity measure used
 to evaluate the output of image segmentation systems. An optimal mapping between reference and system
 speakers is determined and for each pair the Jaccard index is computed. The Jaccard error rate is then
-deﬁnedas1minustheaverageofthesescores. WhilesimilartoDER,itweightseveryspeaker’scontribution
+deﬁned as 1 minus the average of these scores. While similar to DER, it weights every speaker’s contribution
 equally, regardless of how much speech they actually produced.
-Moreconcretely,assumewehaveN referencespeakersandM systemspeakers. Anoptimalmappingbetween
+More concretely, assume we have N reference speakers and M system speakers. An optimal mapping between
 speakers is determined using the Hungarian algorithm so that each reference speaker is paired with at most
 one system speaker and each system speaker with at most one reference speaker. Then, for each reference
 speaker ref the speaker-speciﬁc Jaccard error rate JER is computed as:
 ref
-FA+MISS
+FA + MISS
 JER =
 ref TOTAL
 where
-• TOTAListhedurationoftheunionofreferenceandsystemspeakersegments; ifthereferencespeaker
+• TOTAL is the duration of the union of reference and system speaker segments; if the reference speaker
 was not paired with a system speaker, it is the duration of all reference speaker segments
 • FA is the total system speaker time not attributed to the reference speaker; if the reference speaker
 was not paired with a system speaker, it is 0
@@ -140,13 +140,13 @@ was not paired with a system speaker, it is 0
 was not paired with a system speaker, it is equal to TOTAL
 The Jaccard error rate then is the average of the speaker speciﬁc Jaccard error rates:
 1 (cid:88)
-JER= JER
+JER = JER
 N ref
 ref
-AswithDERNOforgivenesscollarwillbeappliedtothereferencesegmentspriortoscoringandoverlapping
+As with DER NO forgiveness collar will be applied to the reference segments prior to scoring and overlapping
 speech WILL be evaluated.
 2Available as part of the Speech Recognition Scoring Toolkit (SCTK): ftp://jaguar.ncsl.nist.gov/pub/sctk-2.4.
-10-20151007-1312Z.tar.bz2. ForDIHARD,wewillbeusingversion22ofmd-eval.
+10-20151007-1312Z.tar.bz2. For DIHARD, we will be using version 22 of md-eval.
 3https://en.wikipedia.org/wiki/Jaccard_index
 4JER and DER are highly correlated with JER typically being higher, especially in recordings where one or
 more speakers is particularly dominant. Where it tends to track DER is in outliers where the diarization is
@@ -157,7 +157,7 @@ reference speakers are handled correctly.
 In most cases the scoring region for each recording will be the entirety of the recording; that is, for a
 recording of duration 405.37 seconds, the scoring region will be [0, 405.37]. However, for a small subset of
 the recordings, personal identifying information (PII) has been removed from the recording, either by low-
-passﬁlteringorinsertionoftonesorzeroingoutofsamples. Fortheserecordings,thescoringregionsconsists
+pass ﬁltering or insertion of tones or zeroing out of samples. For these recordings, the scoring regions consists
 of the entirety of the recording minus these regions. In both cases the scoring regions will be speciﬁed by
 un-partitioned evaluation map (UEM) ﬁles, which will be distributed by LDC as part of the development
 and evaluation releases. Please see Appendix D for details of the UEM ﬁle format.
@@ -167,8 +167,8 @@ https://github.com/nryant/dscore
 To score a set of system output RTTMs sys1.rttm, sys2.rttm, ... against corresponding reference RTTMs
 ref1.rttm, ref2.rttm, ... using the un-partitioned evaluation map (UEM) all.uem, the command line would
 be:
-$ python score.py −u all .uem −r ref1 .rttm ref2 .rttm ... −s sys1.rttm sys2.rttm ...
-Theoverallandper-ﬁleresultsforDERandJER(andmanyothermetrics)willbeprintedtoSTDOUTasa
+$ python s c o r e . py −u a l l . uem −r r e f 1 . rttm r e f 2 . rttm . . . −s s y s 1 . rttm s y s 2 . rttm . . .
+The overall and per-ﬁle results for DER and JER (and many other metrics) will be printed to STDOUT as a
 table. For additional details about scoring tool usage, please consult the documentation for the github repo.
 5 Data
 5.1 Training data
@@ -179,15 +179,15 @@ exception of the following previously released corpora, from which portions of t
 • Digital Archive of Southern Speech (LDC2012S03 and LDC2016S05)
 • any version of the SEEDLingS corpus, whether acquired via HomeBank or otherwise
 • DIHARD I evaluation set
-PortionsofMIXER6havepreviouslybeenexcerptedforuseintheNISTSRE10andSRE12evaluationsets,
+Portions of MIXER6 have previously been excerpted for use in the NIST SRE10 and SRE12 evaluation sets,
 which also may not be used.
 All training data should be thoroughly documented in the system description document (see Appendix F)
 at the end of the challenge. For a list of suggested training corpora, please consult Appendix E.
 55.2 Single channel data
 The single channel input condition development and evaluation sets (used for tracks 1 and 2) consist of
 selections of 5-10 minute duration samples4 drawn from 11 domains, each containing approximately 2 hours
-ofaudio. Formostdomains, thesamesourceisusedforboththedevelopmentandevaluationset, thoughin
-somecasesthedevelopmentandevaluationsetsusediﬀerentsources; wherethetwosetsdrawfromdiﬀerent
+of audio. For most domains, the same source is used for both the development and evaluation set, though in
+some cases the development and evaluation sets use diﬀerent sources; where the two sets draw from diﬀerent
 sources, this is noted. For a detailed explanation of the domains and sources, please consult Appendix A.
 5.2.1 Development data
 The full composition of the single channel input condition development set, including domains, the sources
@@ -215,7 +215,7 @@ uses diﬀerent sources than the development set for two domains:
 • the SOCIOLINGUISTIC (FIELD) domain draws from DASS instead of SLX
 The domain from which each sample is drawn will not be provided during the evaluation period, but will be
 revealed at the conclusion of the evaluation.
-4ExceptingdatadrawnfromtheWEBVIDEOdomain,whichrangefromunder1minutetomorethan10minutes.
+4Excepting data drawn from the WEB VIDEO domain, which range from under 1 minute to more than 10 minutes.
 6Domain Source Duration (hours) # Recordings
 AUDIOBOOKS LIBRIVOX - -
 BROADCAST INTERVIEW YOUTHPOINT - -
@@ -238,12 +238,12 @@ pauses > 200 ms, where a pause by speaker “S” is deﬁned as any segment of 
 producing a vocalization of any kind, where vocalization is deﬁned as any noise produced by the speaker
 by means of the vocal apparatus5. Boundaries were placed within 10 ms of the true boundary, taking care
 not to truncate sounds at edges of words (e.g., utterance-ﬁnal fricatives or utterance initial stops). For
-somerecordings(e.g., thosefromROAR),close-talkingmicrophonesexistedforeachspeaker; inthesecases,
+some recordings (e.g., those from ROAR), close-talking microphones existed for each speaker; in these cases,
 segmentation was performed separately for each speaker using their individual microphone. Reference SAD
 was then derived from these segmentations by merging overlapping speech segments and removing speaker
 identiﬁcation.
 5.2.4 PII
-AlimitednumberofrecordingsfromADOS,CIR,andDASScontainedregionscarryingpersonalidentifying
+A limited number of recordings from ADOS, CIR, and DASS contained regions carrying personal identifying
 information (PII), which had to be removed prior to publication. As systems have no way of plausibly
 dealing with these regions, they will not be scored and the relevant UEM ﬁles reﬂect this. The method used
 to de-identify these regions diﬀers from source to source, with some opting to replace PII containing regions
@@ -252,22 +252,22 @@ details about how PII was dealt with for each source.
 5.2.5 File formats
 All audio and annotations will be distributed via LDC. The audio will be distributed as single channel, 16
 bit FLAC ﬁles sampled at 16 kHz, while reference speech segmentations will be distributed as HTK label
-ﬁles. Inthecaseofthedevelopmentset,areferencediarizationwillbeprovided,whichwillbedistributedas
-RichTranscriptionTimeMarked(RTTM)ﬁles. Fordetailsregardingtheseﬁleformats,pleaseseeAppendix
+ﬁles. In the case of the development set, a reference diarization will be provided, which will be distributed as
+Rich Transcription Time Marked (RTTM) ﬁles. For details regarding these ﬁle formats, please see Appendix
 B and Appendix C.
-5Forinstance,speech(includingyelledandwhisperedspeech),backchannels,ﬁlledpauses,singing,speecherrorsanddisﬂu-
-encies,infantbabblingorvocalizations,laughter,coughs,breaths,lipsmacks,andhumming.
+5For instance, speech (including yelled and whispered speech), backchannels, ﬁlled pauses, singing, speech errors and disﬂu-
+encies, infant babbling or vocalizations, laughter, coughs, breaths, lipsmacks, and humming.
 75.2.6 Diﬀerences from DIHARD I
 While the single channel input condition development and evaluation sets are supersets of those used in
 DIHARD I, they exhibit several notable diﬀerences:
-• theSEEDLINGSsourcefromtheCHILDLANGUAGEdomainhasbeenre-annotatedfromscratchto
+• the SEEDLINGS source from the CHILD LANGUAGE domain has been re-annotated from scratch to
 correct inconsistencies and outright errors present in DIHARD I
 • the VAST source from the WEB VIDEO domain has been re-annotated from scratch to correct incon-
 sistencies and outright errors present in DIHARD I
 • the DIHARD I sociolinguistic interview domain has been split into two domains for DIHARD II:
 – SOCIOLINGUISTIC (FIELD) – sociolinguistic interviews conducted in the ﬁeld
 – SOCIOLINGUISTIC (LAB) – sociolinguistic interviews conducted in a laboratory setting
-• twoadditionalhoursofMIXER6annotationhavebeenaddedsothattheSOCIOLINGUISTIC(LAB)
+• two additional hours of MIXER6 annotation have been added so that the SOCIOLINGUISTIC (LAB)
 domain is represented in both the development and evaluation sets
 • two hours of new annotation for the previously unseen DASS source have been added so that the
 SOCIOLINGUISTIC (FIELD) domain is represented in both the development and evaluation sets
@@ -289,9 +289,9 @@ phases, each of which was held in a diﬀerent location within the home:
 • living – location of post-dinner conversation/socializing
 Participants were allowed to move freely between locations and speak on any topics they desired subject to
 the requirement that each phase lasted at least 30 minutes.
-Allparties were recordedusing commerciallyavailable microphonearrays representative ofthose thatmight
+All parties were recorded using commercially available microphone arrays representative of those that might
 be found in an actual home or oﬃce environment. Within each home, 6 Microsoft Kinect devices (4 channel
-lineararrays)weredistributedsoastoensurethateachlocationwasalwayscapturedbyatleasttwoarrays.
+linear arrays) were distributed so as to ensure that each location was always captured by at least two arrays.
 This yielded 24 channels (6 arrays x 4 channels per array) of audio for each session.
 For additional details regarding the recording setup, please consult the CHiME-5 website.
 85.3.1 Development set
@@ -309,14 +309,14 @@ participants enter into the post-dinner socialization period. For this reason, e
 separately for the purpose of the evaluation, meaning that for each session participants should run their
 systems once per array, resulting in 6 RTTMs6 (one per Kinect) per session.
 5.3.4 Segmentation
-Themultichannelinputconditionevaluationsetreferencediarizationwascreatedmanuallybyannotatorsat
+The multichannel input condition evaluation set reference diarization was created manually by annotators at
 LDC using the same process described in Section 5.2.3. For each speaker, segmentation was performed from
 that speaker’s binaural recording device. However, due to lack of synchronization between the the binaural
 recording devices and Kinects (see Section 5.3.3), this segmentation then had to be corrected for each array.
 The correction process used is identical to that used for CHiME-5 and consists of two stages7:
 • every 10 seconds, estimate the current delay between the binaural recording device and the Kinect
 using normalized cross-correlation
-• foreachspeakerturn,shifttheboundariesestablishedforthebinauralrecordingdevicebytheestimated
+• for each speaker turn, shift the boundaries established for the binaural recording device by the estimated
 delay
 Due to time constraints, the LDC manual segmentation process could not be implemented for the devel-
 opment set. For the development set, all segmentations come from the turn boundaries established during
@@ -325,17 +325,17 @@ CHiME-5 transcription.
 Portions of the CHiME-5 corpus contain PII or sensitive information, which had to be removed prior to
 publication. These regions (200-300 across the entire corpus) have been zeroed out in the released audio.
 5.3.6 File formats
-AudiowillbedistributedviaUniversityofSheﬃeld,whileannotationswillbedistributedviaLDC.Allaudio
+Audio will be distributed via University of Sheﬃeld, while annotations will be distributed via LDC. All audio
 will be distributed as single channel, 16 bit WAV ﬁles sampled at 16 kHz. There will be one ﬁle per channel
-6ExceptingsessionsS05andS22ofthedevelopmentset,whicharemissingarraysU05andU03respectively.
-7Forthepreciseimplementation,seehttps://github.com/chimechallenge/chime5-synchronisation.
+6Excepting sessions S05 and S22 of the development set, which are missing arrays U05 and U03 respectively.
+7For the precise implementation, see https://github.com/chimechallenge/chime5-synchronisation.
 9for each microphone array, yielding 16 ﬁles per recording session. Reference speech segmentations will be
 distributed as HTK label ﬁles (Appendix B), with one label ﬁle distributed per array. In the case of the
 development set, a reference diarization will be provided, which will be distributed as Rich Transcription
 Time Marked (RTTM) ﬁles (Appendix C).
 6 Evaluation rules
 The 2019 DIHARD challenge is an open evaluation where the test data is sent to participants, who will
-processthedatalocallyandsubmittheirsystemoutputstoLDCforscoring. Assuch, theparticipantshave
+process the data locally and submit their system outputs to LDC for scoring. As such, the participants have
 agreed to process the data in accordance with the following rules:
 • While most of the test data is actually, or eﬀectively, unexposed, portions have been exposed in part
 in the following corpora:
@@ -353,7 +353,7 @@ prior to the end of the evaluation is disallowed.
 of the domain) for the development and evaluation ﬁles.
 • During the evaluation period, each team may make at most six submissions per day.
 • Use of the evaluation server for per-recording hyperparameter tuning (e.g., attempting to establish
-thereferencenumberofspeakersineachrecordingbysystematicallyalteringclusteringthresholdsone
+the reference number of speakers in each recording by systematically altering clustering thresholds one
 recording at a time) is EXPRESSLY prohibited. We are being very generous compared to other
 machine learning competitions with our submission limits, so please do not abuse them. If teams are
 caught violating this rule, we will be forced to adopt stricter limits.
@@ -363,7 +363,7 @@ requirements:
 computational resources used for all of their ﬁnal systems (i.e., systems present on the leaderboard at
 the end of the challenge). These documents will be submitted at the end of the evaluation and should
 follow the format set forth in Appendix F.
-• TheparticipantsagreetodeposittheRTTMoutputsoftheirﬁnalsystemsonZenodo. Attheconclusion
+• The participants agree to deposit the RTTM outputs of their ﬁnal systems on Zenodo. At the conclusion
 of the challenge, the organizers will deposit an archive on Zenodo containing all system descriptions
 and ﬁnal system outputs.
 10Failure to abide by these rules will be considered grounds for disqualiﬁcation and will result in loss of access
@@ -386,7 +386,7 @@ LDC does not have permission to distribute the CHiME-5 audio data. Consequently,
 participating in tracks 3 and 4 must obtain this data from University of Sheﬃeld. Note that this applies to
 all interested teams, even those who participated in the CHiME-5 challenge. To do so, visit
 https://licensing.sheffield.ac.uk/i/data/chime5.html
-andselecttheappropriatelicense. Not-for-proﬁtorganizationsshouldselectthenon-commerciallicense. All
+and select the appropriate license. Not-for-proﬁt organizations should select the non-commercial license. All
 other organizations should select the commercial license, regardless of intended use for the data.
 7.4 Baseline systems
 Access to all baseline systems is provided via the challenge website.
@@ -396,10 +396,10 @@ on how to register an account and submit results, see the challenge website.
 118 Interspeech special session
 The results of the challenge will be presented at a special session at INTERSPEECH 2019, held September
 15-19, 2018 in Graz, Austria. Researchers wishing to submit papers should do so through the Interspeech
-submissionportal. Additionalinstructionswillbeprovidedthroughthechallengewebsiteoncethesubmission
+submission portal. Additional instructions will be provided through the challenge website once the submission
 portal opens.
 9 Updates
-Updatestothisevaluationplanwillbemadeavailableviathemailinglistandthechallengewebsite(https:
+Updates to this evaluation plan will be made available via the mailing list and the challenge website (https:
 //coml.lscp.ens.fr/dihard/index.html).
 12Appendix A: Single Channel Condition Domains and Sources
 Domains
@@ -419,21 +419,21 @@ microphone has been sewn. Because of their age, the child “speech” consists 
 speech consisting of short utterances (possible very disﬂuent), babbling, laughing, crying, and diverse
 uncategorizeable non-speech vocalizations. Other speakers may be present in the recording, typically
 one or more parents, but also siblings, friends of siblings, aunts and uncles, and adult friends of the
-parents. Someoftherecordingshavequietbackgrounds,whileothershaveradiosortelevisionsplaying.
+parents. Some of the recordings have quiet backgrounds, while others have radios or televisions playing.
 All recordings were taken from the SEEDLingS corpus.
 • Clinical
 Recordings of Autism Diagnostic Observation Schedule (ADOS) interviews conducted to identify
 whether a child ﬁt the clinical diagnosis for autism. ADOS is a roughly hour long semi-structured
 interview in which clinicians attempt to elicit language that diﬀerentiates children with Autism Spec-
 trum Disorder from those without (e.g., “What does being a friend mean to you?”). The children
-includedinthiscollectionrangedfrom12-16yearsinageandexhibitarangeofdiagnosesfromautism
+included in this collection ranged from 12-16 years in age and exhibit a range of diagnoses from autism
 to non-autism language disorder to ADHD to typically developing. Interviews are typically recorded
 for quality assurance purposes; in this case, the recording was conducted using a ceiling mounted
 microphone. The recordings are selected from the unpublished LDC ADOS corpus.
 • Courtroom
 Recordings of oral arguments from the 2001 term of the U.S. Supreme Court. The original recordings
 were made using individual table-mounted microphones, one for each participant, which could be
-switchedonandoﬀbythespeakersasappropriate. Theoutputsofthesemicrophonesweresummedand
+switched on and oﬀ by the speakers as appropriate. The outputs of these microphones were summed and
 recorded on a single-channel reel-to-reel analogue tape recorder. All recordings taken from SCOTUS,
 an unpublished LDC corpus.
 • Map task
@@ -445,14 +445,14 @@ Though each speaker was recorded on a separate channel via a close-talking micro
 been mixed together for the DIHARD releases. The recordings are drawn from the DCIEM Map Task
 Corpus (LDC96S38).
 • Meeting
-Recordingsofmeetingscontainingbetween3and7speakers. Thespeechinthesemeetingsishighlyin-
-teractiveinnatureconsistingoflargeamountsofspontaneousspeechcontainingfrequentinterruptions
+Recordings of meetings containing between 3 and 7 speakers. The speech in these meetings is highly in-
+teractive in nature consisting of large amounts of spontaneous speech containing frequent interruptions
 13and overlapping speech. For each meeting a single, centrally located distant microphone is provided,
-whichmayexhibitexcessivelylowgain. Forthedevelopmentset,thesemeetingsaredrawnfromRT04,
+which may exhibit excessively low gain. For the development set, these meetings are drawn from RT04,
 while for the evaluation set they are drawn from ROAR.
 • Restaurant
 Informal conversations recorded in restaurants using binaural microphones. Each session contains
-between4and7speakersseatedatthesametableatarestaurantatlunchtimeandwasrecordedfrom
+between 4 and 7 speakers seated at the same table at a restaurant at lunchtime and was recorded from
 a binaural microphone worn by a designated facilitator; the mix of the two channels recorded by this
 microphone are provided. This data exhibits the following properties, which are expected to make it
 particularly challenging for automated segmentation and recognition:
@@ -467,7 +467,7 @@ All data is taken from LDC’s unpublished CIR corpus.
 • Sociolinguistic ﬁeld recordings
 Sociolinguistic interviews recorded under ﬁeld conditions. Recordings consists of a single interviewer
 attempting to elicit vernacular speech from an informant during informal conversation. Typically,
-interviewswererecordedinthehome,thoughoccasionallytheywererecordedinapubliclocationsuch
+interviews were recorded in the home, though occasionally they were recorded in a public location such
 as a park or cafe. The development set recordings were drawn from SLX and the evaluation set from
 DASS.
 • Sociolinguistic lab recordings
@@ -476,19 +476,19 @@ taken from the PZM microphones of LDC’s Mixer 6 collection (LDC23013S03).
 • Web video
 English and Mandarin amateur videos collected from online video sharing sites (e.g., YouTube and
 Vimeo). This domain is expected to be particularly challenging as the videos present a diverse set of
-topicsandrecordingconditions;inparticular,manyvideoscontainmultiplespeakerstalkinginanoisy
+topics and recording conditions; in particular, many videos contain multiple speakers talking in a noisy
 environment, where it can be diﬃcult to distinguish speech from other kinds of sounds. All data is
 selected from LDC’s VAST collection.
 Sources
 • ADOS
 ADOS is an unpublished LDC corpus consisting of transcribed excerpts from ADOS interviews con-
 ducted at the Center for Autism Research (CAR) at the Children’s Hospital of Philadelphia (CHOP).
-AllinterviewswereconductedatCARbytrainedcliniciansusingADOSmodule3. Theinterviewswere
+All interviews were conducted at CAR by trained clinicians using ADOS module 3. The interviews were
 recorded using a mixture of cameras and audio recorded from a ceiling mounted microphone. Portions
 of these interviews determined by a clinician to be particularly diagnostic were then segmented and
 transcribed.
-Notethatinordertopublishthisdata,ithadtobede-identiﬁedbyapplyingalow-passﬁltertoregions
-identiﬁedascontainingpersonalidentifyinginformation(PII).Pitchinformationintheseregionsisstill
+Note that in order to publish this data, it had to be de-identiﬁed by applying a low-pass ﬁlter to regions
+identiﬁed as containing personal identifying information (PII). Pitch information in these regions is still
 recoverable, but the amplitude levels have been reduced relative to the original signal. Filtering was
 done with a 10th order Butterworth ﬁlter with a passband of 0 to 400 Hz. To avoid abrupt transitions
 14in the resulting waveform, the eﬀect of the ﬁlter was gradually faded in and out at the beginning and
@@ -505,21 +505,21 @@ side of one speaker’s head.
 A limited number of regions from one recording were found to contain PII. These regions were de-
 identiﬁed using the same low-pass ﬁltering approach as in ADOS
 • DASS
-TheDigitalArchiveofSouthernSpeech,orDASS,isacorpusofinterviews(eachlastinganywherefrom
+The Digital Archive of Southern Speech, or DASS, is a corpus of interviews (each lasting anywhere from
 3 to 13 hours) recorded during the late 60s and 70s in the Gulf Coast region of the United States. It is
 part of the larger Linguistic Atlas of the Gulf States (LAGS), a long-running project that attempted
 to preserve the speech of a region encompassing Louisiana, Alabama, Mississippi, and Florida as well
 as parts of Texas, Tennessee, Arkansas, and Georgia. Each interview was conducted in the ﬁeld by a
-trainedinterviewer,whoattemptedtoelicitconversationaboutcommontopicslikefamily,theweather,
+trained interviewer, who attempted to elicit conversation about common topics like family, the weather,
 household articles, agriculture, and social connections. It is distributed by LDC as LDC2012S03 and
 LDC2016S05.
-Duetothenatureoftheinterviews,theysometimescontainPIIorsensitivematerials. Allsuchregions
+Due to the nature of the interviews, they sometimes contain PII or sensitive materials. All such regions
 have been replaced by tones of matched duration. Unfortunately, this process does not appear to have
 been systematic, with the result that the type of tone (pure or complex), power, and frequency diﬀers
 across the corpus.
 • DCIEM
 The DCIEM Map Task Corpus (LDC96S38) is a collection of recordings of two-person map tasks
-recordedfortheDCIEMSleepDeprivationStudy. ThisstudywasconductedbytheDefenseandCivil
+recorded for the DCIEM Sleep Deprivation Study. This study was conducted by the Defense and Civil
 Institute of Environmental Medicine (Department of National Defense, Canada) to evaluate the eﬀect
 of drugs on performance degradation in sleep deprived individuals. Three drug conditions (Modaﬁnil
 vs. Amphetamine vs. placebo) were crossed with three sleep conditions (18 hours vs. 48 hours vs.
@@ -536,22 +536,22 @@ Mixer 6 (LDC2013S03) is a large-scale collection of English speech across multip
 modalities, degrees of formality, and channels that was conducted at LDC from 2009 through 2010.
 The collection consists of interviews with 594 native speakers of English spanning 1,425 sessions,
 each roughly 40-45 minutes in duration. Each session contained multiple components (e.g., informal
-conversationstyledafterasociolinguisticinterviewortranscriptreading)andwascapturedbyavariety
+conversation styled after a sociolinguistic interview or transcript reading) and was captured by a variety
 of microphones, including lavalier, head-mounted, podium, shotgun, PZM, and array microphones.
 While the corpus was released without speaker segmentation or transcripts, a portion of the corpus
 15was subsequently transcribed at LDC. DIHARD II draws its selections from this subset.
 • ROAR
 ROAR is a collection of multiparty (3 to 6 participant) conversations recorded by LDC as part of the
 DARPA ROAR (Robust Omnipresent Automatic Recognition) project in Fall 2001. While portions of
-thiscollectionhavepreviouslybeenexposedduringtheNISTRTevaluations,allDIHARDdatacomes
+this collection have previously been exposed during the NIST RT evaluations, all DIHARD data comes
 from previously unexposed meetings. The meetings were recorded at LDC in a purpose built room
 using a combination of lavalier, head mounted, omnidirectional, PZM, shotgun, podium, and array
 microphones. For each meeting, a single centrally located distant microphone is provided.
 • RT04
-RT04consistsofmeetingspeechreleasedaspartoftheNISTSpring2004RichTranscription(RT-04S)
+RT04 consists of meeting speech released as part of the NIST Spring 2004 Rich Transcription (RT-04S)
 Meeting Recognition Evaluation development and evaluation sets. This data was later re-released by
 LDC as LDC2007S11 and LDC2007S12. It consists of recordings of multiparty (3 to 7 participant)
-meetingsheldatmultiplesites(ICSI,NIST,CMU,andLDC),eachwithadiﬀerentmicrophonesetup.
+meetings held at multiple sites (ICSI, NIST, CMU, and LDC), each with a diﬀerent microphone setup.
 For DIHARD, a single channel is distributed for each meeting, corresponding to the RT-04S single
 distant microphone (SDM) condition. Audio ﬁles have been trimmed from the original recordings to
 the 11 minute scoring regions speciﬁed in the RT-04S un-partitioned evaluation map (UEM) ﬁles8.
@@ -560,12 +560,12 @@ SCOTUS is an unpublished LDC corpus consisting of oral arguments from the 2001 t
 Supreme Court. The recordings were transcribed and manually word-aligned as part of the OYEZ
 project, then forced aligned and QCed at LDC.
 • SEEDLingS
-SEEDLingSisacorpusofchildspeechcollectedattheUniversityofRochester. Excerptsfromday-long
+SEEDLingS is a corpus of child speech collected at the University of Rochester. Excerpts from day-long
 recordings conducted in the home were selected, then segmented and transcribed by LDC.
 • SLX
 SLX (LDC2003T15) is a corpus of sociolinguistic interviews conducted in the 1960s and 1970s by Bill
 Labov and his students. The interview subjects range in age from 15 to 81 and represent a diverse
-samplingofethnicities, backgrounds, anddialects(e.g., southernAmercianEnglish, AfricanAmerican
+sampling of ethnicities, backgrounds, and dialects (e.g., southern Amercian English, African American
 English, northern England, and Scotland). While the recordings have good sound quality for ﬁeld
 recordings (especially from that era), they were collected in a range of environments ranging from
 noisy homes (e.g., small children running around in the background) to public parks to gas stations.
@@ -573,20 +573,20 @@ noisy homes (e.g., small children running around in the background) to public pa
 The Video Annotation for Speech Technologies (VAST) corpus is a (mostly) unexposed collection of
 approximately 2,900 hours of web videos (e.g., YouTube and Vimeo) intended for development and
 evaluation of speech technologies; in particular, speech activity detection (SAD), diarization, language
-identiﬁcation(LID),speakeridentiﬁcation(SID),andspeechrecognition(STT).Collectionemphasized
-videoswherepeoplearetalkingwithaparticularemphasisonvideoswherethespeakersspokeprimarily
+identiﬁcation (LID), speaker identiﬁcation (SID), and speech recognition (STT). Collection emphasized
+videos where people are talking with a particular emphasis on videos where the speakers spoke primarily
 English, Mandarin, and Arabic, which comprise the bulk of the corpus9. Portions of this corpus have
 been exposed previously as part of the NIST 2017 Speech Analytic Technologies Evaluation, the NIST
 2017 Language Recognition Evaluation, NIST 2018 Speaker Recognition Evaluation, and DIHARD I.
 • YouthPoint
 YouthPoint is an unpublished LDC corpus consisting of episodes of YouthPoint, a late 1970s radio
-programrunbystudentsattheUniversityofPennsylvania. Theshowhadaninterviewformatsimilar
+program run by students at the University of Pennsylvania. The show had an interview format similar
 to shows such as NPR’s Fresh Air and consisted of interviews between University of Pennsylvania
 students and various popular ﬁgures. The recordings were conducted in a studio on open reel tapes
 and later digitized and transcribed at LDC.
 8In cases where the onset or oﬀset of a scoring region was found to bisect a speaker turn, it was adjusted to fall in silence
-adjacenttotherelevantturn.
-9Eightlanguagesarerepresentedintotal: Arabic,English,Mandarin,MinNan,Spanish,Portuguese,Russian,andPolish.
+adjacent to the relevant turn.
+9Eight languages are represented in total: Arabic, English, Mandarin, Min Nan, Spanish, Portuguese, Russian, and Polish.
 16Appendix B: Speech segmentation label ﬁles
 For each recording, the reference speech segmentation will be provided via an HTK label ﬁle listing one
 segment per line, each line consisting of three space-delimited ﬁelds:
@@ -644,7 +644,7 @@ LDC corpora
 • 2006 NIST Spoken Term Detection Evaluation Set (LDC2011S03)
 • 2005 Spring NIST Rich Transcription (RT-05S) Evaluation Set (LDC2011S06)
 Non-LDC corpora
-• AugmentedMultipartyInteraction(AMI)MeetingCorpus(http://groups.inf.ed.ac.uk/ami/corpus/)
+• Augmented Multiparty Interaction (AMI) Meeting Corpus (http://groups.inf.ed.ac.uk/ami/corpus/)
 • CSTR VCTK Corpus (https://homepages.inf.ed.ac.uk/jyamagis/page3/page58/page58.html)
 Conversational telephone speech (CTS) corpora
 LDC corpora
@@ -701,8 +701,8 @@ Non-LDC corpora
 • VoxCeleb 2 (http://www.robots.ox.ac.uk/~vgg/data/voxceleb/vox2.html)
 22Appendix F: System descriptions
 Proper interpretation of the evaluation results requires thorough documentation of each system. Conse-
-quently,attheendoftheevaluationresearchersmustsubmitaPDFthatjointlydescribestheirﬁnalsystems
-(i.e.,thoseappearingontheleaderboardattheendofthechallenge)insuﬃcientdetailforafellowresearcher
+quently, at the end of the evaluation researchers must submit a PDF that jointly describes their ﬁnal systems
+(i.e., those appearing on the leaderboard at the end of the challenge) in suﬃcient detail for a fellow researcher
 to understand the approach and data/computational requirements. In order to make the preparation and
 format as consistent as possible, participants should use the IEEE Conference proceedings templates:
 https://www.ieee.org/conferences/publishing/templates.html
@@ -717,25 +717,25 @@ An acceptable system description should include the following information:
 System names used within this document should be consistent with those used on the leaderboard. If for
 some reason this is not possible, then a section should be included that provides a mapping between the
 two namespaces. If a large number of systems were submitted, not all must be included (e.g., tests of the
-CodaLabserver,earlybaselines,abandonedapproaches),butataminimumthefourbestperformingsystems
+CodaLab server, early baselines, abandoned approaches), but at a minimum the four best performing systems
 for each track should be described.
 Section 1: Authors
 Listing of people whose contributions you wish acknowledged. This section is optional, but is helpful to the
-organizersasanynameslistedinthissectionwillbelistedasco-authorsfortheZenododownloadcontaining
+organizers as any names listed in this section will be listed as co-authors for the Zenodo download containing
 the challenge results.
 Section 2: Abstract
 A short (a few sentences) high-level description of the system.
 Section 3: Data resources
 This section should describe the data used for training including both volumes and sources. For LDC or
-ELRAcorpora,catalogidsshouldbesupplied. Forotherpubliclyavailablecorpora(e.g.,AMI)alinkshould
-beprovided. Incaseswhereanon-publiclyavailablecorpusisused,itshouldbedescribedinsuﬃcientdetail
-togetthegistofitscomposition. Ifthesystemiscomposedofmultiplecomponentsanddiﬀerentcomponents
+ELRA corpora, catalog ids should be supplied. For other publicly available corpora (e.g., AMI) a link should
+be provided. In cases where a non-publicly available corpus is used, it should be described in suﬃcient detail
+to get the gist of its composition. If the system is composed of multiple components and diﬀerent components
 are trained using diﬀerent resources, there should be an accompanying description of which resources were
 used for which components.
 Section 4: Detailed description of algorithm
 Each component of the system should be described in suﬃcient detail that another researcher would be able
 to reimplement it. You may be brief or omit entirely description of components that are standard (i.e., no
-needtolistthestandardequationsunderlyinganLSTMorGRU).Ifhyperparametertuningwasperformed,
+need to list the standard equations underlying an LSTM or GRU). If hyperparameter tuning was performed,
 there should be detailed description both of the tuning process and the ﬁnal hyperparameters arrived at.
 23We suggest including subsections for each major phase in the system. Suggested subsections:
 • signal processing – e.g., signal enhancement, denoising, source separation

@@ -13,359 +13,359 @@ archive for the deposit and dissemination of sci- destinée au dépôt et à la 
 entific research documents, whether they are pub- scientifiques de niveau recherche, publiés ou non,
 lished or not. The documents may come from émanant des établissements d’enseignement et de
 teaching and research institutions in France or recherche français ou étrangers, des laboratoires
-abroad, or from public or private research centers. publics ou privés.IMPACTOFOVERLAPPINGSPEECHDETECTION
-ONSPEAKERDIARIZATIONFORBROADCASTNEWSANDDEBATES
-DelphineCharlet1,ClaudeBarras2 andJean-SylvainLie´nard2
-1OrangeLabs,FranceTelecom,Lannion,France
-2LIMSI-CNRS,Univ. Paris-Sud,91403,Orsay,France
-1delphine.charlet@orange.com,2barras@limsi.fr,jslienard@gmail.com
-ABSTRACT 2. ETAPECAMPAIGNANDDATA
-TheETAPEevaluationcampaigntookplaceinSpring2012[5]. It
+abroad, or from public or private research centers. publics ou privés.IMPACT OF OVERLAPPING SPEECH DETECTION
+ON SPEAKER DIARIZATION FOR BROADCAST NEWS AND DEBATES
+Delphine Charlet1, Claude Barras2 and Jean-Sylvain Lie´nard2
+1Orange Labs, France Telecom, Lannion, France
+2LIMSI-CNRS, Univ. Paris-Sud, 91403, Orsay, France
+1delphine.charlet@orange.com, 2barras@limsi.fr, jslienard@gmail.com
+ABSTRACT 2. ETAPE CAMPAIGN AND DATA
+The ETAPE evaluation campaign took place in Spring 2012 [5]. It
 The overlapping speech detection systems developped by Orange
-evaluatedsegmentation,transcriptionandinformationextractionin
-andLIMSIfortheETAPEevaluationcampaignonFrenchbroadcast
+evaluated segmentation, transcription and information extraction in
+and LIMSI for the ETAPE evaluation campaign on French broadcast
 the audio channel of French TV and radio broadcasts. This work
-newsanddebatesaredescribed. Usingeithercepstralfeaturesora
-addressesthesegmentationtasks,i.e.themultiplespeakerdetection
-multi-pitchanalysis,aF1-measureforoverlappingspeechdetection
-andspeakerturnsegmentation.
+news and debates are described. Using either cepstral features or a
+addresses the segmentation tasks, i.e. the multiple speaker detection
+multi-pitch analysis, a F1-measure for overlapping speech detection
+and speaker turn segmentation.
 up to 59.2% is reported on the TV data of the ETAPE evaluation
 The multiple speaker detection task (SES-2) aims at detecting
-set,where6.7%ofthespeechwasmeasuredasoverlapping,ranging
+set, where 6.7% of the speech was measured as overlapping, ranging
 the start and end times of segments containing speech from more
-from1.2%inthenewsto10.7%inthedebates.Overlappingspeech
-thanonespeaker.Manualannotationofoverlapsalongwiththeref-
+from 1.2% in the news to 10.7% in the debates. Overlapping speech
+than one speaker. Manual annotation of overlaps along with the ref-
 segments were excluded during the speaker diarization stage, and
-erencetranscriptionwasprovidedbyELDA,andthetemporalextent
+erence transcription was provided by ELDA, and the temporal extent
 these segments were further labelled with the two nearest speaker
-oftheoverlapswasreﬁnedthroughaforcedalignmentbetweenthe
+of the overlaps was reﬁned through a forced alignment between the
 labels, taking into account the temporal distance. We describe the
 reference and an automatic transcription2. Due to the exploratory
-effectsofthisstrategyforvariousoverlappingspeechsystemsand
-natureofthetask,severalmetricswereproposedbutnoofﬁcialmet-
-weshowthatitimprovesthediarizationerrorrateinallsituations
+effects of this strategy for various overlapping speech systems and
+nature of the task, several metrics were proposed but no ofﬁcial met-
+we show that it improves the diarization error rate in all situations
 ric was chosen. We report recall and precision of multiple speech
-andupto26.1%relativeinourbestconﬁguration.
+and up to 26.1% relative in our best conﬁguration.
 detection expressed in duration, with non-speech regions excluded
-IndexTerms— speakerdiarization,overlappingspeech from the scoring, and the resulting F1-measure. Moreover, we re-
-stricttotheTVdatasincetheforcedalignmentwasnotperformed
-fortheradiotrainingdatasubset.
-Performanceinthespeakerdiarizationtask(SRL)ismeasured
+Index Terms— speaker diarization, overlapping speech from the scoring, and the resulting F1-measure. Moreover, we re-
+strict to the TV data since the forced alignment was not performed
+for the radio training data subset.
+Performance in the speaker diarization task (SRL) is measured
 1. INTRODUCTION
-bytheDiarizationErrorRate(DER)asthesumofMissDetection
-Rate,FalseAlarmRateandSpeakerErrorRate,whereSpeakerError
-Automaticspeechrecognitionandspeakerdiarizationonbroadcast
-Rateisobtainedafteroptimalmappingbetweenautomaticclusters
-datalongfocusedoncontentswherespeechoverlapswererare, or andreferencespeakers3. Usually,evaluationofspeakerdiarization
+by the Diarization Error Rate (DER) as the sum of Miss Detection
+Rate, False Alarm Rate and Speaker Error Rate, where Speaker Error
+Automatic speech recognition and speaker diarization on broadcast
+Rate is obtained after optimal mapping between automatic clusters
+data long focused on contents where speech overlaps were rare, or and reference speakers3. Usually, evaluation of speaker diarization
 excluded speech overlap segments from their evaluation. On the
 is performed after excluding regions of overlapped speech. Here,
 other hand, studies on more spontaneous speech from multi-party
-weevaluatethesystemincludingoverlappedspeechregions. Ifan
-conversations, especiallytelephoneconversationsandmeetingsre-
-overlappedspeechregionisassignedtoonlyonespeaker,thisregion
-portthat6to14%ofwordsareoverlapped[1,2],andoverlapping
-isconsideredasMissedspeechforthesecondspeaker. Ifannon-
-speechwasidentiﬁedasamajorcauseoferrorforspeakerdiariza-
+we evaluate the system including overlapped speech regions. If an
+conversations, especially telephone conversations and meetings re-
+overlapped speech region is assigned to only one speaker, this region
+port that 6 to 14% of words are overlapped [1, 2], and overlapping
+is considered as Missed speech for the second speaker. If an non-
+speech was identiﬁed as a major cause of error for speaker diariza-
 overlapped speech region is falsely detected as overlapped speech
 tion [3]. On broadcast data, the assumption that speech overlap is
 region and assigned to 2 speakers, this region will be counted as
 negligible is no longer valid, when it comes to deal with political
-falsealarmspeechforthesecondspeaker.
-interviews[4]ortalk-shows[5].
+false alarm speech for the second speaker.
+interviews [4] or talk-shows [5].
 The ETAPE TV subset consists in 29 hours of data (18 hours
 To the best of our knowledge, all the published studies about
 training, 5.5 hours development and 5.5 hours test) from three
 overlapped speech in speaker diarization focused on meeting data
-FrenchTVchannels(LCP,BFMandTV8)withnews(BFMStory,
+French TV channels (LCP, BFM and TV8) with news (BFM Story,
 or on telephone conversations. This work focuses on overlapping
-LCP Top Questions), debates (LCP Pile et Face, LCP C¸a vous re-
-speechdetectioninFrenchTVbroadcastsanditsimpactonspeaker
+LCP Top Questions), debates (LCP Pile et Face, LCP C¸ a vous re-
+speech detection in French TV broadcasts and its impact on speaker
 garde, LCP Entre les lignes) and reportages from a local TV with
-diarizationinthecontextoftheETAPEevaluationcampaign1. The
-unprofesionnalspeakers(TV8Laplaceduvillage). Forthewhole
+diarization in the context of the ETAPE evaluation campaign1. The
+unprofesionnal speakers (TV8 La place du village). For the whole
 next sections describes the ETAPE evaluation and its data, the
-dataset, theratioofoverlapsamountsto5.9%, rangingfrom1.8%
-proposedoverlappingspeechdetectionapproachesandtheirperfor-
+dataset, the ratio of overlaps amounts to 5.9%, ranging from 1.8%
+proposed overlapping speech detection approaches and their perfor-
 in the news to 3% in the reportage and 8.7% in the debates (cf.
-mance,theirintegrationforspeakerdiarizationandconcludeswith
+mance, their integration for speaker diarization and concludes with
 Table 1). The mean duration of overlap segments in the training
-acomparisonwithexistingwork.
-setis1.07sec. andtheirmediandurationis0.72sec(seeFigure1
-forthenormalizedhistogramofoverlapdurations). Thecumulated
-durationofoverlapsonthesameFigureshowsthatoverlapslonger
-ExperimentswereperformedinthecontextoftheFrenchETAPEevalu-
-ationcampaign. LIMSIworkwaspartlyrealizedaspartoftheQuaeroPro-
-gramandtheQCompereproject,respectivelyfundedbyOSEO(FrenchState 2ThankstoOlivierGalibertfromLNEforprovidingthesealignmentsto
-agencyforinnovation)andANR(Frenchnationalresearchagency).Orange theETAPEparticipants.
-workwaspartlyrealizedaspartofthePERCOLprojectfundedbyANR. 3DERreportedinthispaperwerecomputedusingtheconventionnalNIST
-1http://www.afcp-parole.org/etape.html evaluationtoolswiththedefaultvalueofcollarof250msthan1sec. coverabout70%ofthecumulateddurationofoverlap- thusremainingcomputationnalylightcomparedtoothermulti-pitch
-pingspeech,eveniftheyrepresentonly35%oftheoccurences.The estimators. Let pt 0,1,2 be the number of hypothesized F0
+a comparison with existing work.
+set is 1.07 sec. and their median duration is 0.72 sec (see Figure 1
+for the normalized histogram of overlap durations). The cumulated
+duration of overlaps on the same Figure shows that overlaps longer
+Experiments were performed in the context of the French ETAPE evalu-
+ation campaign. LIMSI work was partly realized as part of the Quaero Pro-
+gram and the QCompere project, respectively funded by OSEO (French State 2Thanks to Olivier Galibert from LNE for providing these alignments to
+agency for innovation) and ANR (French national research agency). Orange the ETAPE participants.
+work was partly realized as part of the PERCOL project funded by ANR. 3DER reported in this paper were computed using the conventionnal NIST
+1http://www.afcp-parole.org/etape.html evaluation tools with the default value of collar of 250msthan 1 sec. cover about 70% of the cumulated duration of overlap- thus remaining computationnaly light compared to other multi-pitch
+ping speech, even if they represent only 35% of the occurences. The estimators. Let pt 0, 1, 2 be the number of hypothesized F0
 ∈{ }
-corpusisbiasedtowardsmalespeakers,withalotofjournalistsand output by the multi-pitch detector for the frame xt. This value is
-politicians:thereare160malevs.43femalespeakersinthetraining thensmoothedthroughaHammingwindowHofsized,resultingin
-set, accounting for about 90% of the total duration, and overlaps theframe-levelharmonicfeatureht:
-almostexclusivelyinvolvemalespeakers.
+corpus is biased towards male speakers, with a lot of journalists and output by the multi-pitch detector for the frame xt. This value is
+politicians: there are 160 male vs. 43 female speakers in the training then smoothed through a Hamming window H of size d, resulting in
+set, accounting for about 90% of the total duration, and overlaps the frame-level harmonic feature ht:
+almost exclusively involve male speakers.
 d/2 1
 −
 h = H(j).p
 t t+j
 j=￿−d/2
-Finally,aframe-levellinearcombinationoftheltandhtvalues
-wassubmittedasLIMSIprimarysystemtotheETAPESES2task,
-withcombinationweightsanddecisionthresholdsoptimizedonthe
-developmentset.
-3.2. CepstralFeaturesbyOrange
+Finally, a frame-level linear combination of the lt and ht values
+was submitted as LIMSI primary system to the ETAPE SES2 task,
+with combination weights and decision thresholds optimized on the
+development set.
+3.2. Cepstral Features by Orange
 Three GMMs λi i=0...2 with 256 Gaussians, resp. for male
 { }
 non-overlapped speech, female non-overlapped speech and over-
-Fig.1.Distributionofoverlapdurationsinthetrainingset
+Fig. 1. Distribution of overlap durations in the training set
 lapped speech, were trained using forced-alignement between au-
 tomatic and reference transcriptions of the ETAPE training data
 provided by LNE. Cepstral features (12 MFCC and log-energy
-3. OVERLAPPINGSPEECHDETECTION with their ﬁrst and second order derivatives) are computed over
+3. OVERLAPPING SPEECH DETECTION with their ﬁrst and second order derivatives) are computed over
 a windows of 32 ms with a 16 ms frame rate. A 2-class HMM
-Thissectiondescribestheoverlappingspeechdetectionsystemsde- (overlapped/non-overlapped(withmaleandfemaleGMMmodels)
-velopedbyLIMSIandOrangefortheETAPEevaluationcampaign is then built. Viterbi decoding, only applied after a ﬁrst external
-andtheirperformanceintheSES2task. speech/non-speechsegmentationstep,isassociatedwithaminimal
-stateduration(2sinnon-overlappedspeechand0.5sinoverlapped
-3.1. LIMSIsystemcombiningcepstralandmulti-pichfeatures speech). Finally,apost-processingﬁlteringdiscardsallthedetected
-overlapped-speechsegmentswhoselengthislessthan1s. Thiswas
-FortheLIMSIsystem,threeGMM λi i=0...2with256Gaussians, thesystemintegratedtointhediarizationprocesssubmittedtothe
+This section describes the overlapping speech detection systems de- (overlapped/non-overlapped (with male and female GMM models)
+veloped by LIMSI and Orange for the ETAPE evaluation campaign is then built. Viterbi decoding, only applied after a ﬁrst external
+and their performance in the SES2 task. speech/non-speech segmentation step, is associated with a minimal
+state duration (2s in non-overlapped speech and 0.5s in overlapped
+3.1. LIMSI system combining cepstral and multi-pich features speech). Finally, a post-processing ﬁltering discards all the detected
+overlapped-speech segments whose length is less than 1s. This was
+For the LIMSI system, three GMM λi i=0...2 with 256 Gaussians, the system integrated to in the diarization process submitted to the
 { }
-respectively for non-speech, non-overlapping speech and overlap- ETAPEevaluationcampaign.
-pingspeech,aretrainedusingforcedalignementbetweenautomatic Since the campaign, the post-processing ﬁltering based on the
-andreferencetranscriptionsoftheETAPEtrainingdataprovidedby lengthofthesegmentshasbeenreplacedwithaﬁlteringbasedon
-LNE.Cepstralfeatures(12PLPandlog-energyalongwiththeirﬁrst- log-likelihoodratiovalueatthesegmentlevel. Foradetectedover-
-andsecond-orderderivatives)arecomputedoverawindowsof30ms lappedspeechsegmentX ofN frames(x1,..,xN),whiththesame
-witha10msstep. Theframe-levellikelihood-ratio(LLR)between deﬁnitionasabove,theconﬁdencemeasureis:
-the multiple-speaker model f(xλ2) and the two other hypothesis
+respectively for non-speech, non-overlapping speech and overlap- ETAPE evaluation campaign.
+ping speech, are trained using forced alignement between automatic Since the campaign, the post-processing ﬁltering based on the
+and reference transcriptions of the ETAPE training data provided by length of the segments has been replaced with a ﬁltering based on
+LNE. Cepstral features (12 PLP and log-energy along with their ﬁrst- log-likelihood ratio value at the segment level. For a detected over-
+and second-order derivatives) are computed over a windows of 30 ms lapped speech segment X of N frames (x1, .., xN ), whith the same
+with a 10 ms step. The frame-level likelihood-ratio (LLR) between deﬁnition as above, the conﬁdence measure is:
+the multiple-speaker model f(x λ2) and the two other hypothesis
 |
-icsomsmpoaorethdetdooavdeercaisHioanmthmreinshgowldinodpotwimHizedanodntthheerdeesvueltlionpgmveanluteseltt: S(X)= 1 N logf(xt|λ2)
+icsomsmpoaorethdetdo oavdeercaisHioanmthmreinshgowldinodpotwimHizedanodntthheerdeesvueltlionpgmveanlut eseltt: S(X) = 1 N log f(xt|λ2)
 log(N) f(x λ )
 t 1
 t=1 |
 ￿
 d/2 1 The conﬁdence measure S(X) is compared to a threshold to
-lt = − H(j).logf(x fλ(x)t++j|fλ(2x) λ ) validatethedetectionornot. Thelengthnormalisationbylog(N)
-j=￿−d/2 t+j| 0 t+j| 1 iwnestheaavdeoofbthseervuesudatlhNattihsemloenagntdteotefcatvioornsthoefloovnegrldaeptpeecdtiospnese.cIhndweeerde,
-Inourdevelopments,thisapproachwasfoundtoperformbetterthan morelikelytobecorrectthantheshortones.
-aViterbidecodingwiththe λi modelsasproposedin[6](either
+lt = − H(j). log f(x fλ(x)t++j|fλ(2x) λ ) validate the detection or not. The length normalisation by log(N)
+j=￿−d/2 t+j| 0 t+j| 1 iwnestheaavdeoofbthseervuesudatlhNat tihsemloenagntdteotefcatvioornsthoefloovnegrldaeptpeecdtiospnese. cIhndweeerde,
+In our developments, this approach was found to perform better than more likely to be correct than the short ones.
+a Viterbi decoding with the λi models as proposed in [6] (either
 { }
-withaminimaldurationoratransitionpenalty).
-3.3. Developmentandevaluationresults
-Giventheharmonicnatureofvoicedspeech,itcanbeexpected
-thatapproachesandfeatureswhicharerelevantforspeechsepara- ForLIMSIsystem, theperformanceofthemulti-pitchsystemwas
-tionandmulti-pitchdetection[7]arealsoofinterestforoverlapping signiﬁcantlyworsethanthecepstralsystemonthedevelopmentset
-speechdetection. WeperformedourexperimentswiththePSHal- (F1measureof45.3%vs.54.5%),howeveritonlyreliesonaframe-
-gorithmdesignedbyLie´nardetal.[8]. Itisbasedonafrequential levelternaryfeaturecomparedtothe13real-valuedfeaturesusedin
-approachandusesseveralspectralcombs. Spectralcombsareused thecepstralsystem. TheoptimalsizefortheHammingsmoothing
-as pattern matching tools for detecting the harmonic structures of windowwasfoundtobeslightlydifferent(2.5sec. forltvs. 2sec.
-voiced segments of speech. The dot product between a comb and forht). ThecombinationofbothsystemsfurtherimprovedtheF1
+with a minimal duration or a transition penalty).
+3.3. Development and evaluation results
+Given the harmonic nature of voiced speech, it can be expected
+that approaches and features which are relevant for speech separa- For LIMSI system, the performance of the multi-pitch system was
+tion and multi-pitch detection [7] are also of interest for overlapping signiﬁcantly worse than the cepstral system on the development set
+speech detection. We performed our experiments with the PSH al- (F1 measure of 45.3% vs. 54.5%), however it only relies on a frame-
+gorithm designed by Lie´nard et al. [8]. It is based on a frequential level ternary feature compared to the 13 real-valued features used in
+approach and uses several spectral combs. Spectral combs are used the cepstral system. The optimal size for the Hamming smoothing
+as pattern matching tools for detecting the harmonic structures of window was found to be slightly different (2.5 sec. for lt vs. 2 sec.
+voiced segments of speech. The dot product between a comb and for ht). The combination of both systems further improved the F1
 the amplitude spectrum produces a pitch function exhibiting local performance to 55.8% on the development set and was chosen for
-maximaatfrequencieswhereF0ismostprobable. Butinthemul- theLIMSIprimarysubmissiontotheETAPESES2task.
-tipitchcases,numerousspuriouspeaksappear. Tostronglyattenu- Table 2 presents the results on the evaluation TV subset. The
-atethem,twofamiliesofcombsareused: negativeteethcomband segmentlengthﬁlteringdramaticallyimprovesF1valueofOrange
-missingteethcombwhichtreatselectivelyharmonicserrorsandsub- cepstralsystemfrom43.3%to55.2%mainlyduetoanincreasein
-harmonicserrors.Thealgorithmperformsaframe-to-frameanalysis precision, and the alternative LLR ﬁltering further improves it to
-overa50mswindowwith10msstepwithoutanypost-processing, 59.8%.LIMSIsystempresentsaF1-measureslightlylowerat58.2%Showtype Train Development Evaluation All
-News 5.6/297.9(1.9%) 1.1/67.6(1.7%) 0.8/66.4(1.2%) 7.6/431.9(1.8%)
-Debates 41.5/486.3(8.5%) 9.6/128.7(7.5%) 13.6/130.1(10.4%) 64.7/745.1(8.7%)
-Reportage - 0.7/37.6(1.8%) 1.7/41.9(4.0%) 2.4/79.4(3.0%)
-Total 47.1/784.2(6.0%) 11.4/233.9(4.9%) 16.0/238.3(6.7%) 74.6/1256.4(5.9%)
-Table1.Duration(inminutes)andratioofoverlappingspeechrelativetototalspeechintrain,developmentandevaluationsubsets,depending
-onthegenreoftheshow
+maxima at frequencies where F0 is most probable. But in the mul- the LIMSI primary submission to the ETAPE SES2 task.
+tipitch cases, numerous spurious peaks appear. To strongly attenu- Table 2 presents the results on the evaluation TV subset. The
+ate them, two families of combs are used: negative teeth comb and segment length ﬁltering dramatically improves F1 value of Orange
+missing teeth comb which treat selectively harmonics errors and sub- cepstral system from 43.3% to 55.2% mainly due to an increase in
+harmonics errors. The algorithm performs a frame-to-frame analysis precision, and the alternative LLR ﬁltering further improves it to
+over a 50 ms window with 10 ms step without any post-processing, 59.8%. LIMSI system presents a F1-measure slightly lower at 58.2%Show type Train Development Evaluation All
+News 5.6 / 297.9 (1.9 %) 1.1 / 67.6 (1.7 %) 0.8 / 66.4 (1.2 %) 7.6 / 431.9 (1.8 %)
+Debates 41.5 / 486.3 (8.5 %) 9.6 / 128.7 (7.5 %) 13.6 / 130.1 (10.4 %) 64.7 / 745.1 (8.7 %)
+Reportage - 0.7 / 37.6 (1.8 %) 1.7 / 41.9 (4.0 %) 2.4 / 79.4 (3.0 %)
+Total 47.1 / 784.2 (6.0 %) 11.4 / 233.9 (4.9 %) 16.0 / 238.3 (6.7 %) 74.6 / 1256.4 (5.9 %)
+Table 1. Duration (in minutes) and ratio of overlapping speech relative to total speech in train, development and evaluation subsets, depending
+on the genre of the show
 with a lower recall (52.7% vs. 64.3%) but a better precision than effective, and closed to a perfect (oracle) labeling strategies. This
-thebestOrangesystem(64.9%vs. 56.0%). Ascouldbeexpected, overlaphandlingschemehasbeencommonlyadoptedinthestudies
-longeroverlapsareeasiertodetect,andthisbehaviourisillustrated about the impact of overlapped speech in speaker diarization (e.g.
+the best Orange system (64.9% vs. 56.0%). As could be expected, overlap handling scheme has been commonly adopted in the studies
+longer overlaps are easier to detect, and this behaviour is illustrated about the impact of overlapped speech in speaker diarization (e.g.
 for the best performing O2 system on Figure 2 where the overlap [10]). Here, we perform overlap exclusion and propose a slightly
-segmentsinthereferencewhichareshorterthanaminimalduration modiﬁedlabelingstrategy,tocopewiththeerrorsofoverlapdetec-
-areignoredforthescoring. tion:
+segments in the reference which are shorter than a minimal duration modiﬁed labeling strategy, to cope with the errors of overlap detec-
+are ignored for the scoring. tion:
 overlap labeling: always label the segment with the nearest
 •
-System P R F1 speaker(intime),andlabelwiththesecondnearestspeaker
-Orangecepstral 29.9 78.5 43.3 onlyifitstemporaldistancetothesegmentisbelowagiven
-Orangecepstral+lengthﬁltering(O1) 45.5 70.2 55.2 thresholdTs.
-Orangecepstral+LLRﬁltering(O2) 56.0 64.3 59.8 Thisvariantismeanttocopewitherroroffalsedetectionofover-
-LIMSIsystem(L1) 64.9 52.7 58.2 lappedspeechinthemiddleofaspeakerturn.
-Thediarizationsystemusedintheseexperimentsistheonede-
-Table2. Precision(P),recall(R)andF1-measureofoverlapdetec- velopped by Orange based on the principles of [11]: the ﬁrst step
-tion on the ETAPE TV evaluation subset for the different systems consistsinbuildinganagglomerativeclusteringofspeechsegments
-(ofﬁcialsubmissionstotheETAPEevaluationinbold). basedonBayesianInformationCriterion(whereeachclusterismod-
-eledbyasingleGaussianwithafullcovariancematrix).Wheneach
-clustercontainsenoughdatatomodelthevoicemoreprecisely,the
-clustersaremodeledwithGaussiansmixture,andtheagglomerative
+System P R F1 speaker (in time), and label with the second nearest speaker
+Orange cepstral 29.9 78.5 43.3 only if its temporal distance to the segment is below a given
+Orange cepstral+length ﬁltering (O1) 45.5 70.2 55.2 threshold Ts.
+Orange cepstral+LLR ﬁltering (O2) 56.0 64.3 59.8 This variant is meant to cope with error of false detection of over-
+LIMSI system (L1) 64.9 52.7 58.2 lapped speech in the middle of a speaker turn.
+The diarization system used in these experiments is the one de-
+Table 2. Precision (P), recall (R) and F1-measure of overlap detec- velopped by Orange based on the principles of [11]: the ﬁrst step
+tion on the ETAPE TV evaluation subset for the different systems consists in building an agglomerative clustering of speech segments
+(ofﬁcial submissions to the ETAPE evaluation in bold). based on Bayesian Information Criterion (where each cluster is mod-
+eled by a single Gaussian with a full covariance matrix). When each
+cluster contains enough data to model the voice more precisely, the
+clusters are modeled with Gaussians mixture, and the agglomerative
 clustering is pursued with a distance between clusters based on a
-cross-likelihoodcriterion. Ateachiterationoftheclusteringbased
-oncross-likelihood, aViterbidecodingisalsoperformedtoreseg-
-mentthespeechdataintospeakerturns,giventhenewclusters.
+cross-likelihood criterion. At each iteration of the clustering based
+on cross-likelihood, a Viterbi decoding is also performed to reseg-
+ment the speech data into speaker turns, given the new clusters.
 4.2. Evaluations
 In the Figure 3, we plot the diarization error rate (DER) obtained
 with different overlapping speech detection systems, when includ-
 ing overlapping speech in the evaluation, and as a function of the
 threshold Ts. For comparison, the baseline system processes the
-documentswithoutdetectionofoverlappedspeech. Theothersys-
-temsapplytheoverlapexclusionstep,andtheproposednewlabel-
-ingstrategy,usingoneoftheproposedoverlappingspeechdetection
-Fig.2. Performanceofoverlapdetectionasafunctionofminimal
-segmentlengthinthereferenceforO2system. sbyystOemransgOe1t,oOth2eoSrRLL1.taTskheosfytshteemETwAiPthEOch1awllaesngthee. Foinnealsluyb,moriattcelde
-experiments(i.e. automaticspeakerdiarizationwithaperfectover-
+documents without detection of overlapped speech. The other sys-
+tems apply the overlap exclusion step, and the proposed new label-
+ing strategy, using one of the proposed overlapping speech detection
+Fig. 2. Performance of overlap detection as a function of minimal
+segment length in the reference for O2 system. sbyystOemransgOe1t,oOth2eoSrRLL1.taTskheosfytshteemETwAiPthEOch1awllaesngthee. Foinnealsluyb, moriattcelde
+experiments (i.e. automatic speaker diarization with a perfect over-
 lapping speech detection) are also reported. Ts = 0 corresponds
-4. DIARIZATIONEXPERIMENTS totheperformancesobtainedwhenasecondspeakerlabelisnever
-attributedtothedetectedoverlappingspeechsegments.Onthecon-
-4.1. Principle trary,forTs = asecondspeakerlabelisalwaysattributedtothese
+4. DIARIZATION EXPERIMENTS to the performances obtained when a second speaker label is never
+attributed to the detected overlapping speech segments. On the con-
+4.1. Principle trary, for Ts = a second speaker label is always attributed to these
 ∞
 segments.
 In previous studies about speaker diarization in meetings [3], de- First, we can observe that, whichever overlapping speech de-
 tailed error analysis showed that overlapped speech was a major tection system is used and for any Ts, it always outperforms the
-causeoferror,and[9]proposedtwomethodsforhandlingoverlap baselinesystemwithoutoverlappingspeechdetection. Theperfor-
-inspeakerdiarization: mancesobtainedwithTs = 0(onlyonespeakerisassignedtothe
-overlapexclusion:excludeoverlappedspeechsegmentsfrom overlappingspeechsegment)arealwaysfarbetterthanthebaseline
-• thediarizationprocess; system. This improvement is due to the puriﬁcation of the clus-
+cause of error, and [9] proposed two methods for handling overlap baseline system without overlapping speech detection. The perfor-
+in speaker diarization: mances obtained with Ts = 0 (only one speaker is assigned to the
+overlap exclusion: exclude overlapped speech segments from overlapping speech segment) are always far better than the baseline
+• the diarization process; system. This improvement is due to the puriﬁcation of the clus-
 ters, which are only fed with detected non-overlapping speech. It
-overlaplabeling: labeltheoverlappedspeechsegmentswith
-• canbeseenthatthebestautomaticsystemreachesthesameperfor-
-thespeakerlabelsofthe2nearestspeakers(intime).
+overlap labeling: label the overlapped speech segments with
+• can be seen that the best automatic system reaches the same perfor-
+the speaker labels of the 2 nearest speakers (in time).
 mance as the oracle system, when only puriﬁcation is performed.
 On oracle experiments, with perfect overlap detection, the overlap Thus, even though the performance of the overlapping speech de-
-labeling strategies with the 2 nearest speakers proved to be very tector is average (F1=59.8%), it is good enough for the exclusionTypeof Overlapping Baseline DERwith
-show speech(%) DER O2detector
-News 1.2 11.9 12.6(+5.6%)
-Debates 10.4 24.7 16.5(-33.2%)
-Reportage 4.0 41.6 29.8(-28.4%)
-All 6.7 23.8 17.6(-26.1%)
-Table4. RelativeDERimprovementpertypeofshowsforthebest
-diarizationsystemintegratingO2vs.thebaselinesystem.
-5. RELATIONTOPRIORWORK
-Manystudieshavebeenpublishedonoverlappingspeechdetection
-forspeakerdiarizationofmeetings. Someofthemperformsource
-separationorsourcelocalizationrelyingonmultiplechannelrecord-
-ings[12,13,14,15]whicharenotavailableforbroadcastdata. [16]
-testedvariousfeaturesforoverlappingspeechdetectioninaHMM-
-basedsegmenter. Onfar-ﬁeldrecordingsoftheAMImeetingcor-
-Fig.3.Diarizationerrorrate(DER)asafunctionofthethresholdTs puswith18%ofoverlappedspeech,theyget38%F-scoreinover-
-controllingtheattributionofthesecondspeaker. lapsdetection.Featuressuchassilencedistribution[10]orprosodic
-features[17]alsogivesaF-scoreonoverlapdetectionaround40%
+labeling strategies with the 2 nearest speakers proved to be very tector is average (F1=59.8%), it is good enough for the exclusionType of Overlapping Baseline DER with
+show speech (%) DER O2 detector
+News 1.2 11.9 12.6 (+5.6%)
+Debates 10.4 24.7 16.5 (-33.2%)
+Reportage 4.0 41.6 29.8 (-28.4%)
+All 6.7 23.8 17.6 (-26.1%)
+Table 4. Relative DER improvement per type of shows for the best
+diarization system integrating O2 vs. the baseline system.
+5. RELATION TO PRIOR WORK
+Many studies have been published on overlapping speech detection
+for speaker diarization of meetings. Some of them perform source
+separation or source localization relying on multiple channel record-
+ings [12, 13, 14, 15] which are not available for broadcast data. [16]
+tested various features for overlapping speech detection in a HMM-
+based segmenter. On far-ﬁeld recordings of the AMI meeting cor-
+Fig. 3. Diarization error rate (DER) as a function of the threshold Ts pus with 18% of overlapped speech, they get 38% F-score in over-
+controlling the attribution of the second speaker. laps detection. Features such as silence distribution [10] or prosodic
+features [17] also gives a F-score on overlap detection around 40%
 in meetings.[18] proposed a convolutive non-negative sparse cod-
-ingapproachtospeechoverlapdetection; theygeta16.1%recall
-Overlapsdetector M.D. F.A. SER DER
+ing approach to speech overlap detection ; they get a 16.1% recall
+Overlaps detector M.D. F.A. SER DER
 and 28.6% precision of overlapping speech detection on NIST RT
-None(baseline) 6.1 0.7 17.0 23.8 meetings. On telephone converstations,[19] used entropy features
-O1(bestrecall) 1.6 4.9 14.6 21.2 estimatedinthetimedomainfordetectingoverlappingspeech,but
-L1(bestprecision) 3.1 2.0 14.2 19.3 theirapproachisonlysuitableinatwo-speakerssituation. Finally,
-O2(bestF1) 2.0 3.0 12.6 17.6 relevantresearchforoverlappingspeechdetectionisalsodeveloped
-Oracle 2.1 1.3 12.6 16.0 inthecontextofsingle-channelspeechseparation[20,21].
-Whenitcomestotheintegrationofoverlappingspeechdetec-
-Table 3. Decomposition of the Diarization Error Rate into false tioninspeakerdiarizationsystem,theclassicalapproachconsistsin
-alarm(F.A),misseddetection(M.D.)andspeakererrorrate(SER). applyingexclusionandlabeling,whenlabelingiseitherperformed
-withspeakerposteriorprobabilities [6,16,22]or2-nearestspeaker
+None (baseline) 6.1 0.7 17.0 23.8 meetings. On telephone converstations,[19] used entropy features
+O1 (best recall) 1.6 4.9 14.6 21.2 estimated in the time domain for detecting overlapping speech, but
+L1 (best precision) 3.1 2.0 14.2 19.3 their approach is only suitable in a two-speakers situation. Finally,
+O2 (best F1) 2.0 3.0 12.6 17.6 relevant research for overlapping speech detection is also developed
+Oracle 2.1 1.3 12.6 16.0 in the context of single-channel speech separation [20, 21].
+When it comes to the integration of overlapping speech detec-
+Table 3. Decomposition of the Diarization Error Rate into false tion in speaker diarization system, the classical approach consists in
+alarm (F.A), missed detection (M.D.) and speaker error rate (SER). applying exclusion and labeling, when labeling is either performed
+with speaker posterior probabilities [6, 16, 22] or 2-nearest speaker
 labeling [9]. Relative improvement of DER such as 4.2% [23],
 6.5% [18], 7.2% [17], 12.4% [22] and 18.7% [10] have been re-
-step,togetallthebeneﬁtsofthepuriﬁedclusters. Then,theimpact portedformeetingsdata,whenthemajorpartoftheimprovementis
-of the overlapping speech detections on the labeling strategies can duetotheexclusionstep.
+step, to get all the beneﬁts of the puriﬁed clusters. Then, the impact ported for meetings data, when the major part of the improvement is
+of the overlapping speech detections on the labeling strategies can due to the exclusion step.
 be seen on the rest of the curves. For the system with high recall Thus, our work on broadcast data give consistent results with
-andlowprecisiononoverlappedspeechdetection,itisbetternotto priorstudiesonmeetingsdata.Buttheresultsobtainedonbroadcast
-alwaysassignasecondspeaker: indeed, theincreaseoferrorsdue are signiﬁcantly better than those reported on meetings, either for
-tofalsealarmofoverlappedspeechisbiggerthanthereductionof F-mesureonoverlapdetectionorforrelativeDERimprovement.
-errorsduetotheattributionofsegmentofoverlappedspeech. For
+and low precision on overlapped speech detection, it is better not to prior studies on meetings data. But the results obtained on broadcast
+always assign a second speaker: indeed, the increase of errors due are signiﬁcantly better than those reported on meetings, either for
+to false alarm of overlapped speech is bigger than the reduction of F-mesure on overlap detection or for relative DER improvement.
+errors due to the attribution of segment of overlapped speech. For
 6. CONCLUSIONS
 the other systems with higher precision on overlapped speech de-
 tection, always attributing a second speaker appears to be a valid In this paper, we have studied the impact of overlapping speech
-strategy. Table3showsthedetailedcomponentsoftheDERforthe detection in speaker diarization for broadcast news and debates.
-“always2-nearestspeakers”strategy,withthedifferentoverlapping Whereas many studies have been done in the context of meetings
-speechdetectors.ThespeakererrorobtainedwithO2isthesameas diarization, this is the ﬁrst time that this question is treated and
-theoneobtainedwiththeoracledetector,andthemaindifferences evaluated in the broadcast context. The basic strategy of overlap
-lies in the false alarm rate on speaker, which is bigger because of handlingproposedin[9]hasbeenapplied,withdifferentoverlapped
-thefalsealarmofoverlappingspeechdetection. Ontheotherhand, speechdetectors. Theinﬂuenceofthesecond-speakerlabelingstep
-theLIMSIapproachhasahigherprecisionthantheotheronesand hasbeenstudiedwithamodiﬁedlabelingstrategy.Theexperiments
-leadstoasmallerfalealarmrate,butdoesnotfullybeneﬁtsfromthe were conducted on a corpus of 5.5 hours of 7 different TV shows
-clusterspuriﬁcation,thusleadingtoahigherspeakererrorrate. with a varying level of overlapped speech, from the ETAPE eval-
-uationcampaign. Twooverlappingspeechdetectionsystemswere
-The DER per type of shows (news, debates or reportage) are developedbyOrangeandLIMSI,relyingonstandardcepstralfea-
-presentedinTable4,forthebaselinesystem,andforthebestsystem tures or on a multi-pitch analysis. The best conﬁguration presents
-O2 (alongwiththerelativeimprovementrate), andtheoverlapped aF1-measureofabout60%. Thediarizationexperimentsshowthat
-speechratiopertypeofshows. Themoreoverlappingspeechthere thislevelofperformanceissufﬁcienttoprovideallthebeneﬁtsof
-isinthedata,thebettertheimprovementduetooverlappingspeech theexclusionstepduetothepuriﬁcationoftheclusters,andenable
-handlingis. Fornewsshowswithverylittleamountofoverlapped also improvement at the labeling step. The DER decreases from
+strategy. Table 3 shows the detailed components of the DER for the detection in speaker diarization for broadcast news and debates.
+“always 2-nearest speakers” strategy, with the different overlapping Whereas many studies have been done in the context of meetings
+speech detectors. The speaker error obtained with O2 is the same as diarization, this is the ﬁrst time that this question is treated and
+the one obtained with the oracle detector, and the main differences evaluated in the broadcast context. The basic strategy of overlap
+lies in the false alarm rate on speaker, which is bigger because of handling proposed in [9] has been applied, with different overlapped
+the false alarm of overlapping speech detection. On the other hand, speech detectors. The inﬂuence of the second-speaker labeling step
+the LIMSI approach has a higher precision than the other ones and has been studied with a modiﬁed labeling strategy. The experiments
+leads to a smaller fale alarm rate, but does not fully beneﬁts from the were conducted on a corpus of 5.5 hours of 7 different TV shows
+clusters puriﬁcation, thus leading to a higher speaker error rate. with a varying level of overlapped speech, from the ETAPE eval-
+uation campaign. Two overlapping speech detection systems were
+The DER per type of shows (news, debates or reportage) are developed by Orange and LIMSI, relying on standard cepstral fea-
+presented in Table 4, for the baseline system, and for the best system tures or on a multi-pitch analysis. The best conﬁguration presents
+O2 (along with the relative improvement rate), and the overlapped a F1-measure of about 60%. The diarization experiments show that
+speech ratio per type of shows. The more overlapping speech there this level of performance is sufﬁcient to provide all the beneﬁts of
+is in the data, the better the improvement due to overlapping speech the exclusion step due to the puriﬁcation of the clusters, and enable
+handling is. For news shows with very little amount of overlapped also improvement at the labeling step. The DER decreases from
 speech, the imprecision due to the overlapped speech detector de- 23.8% with no overlap handling to 17.6% with automatic overlap
-gradestheoverallresults,whilefordebatesshows,thedecreaseof detection.
-DERreaches33.2%.7. REFERENCES [15] JosePardo,XavierAnguera,andChuckWooter, “Speakerdi-
+grades the overall results, while for debates shows, the decrease of detection.
+DER reaches 33.2%.7. REFERENCES [15] Jose Pardo, Xavier Anguera, and Chuck Wooter, “Speaker di-
 arization for multiple distant microphone meetings: Mixing
-[1] E.Shriberg,A.Stolcke,andD.Baron,“ObservationsonOver- acoustic features and inter-channel time differences,” in In-
-lap: Findings and Implications for Automatic Processing of terspeech2006-ICSL,Pittsburgh,USA,September2006,pp.
+[1] E. Shriberg, A. Stolcke, and D. Baron, “Observations on Over- acoustic features and inter-channel time differences,” in In-
+lap: Findings and Implications for Automatic Processing of terspeech 2006 - ICSL, Pittsburgh, USA, September 2006, pp.
 Multi-Party Conversation,” in Proceedings of the 7th Euro- 2194–2197.
-peanConferenceofEurospeech,Aalborg,September2001,pp.
-[16] K.Boakye,O.Vinyals,andG.Friedland, “Two’sacrowd:Im-
+pean Conference of Eurospeech, Aalborg, September 2001, pp.
+[16] K. Boakye, O. Vinyals, and G. Friedland, “Two’sa crowd: Im-
 1359–1362.
 proving speaker diarization by automatically identifying and
 [2] O. Cetin and E. Shriberg, “Errors in meetings: Effects be- excluding overlapped speech,” in Proc. Interspeech 2008,
-fore,during,andaftertheoverlap,”inICASSP2006,Toulouse, 2008,pp.32–35.
-France,May2006.
+fore, during, and after the overlap,” in ICASSP 2006, Toulouse, 2008, pp. 32–35.
+France, May 2006.
 [17] M. Zelenak and J. Hernando, “The detection of overlapping
-[3] M.HuijbregtsandC.Wooters,“Theblamegame:Performance speechwithprosodicfeaturesforspeakerdiarization,”inProc.
-analysisofspeakerdiarizationsystemcomponents,” inproc. Interspeech2011,2011,pp.32–35.
-Interspeech,Antwerp,Belgium,September2007.
+[3] M. Huijbregts and C. Wooters, “The blame game: Performance speech with prosodic features for speaker diarization,” in Proc.
+analysis of speaker diarization system components,” in proc. Interspeech 2011, 2011, pp. 32–35.
+Interspeech, Antwerp, Belgium, September 2007.
 [18] R. Vipperla, J. Geiger, S. Bozonnet, D. Wang, N. Evans,
 [4] Gilles Adda, Martine Adda-Decker, Claude Barras, B. Schuller, and G. Rigoll, “Speech overlap detection and
-Philippe Boula de Mareu¨il, Benoˆıt Habert, and Patrick attributionusingconvolutivenon-negativesparsecoding,” in
-Paroubek, “Speech Overlap and Interplay with Disﬂuencies ICASSP-12,2012,pp.4181–4184.
+Philippe Boula de Mareu¨il, Benoˆıt Habert, and Patrick attribution using convolutive non-negative sparse coding,” in
+Paroubek, “Speech Overlap and Interplay with Disﬂuencies ICASSP-12, 2012, pp. 4181–4184.
 in Political Interviews,” in International workshop on Par-
 [19] O. Ben-Harush, H. Guterman, and I. Lapidot, “Frame level
-alinguisticSpeech-betweenmodelsanddata,ParaLing2007,
-entropybasedoverlappedspeechdetectionasapre-processing
-Sarbru¨cken,August2007,pp.41–46.
-stageforspeakerdiarization,” inMachineLearningforSignal
-[5] G. Gravier, G. Adda, N. Paulson, M. Carre´, A. Giraudel, Processing,2009.MLSP2009.IEEEInternationalWorkshop
-O.Galibert, etal., “TheETAPEcorpusfortheevaluationof on,2009,pp.1–6.
-speech-basedTVcontentprocessinginthefrenchlanguage,”
-[20] P.Mowlaee,M.GChristensen,Z.HTan,andS.HJensen, “A
-inInternationalConferenceonLanguageResources,Evalua-
-MAPcriterionfordetectingthenumberofspeakersatframe
-tionandCorpora,2012.
-levelinmodel-basedsingle-channelspeechseparation,”inSig-
-[6] K.Boakye,B.Trueba-Hornero,O.Vinyals,andG.Friedland, nals,SystemsandComputers(ASILOMAR),2010Conference
-“Overlappedspeechdetectionforimprovedspeakerdiarization RecordoftheFortyFourthAsilomarConferenceon,2010,pp.
-inmultipartymeetings,” inIEEEInternationalConferenceon
+alinguistic Speech - between models and data, ParaLing 2007,
+entropy based overlapped speech detection as a pre-processing
+Sarbru¨cken, August 2007, pp. 41–46.
+stage for speaker diarization,” in Machine Learning for Signal
+[5] G. Gravier, G. Adda, N. Paulson, M. Carre´, A. Giraudel, Processing, 2009. MLSP 2009. IEEE International Workshop
+O. Galibert, et al., “The ETAPE corpus for the evaluation of on, 2009, pp. 1–6.
+speech-based TV content processing in the french language,”
+[20] P. Mowlaee, M. G Christensen, Z. H Tan, and S. H Jensen, “A
+in International Conference on Language Resources, Evalua-
+MAP criterion for detecting the number of speakers at frame
+tion and Corpora, 2012.
+level in model-based single-channel speech separation,” in Sig-
+[6] K. Boakye, B. Trueba-Hornero, O. Vinyals, and G. Friedland, nals, Systems and Computers (ASILOMAR), 2010 Conference
+“Overlapped speech detection for improved speaker diarization Record of the Forty Fourth Asilomar Conference on, 2010, pp.
+in multiparty meetings,” in IEEE International Conference on
 538–541.
-Acoustics,SpeechandSignalProcessing(ICASSP),2008,pp.
+Acoustics, Speech and Signal Processing (ICASSP), 2008, pp.
 [21] R. Saeidi, P. Mowlaee, T. Kinnunen, Z. H Tan, M. G Chris-
 4353–4356.
 tensen, S. H Jensen, and P. Fra¨nti, “Improving monaural
-[7] A.DeCheveigne´,“MultipleF0estimation,”inComputational
+[7] A. De Cheveigne´, “Multiple F0 estimation,” in Computational
 speaker identiﬁcation by double-talk detection,” in Eleventh
 Auditory Scene Analysis: Principles, Algorithms and Appli-
 Annual Conference of the International Speech Communica-
 cations, DeLiang Wang and Guy J. Brown, Eds., pp. 65–70.
-tionAssociation,2010.
-Wiley/IEEEPress,2006.
+tion Association, 2010.
+Wiley/IEEE Press, 2006.
 [22] K. Boakye, O. Vinyals, and G. Friedland, “Improved over-
-[8] J-S.Lie´nard,C.Barras,andF.Signol, “Usingsetsofcombsto
-lappedspeechhandlingforspeakerdiarization,” in12thAn-
-controlpitchestimationerrors,” Proc.ofMeetingsonAcous-
+[8] J-S. Lie´nard, C. Barras, and F. Signol, “Using sets of combs to
+lapped speech handling for speaker diarization,” in 12th An-
+control pitch estimation errors,” Proc. of Meetings on Acous-
 nual Conference of the International Speech Communication
-tics,vol.4,no.1,2008.
-Association,Florence,Italy,2011,pp.941–944.
-[9] S.OttersonandM.Ostendorf, “Efﬁcientuseofoverlapinfor-
-[23] M.Huijbregts,D.vanLeeuwen,andF.deJong,“Speechover-
-mationinspeakerdiarization,” inproc.ASRU,Kyoto,Japan,
+tics, vol. 4, no. 1, 2008.
+Association, Florence, Italy, 2011, pp. 941–944.
+[9] S. Otterson and M. Ostendorf, “Efﬁcient use of overlap infor-
+[23] M. Huijbregts, D. van Leeuwen, and F. de Jong, “Speech over-
+mation in speaker diarization,” in proc. ASRU, Kyoto, Japan,
 lap detection in a two-pass speaker diarization system,” in
-December2007.
-Proc.Interpseech,2009.
-[10] S.H.YellaandF.Valente, “Speakerdiarizationofoverlapping
+December 2007.
+Proc. Interpseech, 2009.
+[10] S.H. Yella and F. Valente, “Speaker diarization of overlapping
 speech based on silence distribution in meetings recordings,”
-inproc.Interpseech,Portland,USA,September2012.
-[11] C.Barras,X.Zhu,S.Meignier,andJ-L.Gauvain,“Multi-stage
-speakerdiarizationofbroadcastnews,” IEEETransactionson
+in proc. Interpseech, Portland, USA, September 2012.
+[11] C. Barras, X. Zhu, S. Meignier, and J-L. Gauvain, “Multi-stage
+speaker diarization of broadcast news,” IEEE Transactions on
 Audio, Speech and Language Processing, vol. 14, no. 5, pp.
-1505–1512,2006.
+1505–1512, 2006.
 [12] Thilo Pfau, Daniel P.W. Ellis, and Andreas Stolcke, “Mul-
 tispeaker Speech Activity Detection for the ICSI Meeting
-Recorder,” inProceedingsIEEEAutomaticSpeechRecogni-
-tionandUnderstandingWorkshop-ASRU,Trento, Italy,De-
-cember2001.
-[13] S.J. Wrigley, G.J. Brown, V.Wan, and S.Renals, “Speech
-andcrosstalkdetectioninmulti-channelaudio,” IEEETrans.
-onSpeechandAudioProcessing,vol.13,pp.84–91,2005.
+Recorder,” in Proceedings IEEE Automatic Speech Recogni-
+tion and Understanding Workshop - ASRU, Trento, Italy, De-
+cember 2001.
+[13] S. J. Wrigley, G. J. Brown, V. Wan, and S. Renals, “Speech
+and crosstalk detection in multi-channel audio,” IEEE Trans.
+on Speech and Audio Processing, vol. 13, pp. 84–91, 2005.
 [14] Kornel Laskowski and Tanja Schultz, “Unsupervised learn-
 ing of overlapped speech model parameters for multichan-
 nel speech activity detection in meetings,” in ICASSP 2006,
-Toulouse,France,May2006,pp.993–996.
+Toulouse, France, May 2006, pp. 993–996.

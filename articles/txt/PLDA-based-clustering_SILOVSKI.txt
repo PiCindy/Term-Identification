@@ -1,306 +1,306 @@
 INTERSPEECH 2011
 PLDA-based Clustering for Speaker Diarization of Broadcast Streams
-JanSilovsky,JanPrazak,PetrCerva,JindrichZdansky,JanNouza
-InstituteofInformationTechnologyandElectronics,FacultyofMechatronics,
-TechnicalUniversityofLiberec,CzechRepublic
+Jan Silovsky, Jan Prazak, Petr Cerva, Jindrich Zdansky, Jan Nouza
+Institute of Information Technology and Electronics, Faculty of Mechatronics,
+Technical University of Liberec, Czech Republic
 {jan.silovsky,jan.prazak,petr.cerva,jindrich.zdansky,jan.nouza}@tul.cz
 Abstract multiple observations (speech segments in our case). In con-
 trast, traditional speaker recognition methods usually handle
-Thispaperpresentstwoapproachestospeakerclusteringbased multiplesegmentsbymergingthemintoonesegment,orequiv-
-on Probabilistic Linear Discriminant Analysis (PLDA) in the alentlybysummationofstatisticsderivedforeachsegment.
+This paper presents two approaches to speaker clustering based multiple segments by merging them into one segment, or equiv-
+on Probabilistic Linear Discriminant Analysis (PLDA) in the alently by summation of statistics derived for each segment.
 speaker diarization task. We refer to the approaches as the
-multifold-PLDA approach and the onefold-PLDA approach. 2. Speakerdiarizationsystem
-Forbothapproaches,simplefactoranalysismodelisemployed
-to extract low-dimensional representation of a sequence of Ourspeakerdiarizationsystemconsistsofthreebasicmodules.
-acoustic feature vectors – so called i-vectors – and these i- First,afterfeaturevectorsareextracted,speechactivitydetec-
-vectorsaremodeledusingthePLDAmodel.Further,two-stage tion(SAD)isapplied.Then,speakerchangepointsaredetected
-clusteringwithBayesianInformationCriterion(BIC)basedap- by a speaker segmentation module. Finally, segments of the
-proachappliedintheﬁrststageandthePLDA-basedapproach samespeakersareclusteredandspeakerdiarizationisprovided.
-inthesecondstageisexamined.Wecarriedoutourexperiments All components of the system use classic Mel-frequency cep-
-usingtheCOST278multilingualbroadcastnewsdatabase.The stralcoefﬁcient(MFCC)features.
-bestevaluatedsystemyielded42%relativeimprovementofthe Thespeechactivitydetectorhastwoparts-anenergybased
-speakererrorrateoverabaselineBIC-basedsystem. detector with an adaptive threshold and a Gaussian Mixture
-IndexTerms:speakerdiarization,PLDA,clustering,i-vectors Model(GMM)baseddetector. Theaimoftheformeristore-
-movesilentpartsfromthesignal,whilethelatterdoesthesame
-forothernon-speechevents(especiallyformusicandnoise).
+multifold-PLDA approach and the onefold-PLDA approach. 2. Speaker diarization system
+For both approaches, simple factor analysis model is employed
+to extract low-dimensional representation of a sequence of Our speaker diarization system consists of three basic modules.
+acoustic feature vectors – so called i-vectors – and these i- First, after feature vectors are extracted, speech activity detec-
+vectors are modeled using the PLDA model. Further, two-stage tion (SAD) is applied. Then, speaker change points are detected
+clustering with Bayesian Information Criterion (BIC) based ap- by a speaker segmentation module. Finally, segments of the
+proach applied in the ﬁrst stage and the PLDA-based approach same speakers are clustered and speaker diarization is provided.
+in the second stage is examined. We carried out our experiments All components of the system use classic Mel-frequency cep-
+using the COST278 multilingual broadcast news database. The stral coefﬁcient (MFCC) features.
+best evaluated system yielded 42 % relative improvement of the The speech activity detector has two parts - an energy based
+speaker error rate over a baseline BIC-based system. detector with an adaptive threshold and a Gaussian Mixture
+Index Terms: speaker diarization, PLDA, clustering, i-vectors Model (GMM) based detector. The aim of the former is to re-
+move silent parts from the signal, while the latter does the same
+for other non-speech events (especially for music and noise).
 1. Introduction
 The aim of the speaker segmentation module is to ﬁnd
-Speakerdiarizationistheprocessofpartitioninganinputaudio speakerchangepointsinpreviouslyidentiﬁedspeechsegments.
-dataintohomogeneoussegmentsaccordingtoaspeciﬁcspeaker For that purpose, we use method based on the Bayesian In-
-identity(itsolvesthe”whospokewhen”task)anditisauseful formation Criterion (BIC) introduced in [5]. This technique
-preprocessingstepinspeechorspeakerrecognitionandforin- searches for one change point within an adaptive (variable-
-dexingofaudioarchives. Itcanalsoimprovethereadabilityof length)windowthatmovessubsequentlythroughallthespeech
-automatictranscriptions. Aninherentpartofaspeakerdiariza- segments.
-tionsystemisaclusteringmodule. Theaimofclusteringisto Theclusteringmoduleusesbottom-upclustering(a.k.a.hi-
-groupsegmentsofthesamespeakertogether. Inthispaper,we erarchicalagglomerativeclustering)whichispredominantap-
-investigatetwoclusteringapproachesbasedontheProbabilistic proach for speaker clustering. First, a similarity measure be-
-LinearDiscriminantAnalysis(PLDA). tweenallpairsofspeechsegmentsiscomputed.Next,untilthe
-stoppingcriterionismet, themostsimilarpairofspeechseg-
+Speaker diarization is the process of partitioning an input audio speaker change points in previously identiﬁed speech segments.
+data into homogeneous segments according to a speciﬁc speaker For that purpose, we use method based on the Bayesian In-
+identity (it solves the ”who spoke when” task) and it is a useful formation Criterion (BIC) introduced in [5]. This technique
+preprocessing step in speech or speaker recognition and for in- searches for one change point within an adaptive (variable-
+dexing of audio archives. It can also improve the readability of length) window that moves subsequently through all the speech
+automatic transcriptions. An inherent part of a speaker diariza- segments.
+tion system is a clustering module. The aim of clustering is to The clustering module uses bottom-up clustering (a.k.a. hi-
+group segments of the same speaker together. In this paper, we erarchical agglomerative clustering) which is predominant ap-
+investigate two clustering approaches based on the Probabilistic proach for speaker clustering. First, a similarity measure be-
+Linear Discriminant Analysis (PLDA). tween all pairs of speech segments is computed. Next, until the
+stopping criterion is met, the most similar pair of speech seg-
 The PLDA was initially introduced for the face recogni-
-ments(clusters)isiterativelymergedintoanewclusterandthe
+ments (clusters) is iteratively merged into a new cluster and the
 tion task [1] and it was recently successfully applied in the
 similarity measure between the new cluster and all remaining
-speakerdetectiontaskintheNIST2010SpeakerRecognition
-speechsegments(clusters)isrecomputed.
+speaker detection task in the NIST 2010 Speaker Recognition
+speech segments (clusters) is recomputed.
 Evaluation (SRE) [2]. Compared to the face recognition task
 based on comparison of two images of a deﬁned resolution,
-speaker recognition operates with observations (sequences of 3. Clusteringmethods
+speaker recognition operates with observations (sequences of 3. Clustering methods
 feature vectors) of variable length and thus a projection to a
-3.1. BIC-basedclustering
+3.1. BIC-based clustering
 ﬁxed-dimensional feature vector must be performed. We ap-
-ply asimple factor analysis model to extract low-dimensional Probably the most popular clustering similarity measure is a
-representation of audio segments using so called i-vectors as metricbasedontheBIC[5].TheBIC-basedcriterioncompares
-proposedby[3]. theBICstatisticofclustersg1 andg2 withtheBICstatisticof
-OurmotivationforutilizationofPLDAstemsfromthefol- theclustergwhichisformedbymergingoftheg1 andtheg2.
-lowing reasons. First, the PLDA model provides separation WeapplyalocalBICmeasurewhichisdeﬁnedas
+ply a simple factor analysis model to extract low-dimensional Probably the most popular clustering similarity measure is a
+representation of audio segments using so called i-vectors as metric based on the BIC [5]. The BIC-based criterion compares
+proposed by [3]. the BIC statistic of clusters g1 and g2 with the BIC statistic of
+Our motivation for utilization of PLDA stems from the fol- the cluster g which is formed by merging of the g1 and the g2.
+lowing reasons. First, the PLDA model provides separation We apply a local BIC measure which is deﬁned as
 of speaker-speciﬁc and nuisance variability. Further, PLDA
-provides implicitly symmetric scoring. When deciding about ΔBIC(g1,g2)=(N1+N2)log|Σ|−N1log|Σ1| (1)
-whethertwosegmentssharethesameidentityornot,traditional −N2log|Σ2|−αP
-speakerrecognitionmethodsusuallyemployaspeakermodel,
-whereN isthenumberofframes,Σisthefullcovariancema-
+provides implicitly symmetric scoring. When deciding about ΔBIC(g1, g2) =(N1 + N2)log |Σ| − N1log |Σ1| (1)
+whether two segments share the same identity or not, traditional − N2log |Σ2| − αP
+speaker recognition methods usually employ a speaker model,
+where N is the number of frames, Σ is the full covariance ma-
 trained using one of the segments, which is scored against
-trixofthedataandP isthepenalty
-theothersegment. Crossscoreiscomputedforswappedseg- (cid:2) (cid:3)
+trix of the data and P is the penalty
+the other segment. Cross score is computed for swapped seg- (cid:2) (cid:3)
 ments [4] and symmetric score is then obtained as average of 1 1
-bothscores. Finally,thePLDAmodelsupportsoperationwith P = 2 d+ 2d(d+1) log(N1+N2) (2)
-Copyright © 2011 ISCA 2909 28-31 August 2011, Florence, Italywheredisthedimensionoffeaturevectorsandαisapenalty Nz[0,I]. PleasenotethatthetermVys dependsonlyonthe
-weight. identityofthespeakerandnotontheparticularsegment.
-In the clustering process, two clusters with the lowest ThemodelrepresentedbyEq.(4)canbeexpressedinterms
-ΔBIC value are merged together. If a minimal distance be- ofconditionalprobabilityasfollows:
-tweenanypairofclustersishigherthanacertainthresholdλ
-(typicallyzero),thestoppingcriterionismet. p(xs,j|ys,zs,j,θ)=Nx[μ+Vys+Uzs,j,Σ] (5)
-whereθrepresentsthesetofparameters{μ,V,U,Σ}thatare
-3.2. I-vectorsextraction estimatedusingtheExpectationMaximization(EM)algorithm
-onthebackgrounddata. Theseparametersremainﬁxedduring
+both scores. Finally, the PLDA model supports operation with P = 2 d + 2 d(d + 1) log(N1 + N2) (2)
+Copyright © 2011 ISCA 2909 28- 31 August 2011, Florence, Italywhere d is the dimension of feature vectors and α is a penalty Nz[0, I]. Please note that the term V ys depends only on the
+weight. identity of the speaker and not on the particular segment.
+In the clustering process, two clusters with the lowest The model represented by Eq. (4) can be expressed in terms
+ΔBIC value are merged together. If a minimal distance be- of conditional probability as follows:
+tween any pair of clusters is higher than a certain threshold λ
+(typically zero), the stopping criterion is met. p(xs,j|ys, zs,j, θ) = Nx[μ + V ys + U zs,j, Σ] (5)
+where θ represents the set of parameters {μ, V , U , Σ} that are
+3.2. I-vectors extraction estimated using the Expectation Maximization (EM) algorithm
+on the background data. These parameters remain ﬁxed during
 Before we can approach PLDA-based clustering, a ﬁxed-
-therecognitionphase.
-dimensionalrepresentationofasegmentofvariablelengthmust
-Inrecognition,weaimtocomputethelikelihoodoftheob-
-beextracted.Weemployasimplefactoranalysismodelaspro-
-serveddata. Consideringtheclusteringtask,evaluationofthe
-posedby[3].Let’sassumeaGMMtrainedondatapooledfrom
-manyspeakers. ThismodelistypicallyreferredtoastheUni- likelihoodp(x1...N)thatN observationsx1...N sharethesame
+the recognition phase.
+dimensional representation of a segment of variable length must
+In recognition, we aim to compute the likelihood of the ob-
+be extracted. We employ a simple factor analysis model as pro-
+served data. Considering the clustering task, evaluation of the
+posed by [3]. Let’s assume a GMM trained on data pooled from
+many speakers. This model is typically referred to as the Uni- likelihood p(x1...N ) that N observations x1...N share the same
 identity is particularly of our interest. Combining the PLDA
-versalBackgroundModel(UBM).Thetermsupervectorisused
-generativemodelsforallN observationssharingtheidentityy
-torefertoahigh-dimensionalvectorobtainedbyconcatenation
-ofmeanvectorsofcomponentsofaGMM.Letsbeasupervec- wegetacompoundmodel:
-torrepresentingaspeechsegment. Thespeaker-andsegment- ⎡ ⎤
-speciﬁcsupervectorforj’thsegmentofaspeakersisdeﬁned ⎡ ⎤ ⎡ ⎤ ⎡ ⎤ y ⎡ ⎤
-usingthegenerativemodel ⎢⎢xx12⎥⎥ ⎢⎢μμ⎥⎥ ⎢⎢VV U0 U0 ...... 00⎥⎥⎢⎢⎢zz1⎥⎥⎥ ⎢⎢(cid:2)(cid:2)12⎥⎥
-ss,j =m+Txs,j (3) ⎢⎣ ... ⎥⎦=⎢⎣...⎥⎦+⎢⎣ ... ... ... ... ... ⎥⎦⎢⎢⎣ ..2⎥⎥⎦+⎢⎣ ... ⎥⎦
+versal Background Model (UBM). The term supervector is used
+generative models for all N observations sharing the identity y
+to refer to a high-dimensional vector obtained by concatenation
+of mean vectors of components of a GMM. Let s be a supervec- we get a compound model:
+tor representing a speech segment. The speaker-and segment- ⎡ ⎤
+speciﬁc supervector for j’th segment of a speaker s is deﬁned ⎡ ⎤ ⎡ ⎤ ⎡ ⎤ y ⎡ ⎤
+using the generative model ⎢⎢ xx12 ⎥⎥ ⎢⎢μμ⎥⎥ ⎢⎢VV U0 U0 .. .. .. 00 ⎥⎥ ⎢⎢⎢ zz1 ⎥⎥⎥ ⎢⎢ (cid:2)(cid:2)12 ⎥⎥
+ss,j = m + T xs,j (3) ⎢⎣ ... ⎥⎦ = ⎢⎣ ... ⎥⎦ + ⎢⎣ ... ... ... . . . ... ⎥⎦ ⎢⎢⎣ ..2 ⎥⎥⎦ + ⎢⎣ ... ⎥⎦
 .
-wheremisthespeaker-andsegment-independentsupervector xN μ V 0 0 ... U z (cid:2)N
+where m is the speaker-and segment-independent supervector xN μ V 0 0 . . . U z (cid:2)N
 N
-(obtainedfromtheUBM),theT isarectangularmatrixoflow (6)
-rankandxs,jisarandomvectorhavingstandardnormaldistri- whichwecanrewriteas:
-butionN[0,I]. ThematrixT deﬁnesatotalvariabilityspace
-and components of the vector x are the total factor loadings. x(cid:2) =μ(cid:2)+Aw+(cid:2)(cid:2) (7)
-Followingtheterminologyof[3]werefertothevectorxasthe because p(w) = Nw[0,I], the likelihood of the compound
+(obtained from the UBM), the T is a rectangular matrix of low (6)
+rank and xs,j is a random vector having standard normal distri- which we can rewrite as:
+bution N [0, I]. The matrix T deﬁnes a total variability space
+and components of the vector x are the total factor loadings. x(cid:2) = μ(cid:2) + Aw + (cid:2)(cid:2) (7)
+Following the terminology of [3] we refer to the vector x as the because p(w) = Nw[0, I], the likelihood of the compound
 i-vector.
-modelisgivenas:
-Aprojectionfromasequenceoffeaturevectorsrepresent-
-ingaspeechsegmenttothei-vectorspaceisprovidedbycom- p(x1...N)=p(x(cid:2))=Nx(cid:2)[μ(cid:2),AAT +Σ(cid:2)] (8)
+model is given as:
+A projection from a sequence of feature vectors represent-
+ing a speech segment to the i-vector space is provided by com- p(x1...N ) = p(x(cid:2)) = Nx(cid:2)[μ(cid:2), AAT + Σ(cid:2)] (8)
 putation of a Maximum A Posterior (MAP) point estimate of
-whereΣ(cid:2) isblockdiagonalmatrixwhosediagonalblocksare
-thetotalfactorloadingsbasedonzero-andﬁrst-ordersufﬁcient
-Σ. Eq.8thusrepresentsthelikelihoodthatthesegmentsrep-
+where Σ(cid:2) is block diagonal matrix whose diagonal blocks are
+the total factor loadings based on zero-and ﬁrst-order sufﬁcient
+Σ. Eq. 8 thus represents the likelihood that the segments rep-
 statistics gathered employing the UBM [6]. Having a ﬁxed-
-dimensionalrepresentationwecanapplythePLDA.Motivated resentedbyi-vectors{x1,...xN}allsharethesameidentity.
+dimensional representation we can apply the PLDA. Motivated resented by i-vectors {x1, . . . xN } all share the same identity.
 Please note that no point estimates of hidden variables y or
-by[3]whichdealswithapplicationofcosinedistancescoring
-for speaker recognition using i-vectors, we apply unit length {z1,...zN} are used for the likelihood computation, instead
-thehiddenvariablesareintegratedout[1].
-normalizationofi-vectors.
-3.4. Multifold-PLDAapproach
-3.3. Probabilisticlineardiscriminantanalysis
-Inthemultifold-PLDAapproach,aclusterisrepresentedbya
-Nowweputasidetheassumptionofi-vectorshavingdistribu-
-tion N[0,I] and consider another factor analysis model that setofi-vectorscorrespondingtothesegmentsassignedtothe
-aimstoseparatespeaker-speciﬁcandnuisancevariabilityinthe cluster. Let X(g) = {x(1g..).J(g)} be the set of J(g) i-vectors
-i-vectorspace. ThePLDAmodeldeﬁnesgenerationprocessof representing a cluster g and x(cid:2)(g) a compound vector formed
-thei-vectorx as byconcatenationofthei-vectors. Intheclusteringprocess,we
+by [3] which deals with application of cosine distance scoring
+for speaker recognition using i-vectors, we apply unit length {z1, . . . zN } are used for the likelihood computation, instead
+the hidden variables are integrated out [1].
+normalization of i-vectors.
+3.4. Multifold-PLDA approach
+3.3. Probabilistic linear discriminant analysis
+In the multifold-PLDA approach, a cluster is represented by a
+Now we put aside the assumption of i-vectors having distribu-
+tion N [0, I] and consider another factor analysis model that set of i-vectors corresponding to the segments assigned to the
+aims to separate speaker-speciﬁc and nuisance variability in the cluster. Let X(g) = {x(1g..).J(g)} be the set of J(g) i-vectors
+i-vector space. The PLDA model deﬁnes generation process of representing a cluster g and x(cid:2)(g) a compound vector formed
+the i-vector x as by concatenation of the i-vectors. In the clustering process, we
 s,j
-aimtocomparethelikelihoodoftwocompetingmodels. Un-
-xs,j =μ+Vys+Uzs,j+(cid:2)s,j (4) der the ﬁrst model M0, clusters belong to different speakers
-andthustheyhavedifferentspeakerfactorloadingsy andy .
-whereμistheoverallspeaker-andsegment-independentmean WhileunderthesecondmodelM1,twoclustersbelo1ngtoth2e
-ofthevectorsinthetrainingdataset,columnsofthematrixV samespeakerandthushavethesamespeakerfactorloadingsy.
+aim to compare the likelihood of two competing models. Un-
+xs,j = μ + V ys + U zs,j + (cid:2)s,j (4) der the ﬁrst model M0, clusters belong to different speakers
+and thus they have different speaker factor loadings y and y .
+where μ is the overall speaker-and segment-independent mean While under the second model M1, two clusters belo1ng to th2e
+of the vectors in the training dataset, columns of the matrix V same speaker and thus have the same speaker factor loadings y.
 deﬁne bases for the subspace where the speaker-speciﬁc vari- The criterion used to decide whether the data are more likely
-abilityresides(thecolumnsarereferredtoaseigenvoices)and representedbythemodelwithasharedidentityorbythemodel
-columnsofthematrixU deﬁnebasesforthenuisancevariabil- withdifferentidentitiesisbasedonthelog-likelihoodratio:
+ability resides (the columns are referred to as eigenvoices) and represented by the model with a shared identity or by the model
+columns of the matrix U deﬁne bases for the nuisance variabil- with different identities is based on the log-likelihood ratio:
 ity subspace (the columns are referred to as eigenchannels1).
-Theterm(cid:2)s,j representsunexplainedresidualvariabilitywhich LLR=logp(x(cid:2)(1),x(cid:2)(2)|M1) (9)
-is deﬁned by the diagonal covariance matrix Σ. The com- p(x(cid:2)(1),x(cid:2)(2)|M0)
+The term (cid:2)s,j represents unexplained residual variability which LLR = log p(x(cid:2)(1), x(cid:2)(2)|M1) (9)
+is deﬁned by the diagonal covariance matrix Σ. The com- p(x(cid:2)(1), x(cid:2)(2)|M0)
 ponents of the vector y are the eigenvoice factor loadings
-and components of the vsector z are the eigenchannel fac- Becausethevariablesy1andy2areindependentunderthe
-torloadings. Bothloadingsvectosr,jsareassumedtohavestan- modelM0,thelikelihoodcanbebrokendowninto
-dardnormaldistribution,i.e. p(ys)=Ny[0,I]andp(zs,j)= p(x(cid:2)(1),x(cid:2)(2)|M0)=p(x(cid:2)(1)|M0)p(x(cid:2)(2)|M0) (10)
-1Weadopttheterminologyusedinspeakerrecognitionwherechan- ThelikelihoodforthemodelM1isgivenasfollows:
-nelvariabilityisusuallysupposedtorepresentnotonlyvariancebe-
-tweentelephoneandmicrophonespeechbutallthenuisancevariability. p(x(cid:2)(1),x(cid:2)(2)|M1)=p(x(cid:2)|M1) (11)
-2910wherex(cid:2)isformedbyconcatenationofvectorsx(cid:2)(1)andx(cid:2)(2). FAreﬂectstheamountofnon-speechsegmentsthatwererec-
-Likelihoods on the right-hand side of Eqs. (10) and (11) cor- ognizedasspeechandtheMISSreﬂectstheamountofspeech
-respondtomodelswithasingleidentityandarecomputedac- segmentsthatwererecognizedasnon-speech. Becauseallour
-cordingto(8). evaluated systems share the same SAD and speaker segmen-
-Intheclusteringprocess,thetwoclusterswiththehighest tation modules, we use the SPKE as the primary metric. The
-LLRvaluearemergedtogether.IfamaximumLLRvaluefor NIST scoring tool2 was employed to compute the metrics for
-anypairofclustersislowerthanacertainthresholdλ,estimated ourexperiments. Likewisein[8],aforgivenesscollarof0.25s
-onthedevelopmentdata,thestoppingcriterionismet. (both+and-)wasnotscoredaroundeachboundary.
-3.5. Onefold-PLDAapproach 4.3. Baselinesystem
-Intheonefold-PLDAapproach,aclusterisrepresentedbyasin- TheSADachievedFAof0.8%andMISSof3.2%. Wefound
-glei-vector. SufﬁcientstatisticsgatheredemployingtheUBM thathighervalueoftheMISSiscausedbyinaccuracyofrefer-
-foreachsegmentassignedtotheclusteraresummedtogether enceannotations. Theaveragelengthofspeechsegmentsafter
-andaMAPpointestimateofthetotalfactorloadingsextracted segmentationwas3.6s.
-basedonthesesummedstatistics. Although, comparedtothe ThebaselinesystememploystheBIC-basedclusteringap-
+and components of the vsector z are the eigenchannel fac- Because the variables y1 and y2 are independent under the
+tor loadings. Both loadings vectosr,js are assumed to have stan- model M0, the likelihood can be broken down into
+dard normal distribution, i.e. p(ys) = Ny[0, I] and p(zs,j) = p(x(cid:2)(1), x(cid:2)(2)|M0) = p(x(cid:2)(1)|M0)p(x(cid:2)(2)|M0) (10)
+1We adopt the terminology used in speaker recognition where chan- The likelihood for the model M1 is given as follows:
+nel variability is usually supposed to represent not only variance be-
+tween telephone and microphone speech but all the nuisance variability. p(x(cid:2)(1), x(cid:2)(2)|M1) = p(x(cid:2)|M1) (11)
+2910where x(cid:2) is formed by concatenation of vectors x(cid:2)(1) and x(cid:2)(2). FA reﬂects the amount of non-speech segments that were rec-
+Likelihoods on the right-hand side of Eqs. (10) and (11) cor- ognized as speech and the MISS reﬂects the amount of speech
+respond to models with a single identity and are computed ac- segments that were recognized as non-speech. Because all our
+cording to (8). evaluated systems share the same SAD and speaker segmen-
+In the clustering process, the two clusters with the highest tation modules, we use the SPKE as the primary metric. The
+LLR value are merged together. If a maximum LLR value for NIST scoring tool2 was employed to compute the metrics for
+any pair of clusters is lower than a certain threshold λ, estimated our experiments. Likewise in [8], a forgiveness collar of 0.25 s
+on the development data, the stopping criterion is met. (both + and -) was not scored around each boundary.
+3.5. Onefold-PLDA approach 4.3. Baseline system
+In the onefold-PLDA approach, a cluster is represented by a sin- The SAD achieved FA of 0.8 % and MISS of 3.2 %. We found
+gle i-vector. Sufﬁcient statistics gathered employing the UBM that higher value of the MISS is caused by inaccuracy of refer-
+for each segment assigned to the cluster are summed together ence annotations. The average length of speech segments after
+and a MAP point estimate of the total factor loadings extracted segmentation was 3.6 s.
+based on these summed statistics. Although, compared to the The baseline system employs the BIC-based clustering ap-
 multifold-PLDA system, an i-vector must be extracted every proach. First, performance for different values of the BIC
-timeanewclusterisformed,theonefold-PLDAsystemisless penalty weight α was evaluated. We found that the systems
-computationalexpensiveasonlyonei-vectorperaclusterpar- usingavalueofthestoppingthresholdλestimatedonthede-
-ticipatesinthelikelihoodcomputation. velopmentdatayieldedbetterperformancethanthesystemsop-
-Likewiseinthemultifoldapproach,theclusteringprocess eratingwithzerovalueofthethreshold. Thebestperformance
-isdrivenbytheLLRvaluesbetweenclusters. wasprovidedbythesystemusingpenaltyweightαof4.0and
-thestoppingthresholdλof1268.8.ThesystemachievedSPKE
-4. Experimentsandresults of 24.9 % which corresponds to the DER of 28.9 %. These
-resultsareconsideredasbaseline.
+time a new cluster is formed, the onefold-PLDA system is less penalty weight α was evaluated. We found that the systems
+computational expensive as only one i-vector per a cluster par- using a value of the stopping threshold λ estimated on the de-
+ticipates in the likelihood computation. velopment data yielded better performance than the systems op-
+Likewise in the multifold approach, the clustering process erating with zero value of the threshold. The best performance
+is driven by the LLR values between clusters. was provided by the system using penalty weight α of 4.0 and
+the stopping threshold λ of 1268.8. The system achieved SPKE
+4. Experiments and results of 24.9 % which corresponds to the DER of 28.9 %. These
+results are considered as baseline.
 4.1. Datasets
-4.4. PLDAsystemtrainingdata
-ExperimentswerecarriedoutusingtheCOST278multilingual
-pan-Europeanbroadcastnewsdatabase[7]. Thedatabasecom- TheUBMwith1024componentswastrainedusingdatafrom
-prisesbroadcastnewsrecordingsin9languages.Authorsofthe 1007speakers(2530segments,11.5hours). Thetotalvariabil-
-databasehavedividedthedataforeachlanguageintoatraining ityspacewasestimatedusingasubsetoftheUBMtrainingdata
-set(containingabouttwohours)andatestset(containingabout resultingfromtheconditionofminimallengthofasegmentof
-onehour). 3secondsandusingatmosteightsegmentsperspeaker. This
-Wedividedthedataintothreedatasets. Theﬁrstsetcon- resultedin2050segments(10.2hours)from909speakers.The
-tained all COST278 Croatian, Czech, Hungarian, Portuguese eigenvoicesandeigenchannelswerejointlyestimated[1]using
-andSlovaktrainingdatagivingintotal11.5hoursofaudio.This data from speakers for which at least three segments of mini-
-setwasusedfortrainingoftheUBMandestimationofthetotal mal length of 3 seconds are available, in total 1528 segments
-variabilityspaceandparametersofthePLDAmodel. Thesec- (7.5hours)from280speakerswereused. Theaveragelength
-ondset,consistingof13showsofvariouslengths(intherange ofsegmentsusedintrainingis17.8s. Fortrainingofallsub-
-from8.5to53.8minutes)drawnalsofromtheCOST278train- spaces,weemployedtheEM-algorithmproposedby[9]which
-ingdatagivingintotal5.89hours,wasusedasthedevelopment performs both maximum likelihood and minimum divergence
-setfortuningofsystemparameters. Particularlyforestimation updateateachiteration.
-ofsegmentationandclusteringstoppingthresholds.Finally,the
-third set was used as the test set in our experiments. The set 4.5. Multifold-PLDAsystem
-consistedof15showsofvariouslengths(intherangefrom4.1
+4.4. PLDA system training data
+Experiments were carried out using the COST278 multilingual
+pan-European broadcast news database [7]. The database com- The UBM with 1024 components was trained using data from
+prises broadcast news recordings in 9 languages. Authors of the 1007 speakers (2530 segments, 11.5 hours). The total variabil-
+database have divided the data for each language into a training ity space was estimated using a subset of the UBM training data
+set (containing about two hours) and a test set (containing about resulting from the condition of minimal length of a segment of
+one hour). 3 seconds and using at most eight segments per speaker. This
+We divided the data into three datasets. The ﬁrst set con- resulted in 2050 segments (10.2 hours) from 909 speakers. The
+tained all COST278 Croatian, Czech, Hungarian, Portuguese eigenvoices and eigenchannels were jointly estimated [1] using
+and Slovak training data giving in total 11.5 hours of audio. This data from speakers for which at least three segments of mini-
+set was used for training of the UBM and estimation of the total mal length of 3 seconds are available, in total 1528 segments
+variability space and parameters of the PLDA model. The sec- (7.5 hours) from 280 speakers were used. The average length
+ond set, consisting of 13 shows of various lengths (in the range of segments used in training is 17.8 s. For training of all sub-
+from 8.5 to 53.8 minutes) drawn also from the COST278 train- spaces, we employed the EM-algorithm proposed by [9] which
+ing data giving in total 5.89 hours, was used as the development performs both maximum likelihood and minimum divergence
+set for tuning of system parameters. Particularly for estimation update at each iteration.
+of segmentation and clustering stopping thresholds. Finally, the
+third set was used as the test set in our experiments. The set 4.5. Multifold-PLDA system
+consisted of 15 shows of various lengths (in the range from 4.1
 Various conﬁgurations were examined differing in the num-
-to53.2minutes)drawnfromtheCOST278testdatagivingin
-berofGaussiansintheUBM,dimensionofthetotalvariabil-
+to 53.2 minutes) drawn from the COST278 test data giving in
+ber of Gaussians in the UBM, dimension of the total variabil-
 total 6.34 hours. The development and test data were limited
-ityspaceandthenumberofeigenvoicesandeigenchannelsin
+ity space and the number of eigenvoices and eigenchannels in
 to 5 languages: Belgian Dutch, Czech, Hungarian, Slovenian
-thePLDAmodel. Table1showsresultsfortwobestperform-
-andSlovak.ThestreamsinCOST278corpuscontainalsocom-
+the PLDA model. Table 1 shows results for two best perform-
+and Slovak. The streams in COST278 corpus contain also com-
 ing conﬁgurations. The UBM with 256 Gaussians was used
-mercialswhicharenotannotated. Thecommercialswerethus
-toextractthesufﬁcientstatisticsinbothcases. Althoughnon-
-removedfromthestreamsusedindevelopmentandtestsets.
-symmetricnumbersofeigenvoicesandeigenchannelswerealso
-examined,symmetricconﬁgurationsalwaysyieldedbetterper-
-4.2. Evaluationmetrics
+mercials which are not annotated. The commercials were thus
+to extract the sufﬁcient statistics in both cases. Although non-
+removed from the streams used in development and test sets.
+symmetric numbers of eigenvoices and eigenchannels were also
+examined, symmetric conﬁgurations always yielded better per-
+4.2. Evaluation metrics
 formance. The system employing 400-dimensional i-vectors
-Performanceofdiarizationsystemsisusuallyevaluatedbythe andthePLDAmodelwith200eigenvoicesand200eigenchan-
-DiarizationErrorRate(DER)astheprimarymetric. TheDER nelsyielded36%reductionoftheSPKE.
-wasdeﬁnedbytheNationalInstituteofStandardsandTechnol-
-ogy(NIST)[8]anditcanbedecomposedas:
-Table1:Resultsforthemultifold-PLDAsystem.
-DER=SPKE+FA+MISS (12)
-rk(T) rk(V) rk(U) SPKE[%] rel.impr.[%]
-wheretheSPKErepresentsthespeakererrorrate,theFAisthe 300 150 150 17.2 30.9
-speechfalsealarmerrorrateandtheMISSisthemissedspeech 400 200 200 15.9 36.1
-errorrate. TheSPKEreﬂectstheamountofspeechdatathatis
-attributedtoawrongspeakergiventheoptimumspeakermap-
-pingbetweenasystemoutputandareferencediarization. The 2http://itl.nist.gov/iad/mig/tests/rt/2006-spring/code/md-eval-v21.pl
-29114.6. Onefold-PLDAsystem rations from Table 1. Better performance was yielded by the
+Performance of diarization systems is usually evaluated by the and the PLDA model with 200 eigenvoices and 200 eigenchan-
+Diarization Error Rate (DER) as the primary metric. The DER nels yielded 36 % reduction of the SPKE.
+was deﬁned by the National Institute of Standards and Technol-
+ogy (NIST) [8] and it can be decomposed as:
+Table 1: Results for the multifold-PLDA system.
+DER = SP KE + F A + MISS (12)
+rk(T ) rk(V ) rk(U ) SPKE [%] rel. impr. [%]
+where the SPKE represents the speaker error rate, the FA is the 300 150 150 17.2 30.9
+speech false alarm error rate and the MISS is the missed speech 400 200 200 15.9 36.1
+error rate. The SPKE reﬂects the amount of speech data that is
+attributed to a wrong speaker given the optimum speaker map-
+ping between a system output and a reference diarization. The 2http://itl.nist.gov/iad/mig/tests/rt/2006-spring/code/md-eval-v21.pl
+29114.6. Onefold-PLDA system rations from Table 1. Better performance was yielded by the
 larger system. For the BIC penalty weight of 2.5, the system
-Table2summarizesresultsforthebestperformingsetupsofthe
-achievedSPKEof14.7%(41%relativereduction).Compared
-onefold-PLDAsystem(againtheUBMwith256Gaussianswas
+Table 2 summarizes results for the best performing setups of the
+achieved SPKE of 14.7 % (41 % relative reduction). Compared
+onefold-PLDA system (again the UBM with 256 Gaussians was
 to the onefold-PLDA system, the multifold-PLDA seems to
-employed)andshowsthatthesystemalsooutperformsthebase-
-providebetterperformanceformoreunder-clusteredsegments
-linesystem.However,theperformanceimprovementisofmuch
+employed) and shows that the system also outperforms the base-
+provide better performance for more under-clustered segments
+line system. However, the performance improvement is of much
 which corresponds to the performance of both systems in the
-smallerextentcomparedtothemultifold-PLDAsystem.Weat-
+smaller extent compared to the multifold-PLDA system. We at-
 one-stage clustering scenario. However, two-stage clustering
-tributethistothelossofinformationcausedbysummationof
-scenarioimprovesperformanceforbothsystems.
-thesufﬁcientstatistics.Incasethattheclustersbelongingtothe
-samespeakeraremergedtogether,weobtainabetterestimate
+tribute this to the loss of information caused by summation of
+scenario improves performance for both systems.
+the sufﬁcient statistics. In case that the clusters belonging to the
+same speaker are merged together, we obtain a better estimate
 5. Conclusions
-ofi-vectorcomponentsbyvirtueofsummationofthestatistics
+of i-vector components by virtue of summation of the statistics
 over the clusters since the summation averages out the intra- In this paper we have described our speaker diarization sys-
-speakervariability. Incontrast,whentwoclustersbelongingto temandpresentedtwospeakerclusteringapproachesbasedon
-differentspeakersaremerged,weobtainani-vectorbelonging the PLDA. The system using the ﬁrst approach, denoted as
-toasynthesizedidentity. Thisseemstohavemoreimpactthan themultifold-PLDAsystem,outperformedthebaselinesystem
+speaker variability. In contrast, when two clusters belonging to tem and presented two speaker clustering approaches based on
+different speakers are merged, we obtain an i-vector belonging the PLDA. The system using the ﬁrst approach, denoted as
+to a synthesized identity. This seems to have more impact than the multifold-PLDA system, outperformed the baseline system
 a contamination of a set of i-vectors representing a cluster by based on the BIC relatively by 36 % in terms of speaker er-
-i-vectorbelongingtoadifferentspeakerwhichwouldoccurin rorrate. Theonefold-PLDAsystembasedonthesecondpre-
-caseofthemultifold-PLDAsystem. sentedapproachyielded12%performanceimprovementover
-thebaseline.Wearguethatthei-vectorsrepresentingthespeech
+i-vector belonging to a different speaker which would occur in ror rate. The onefold-PLDA system based on the second pre-
+case of the multifold-PLDA system. sented approach yielded 12 % performance improvement over
+the baseline. We argue that the i-vectors representing the speech
 segments cannot be estimated reliably for short segments and
-Table2:Resultsfortheonefold-PLDAsystem.
+Table 2: Results for the onefold-PLDA system.
 employ two-stage clustering. The ﬁrst stage uses BIC-based
-rk(T) rk(V) rk(U) SPKE[%] rel.impr.[%] clusteringtounder-clusterthesegmentsandPLDA-basedclus-
-teringisperformedatthesecondstage.Signiﬁcanteffectofthe
+rk(T ) rk(V ) rk(U ) SPKE [%] rel. impr. [%] clustering to under-cluster the segments and PLDA-based clus-
+tering is performed at the second stage. Signiﬁcant effect of the
 300 100 100 22.5 9.6
-two-stageclusteringwasobservedparticularlyfortheonefold-
+two-stage clustering was observed particularly for the onefold-
 300 150 150 21.8 12.4
 PLDA system. The onefold-PLDA system used in two-stage
 400 200 200 23.0 7.6
-clusteringscenarioachievedthebestoverallspeakererrorrate
-of14.5%whichcorrespondsto42%relativeimprovementover
-thebaselineerrorrateof24.9%.
-4.7. Two-stageclustering
+clustering scenario achieved the best overall speaker error rate
+of 14.5 % which corresponds to 42 % relative improvement over
+the baseline error rate of 24.9 %.
+4.7. Two-stage clustering
 We hypothesize that the MAP point estimate of the total fac- 6. Acknowledgements
-torloadings(i-vectors)forsegmentsofshortdurationcannotbe
+tor loadings (i-vectors) for segments of short duration cannot be
 The research described in this paper was supported by
-estimatedreliablywhichmayharmtheclusteringprocesspar-
+estimated reliably which may harm the clustering process par-
 the Technology Agency of the Czech Republic (project no.
-ticularlyatearlyphases. Thisproblemrelatesatvariousextent
+ticularly at early phases. This problem relates at various extent
 TA01011204) and by the Czech Science Foundation - GACR
-tobothPLDA-basedsystems.Tocopewiththeproblemweem-
-(projectno.P103/11/P499).
-ploytwo-stageclustering. Intheﬁrststage,weuseBIC-based
-clusteringwithzerovalueofthestoppingthresholdλandvalue
+to both PLDA-based systems. To cope with the problem we em-
+(project no. P103/11/P499).
+ploy two-stage clustering. In the ﬁrst stage, we use BIC-based
+clustering with zero value of the stopping threshold λ and value
 7. References
-oftheBICpenaltyweightαsetsoastounder-clustertheseg-
-ments. InthenextstagethePLDA-basedclusteringisapplied. [1] S.PrinceandJ.Elder, “Probabilisticlineardiscriminantanalysis
-Table3showsachievedresults. forinferencesaboutidentity,”inProceedingsICCV2007,Riode
-Janeiro,Brazil,October2007.
-[2] N.Brummer,L.Burget,P.Kenny,P.Mateˇjka,E.V.de,M.Karaﬁa´t,
-Table3:Resultsfortwo-stageclustering. M.Kockmann,O.Glembek,O.Plchot,D.Baum,andM.Senous-
+of the BIC penalty weight α set so as to under-cluster the seg-
+ments. In the next stage the PLDA-based clustering is applied. [1] S. Prince and J. Elder, “Probabilistic linear discriminant analysis
+Table 3 shows achieved results. for inferences about identity,” in Proceedings ICCV 2007, Rio de
+Janeiro, Brazil, October 2007.
+[2] N. Brummer, L. Burget, P. Kenny, P. Mateˇjka, E. V. de, M. Karaﬁa´t,
+Table 3: Results for two-stage clustering. M. Kockmann, O. Glembek, O. Plchot, D. Baum, and M. Senous-
 sauoi, “ABC system description for NIST SRE 2010,” in Proc.
-Multifold-PLDAsystem Onefold-PLDAsystem NIST2010SpeakerRecognitionEvaluation. BrnoUniversityof
-BICα SPKE rel.impr. BICα SPKE rel.impr. Technology,2010,pp.1–20.
+Multifold-PLDA system Onefold-PLDA system NIST 2010 Speaker Recognition Evaluation. Brno University of
+BIC α SPKE rel. impr. BIC α SPKE rel. impr. Technology, 2010, pp. 1–20.
 [%] [%] [%] [%] [3] N. Dehak, P. Kenny, R. Dehak, P. Dumouchel, and P. Ouellet,
-rk(T)=300,rk(V)=150,rk(U)=150 “Front-endfactoranalysisforspeakerveriﬁcation,”Audio,Speech,
-andLanguageProcessing,IEEETransactionson,vol.19,no.4,
+rk(T ) = 300, rk(V ) = 150, rk(U ) = 150 “Front-end factor analysis for speaker veriﬁcation,” Audio, Speech,
+and Language Processing, IEEE Transactions on, vol. 19, no. 4,
 2.0 17.0 31.7 2.0 19.2 22.9
-pp.788–798,May2011.
+pp. 788 –798, May 2011.
 2.5 18.3 26.5 2.5 16.0 35.7
 [4] X. Zhu, C. Barras, S. Meignier, and J.-L. Gauvain, “Combining
 3.0 18.9 24.1 3.0 14.5 41.8
 speaker identiﬁcation and bic for speaker diarization,” in Inter-
-rk(T)=400,rk(V)=200,rk(U)=200
-speech’05,ISCA,Lisbon,September2005.
+rk(T ) = 400, rk(V ) = 200, rk(U ) = 200
+speech’05, ISCA, Lisbon, September 2005.
 2.0 14.9 40.2 2.0 19.0 23.7
-[5] S.ChenandP.Gopalakrishnan,“Speaker,environmentandchannel
-2.5 14.7 41.0 2.5 16.6 33.3 changedetectionandclusteringviathebayesianinformationcrite-
-3.0 15.1 39.4 3.0 16.9 32.1 rion,”inProceedings1998DARPABroadcastNewsTranscription
-andUnderstandingWorkshop,1998,pp.127–132.
-[6] P.Kenny,G.Boulianne,andP.Dumouchel,“Eigenvoicemodeling
-Signiﬁcanteffectofthetwo-stageclusteringscenariowas
-withsparsetrainingdata,”IEEETrans.Processing,vol.13,May
-observedparticularlyfortheonefold-PLDAsystem. Alleval-
+[5] S. Chen and P. Gopalakrishnan, “Speaker, environment and channel
+2.5 14.7 41.0 2.5 16.6 33.3 change detection and clustering via the bayesian information crite-
+3.0 15.1 39.4 3.0 16.9 32.1 rion,” in Proceedings 1998 DARPA Broadcast News Transcription
+and Understanding Workshop, 1998, pp. 127–132.
+[6] P. Kenny, G. Boulianne, and P. Dumouchel, “Eigenvoice modeling
+Signiﬁcant effect of the two-stage clustering scenario was
+with sparse training data,” IEEE Trans. Processing, vol. 13, May
+observed particularly for the onefold-PLDA system. All eval-
 2005.
 uated setups of the system provided performance improve-
 [7] A. Vandecatseye et al., “The COST278 pan-European broadcast
 ment. The system employing 300-dimensional i-vectors and
-newsdatabase,”2004,pp.873–876.
-thePLDAmodelwith150eigenvoicesand150eigenchannels
+news database,” 2004, pp. 873–876.
+the PLDA model with 150 eigenvoices and 150 eigenchannels
 [8] NIST, “The 2009 (RT-09) rich transcription meeting recognition
-achievedthebestoverallSPKEof14.5%(42%relativereduc- evaluationplan,”2009.
-tion)fortheBICpenaltyweightof3.0usedattheﬁrststage.
+achieved the best overall SPKE of 14.5 % (42 % relative reduc- evaluation plan,” 2009.
+tion) for the BIC penalty weight of 3.0 used at the ﬁrst stage.
 [9] N. Brummer, “The EM algorithm and minimum diver-
-Forthemultifold-PLDAsystem,ratherminoreffectofthe gence,” October 2009, unpublished. [Online]. Available:
+For the multifold-PLDA system, rather minor effect of the gence,” October 2009, unpublished. [Online]. Available:
 two-stage clustering was observed for both system’s conﬁgu- http://niko.brummer.googlepages.com/EMandMINDIV.pdf
 2912

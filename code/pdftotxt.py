@@ -12,4 +12,4 @@ for file in glob.glob(r'articles/pdf/*'):
         with open(path, 'a') as txt:
             # Copy content of each page into the txt file
             for page in pages:
-                txt.write(page.extract_text())
+                txt.write(page.extract_text(x_tolerance=1))
