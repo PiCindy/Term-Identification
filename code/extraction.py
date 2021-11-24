@@ -1,15 +1,21 @@
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
-#txt = 'Hello my name is Cindy and you? My name is Justine.'
-#doc = nlp(txt)
 
-vocabulary = set()
-for file in glob.glob('articles/txt/*'):
-    with open(file, 'r') as f:
+# create set
+vocabulary = set()		
+# iterate over files
+for file in glob.glob('articles/txt/*'):		
+    # open each file (read mode)
+    with open(file, 'r') as f:			
+        # using spacy model, read text with it
         doc = nlp(f.read())
-    for spacy_token in doc:
-        token = spacy_token.text.lower()
-        if not spacy_token.is_stop and token not in vocabulary:
+    # tokenize text				
+    for spacy_token in doc:				
+        # change token into string and lowercase
+        token = spacy_token.text.lower()		
+        # adding tokens in vocabulary (if it is not a stopword and not already in voc)
+        if not spacy_token.is_stop and token not in vocabulary: 	
             vocabulary.add(token)
-print(vocabulary)
+
+print(len(vocabulary))
