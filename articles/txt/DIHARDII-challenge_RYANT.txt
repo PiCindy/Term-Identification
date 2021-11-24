@@ -1,0 +1,416 @@
+The Second DIHARD Diarization Challenge: Dataset, task, and baselines
+NevilleRyant1, KennethChurch2, ChristopherCieri1, AlejandrinaCristia3, JunDu4, Sriram
+Ganapathy5, MarkLiberman1
+1LinguisticDataConsortium,UniversityofPennsylvania,Philadelphia,PA, USA
+2Baidu Research, Sunnyvale,CA, USA
+3LaboratoiredeSciences Cognitiveset dePsycholinguistique,De´pt d’e´tudescognitives,ENS,
+EHESS, CNRS, PSL University,Paris, France
+4UniversityofScience and TechnologyofChina, Hefei, China
+5Electrical EngineeringDepartment,IndianInstituteofScience, Bangalore, India
+nryant@ldc.upenn.edu
+9
+1
+0 Abstract backchannelsandoverlappingspeecharebothcommonincon-
+2
+versation, thismayhaveresultedinanover-optimisticassess-
+n  ThispaperintroducesthesecondDIHARDchallenge,thesec- mentofperformanceevenwithinthesedomains1[11].
+ond in a series of speaker diarization challenges intended to
+u Itisagainst thisbackdrop that the JSALT-2017workshop
+improve the robustness of diarization systems to variation in
+J [12]andDIHARDchallenges2 emerged. TheDIHARDseries
+  recordingequipment, noiseconditions, andconversational do-
+8 ofchallengesintroduceanewcommontaskfordiarizationthat
+main. Thechallengecomprisesfourtracksevaluatingdiariza-
+1 isintended bothtofacilitatecomparison ofcurrent andfuture
+tion performance under two input conditions (single channel
+  systemsthroughstandardizeddata,tasks,andmetricsandpro-
+  vs. multi-channel) and two segmentation conditions (diariza-
+] moteworkonrobust diarizationsystems; thatissystems, that
+S tionfromareferencespeechsegmentationvs. diarizationfrom
+areabletoaccuratelyhandlehighlyinteractiveandoverlapping
+A scratch). Inordertoprevent participantsfromovertuning toa speechfromarangeofconversationaldomains,whilebeingre-
+particular combination of recording conditions and conversa-
+. silienttovariationinrecording equipment, recording environ-
+s tionaldomain, recordingsaredrawnfromavarietyofsources
+ment, reverberation, ambient noise, number of speakers, and
+s rangingfromreadaudiobookstomeetingspeech,tochildlan-
+e speakerdemographics. AswiththeNISTRTevaluations,DER
+guage acquisition recordings, to dinner parties, to web video.
+e isadoptedastheprimaryevaluationmetric,butwithoutuseof
+We describe the task and metrics, challenge design, datasets,
+[ collarsorexclusion ofoverlapping speech. Therearenocon-
+  andbaselinesystemsfor speechenhancement, speechactivity
+  straints on training data, with participants allowed to use any
+1 detection,anddiarization.
+combinationofpublic/proprietarydataforsystemdevelopment.
+v IndexTerms: speakerdiarization,speakerrecognition, robust
+TheinitialDIHARDchallenge(DIHARDI)[13]randuring
+9 ASR,noise,conversationalspeech,DIHARDchallenge
+thespringof2018andattractedregistrationsfrom20teams,of
+3
+8 1. Introduction which13submittedsystems. Asexpected,state-of-the-artsys-
+7 temsperformedpoorly,withﬁnalDERontheevaluationsetfor
+0 Speaker diarization, often referred to as “who spoke when”, thetopsystemsrangingfrom23.73%[14]whenprovidedwith
+. is the task of determining how many speakers are present in referencespeechactivitydetection(SAD)marksto35.51%[15]
+6
+when forced to performdiarization from scratch. These error
+aconversation and correctly identifying all segments for each
+0
+ratesratesaremorethandoublethestate-of-the-artforCALL-
+9 speaker. In addition to being an interesting technical chal-
+1 lenge,itformsanimportantpartofthepre-processingpipeline HOME[16]at thetime[4,5]. Forsomedomains, error rates
+: for speech-to-text and is essential for making objective mea- forthebestsystemsexceeded49%whenusingreferenceSAD
+v surements of turn-taking behavior. Early work in this area and75%whenperformingdiarizationfromscratch!
+Xi was driven by the NIST Rich Transcription (RT) evaluations The second DIHARD Challenge (DIHARD II) [17], like
+[1], whichranbetween2002and2009. Inadditiontodriving its predecessor, examines diarization system performance un-
+ar substantial performanceimprovements, especiallyformeeting der two SAD conditions: diarization from a supplied refer-
+speech,theRTevaluationsintroducedthediarizationerrorrate ence SAD and diarization from scratch. Aswith DIHARD I,
+(DER)metric,whichremainstheprincipalevaluationmetricin itincludesasinglechannelinputconditionutilizingwideband
+thisarea.SincetheRTevaluationseriesendedin2009,diariza- speech sampled from 11 demanding domains, ranging from
+tion performance has continued to improve, though the lack clean, nearﬁeld recordings of read audiobooks to extremely
+of a common task has resulted in fragmentation with individ- noisy,highlyinteractive,farﬁeldrecordingsofspeechinrestau-
+ual research groups focusing on different datasets or domains rantstochildlanguagedatarecordedinthehomeusingLENA
+(e.g.,conversationaltelephonespeech[2,3,4,5,6],broadcast vests. Unlike DIHARD I, it additionally offers a multichan-
+[7, 8], or meeting [9,10]). At best, thishas made comparing nelinputconditionrequiringparticipantstoperformdiarization
+performance difﬁcult, while at worst it may have engendered fromfarﬁeldmicrophone arraysofdinner partyspeechdrawn
+overﬁtting to individual domains/datasets resulting in systems
+1See, for instance, the release of IBM’s diarization API in 2017.
+thatdonotgeneralize. Moreover,themajorityofthisworkhas
+Thefeature worked well forsimplecases, butwhenrunbyuserson
+evaluated systems using a modiﬁed version of DER in which
+real inputs, the performance was found to be lacking, especially for
+speechwithin250msofreferenceboundariesandoverlapped overlaps,back-channels,andshortturns.
+speech areexcluded fromscoring. Asshort segmentssuch as 2https://coml.lscp.ens.fr/dihard/index.htmlfrom the CHiME-5 corpus [18]. For the ﬁrst time, we also Table 1: Overview of DIHARD II datasets. For the CHiME-
+provideparticipantswithbaselinesystemsforspeechenhance- 5 (multichannel) data, each Kinect is treated as a separate
+ment, SAD, and diarization, as well as results obtained with recording.
+thesesystemsforalltracks.
+Inputcondition Set Duration(hours) #Recordings
+2. Tracks singlechannel dev 23.81 192
+eval 22.49 194
+Thechallengefeaturestwoaudioinputconditions: dev 262.41 105
+multichannel
+eval 31.24 12
+• Single channel – Systems are provided with a single
+channelofaudioforeachrecording. Dependingonthe
+recordingsource,thischannelmaybetakenfromasin-
+gledistantmicrophone, asinglechannel fromadistant speaker ispairedwithasystemspeaker withanidenticalseg-
+microphone array, amixof head-mounted or arraymi- mentationto100%inthecasewherenoneofthesystemspeak-
+crophones,oramixofbinauralmicrophones. ersoverlapanyofthereferencespeakers.
+• Multichannel–Eachrecordingsessioncontainsoutput FA+MISS
+fromoneormoredistantmicrophone arrays,eachcon- JERref = TOTAL (1)
+tainingmultiplechannels. Participantsareinstructedto
+treatthearraysseparately,producingoneoutputperar- Allmetricsarecomputedusingversion1.0.1ofthedscore
+ray. Theyarefreetouseasfeworasmanyofthechan- tool3withouttheuseofforgivenesscollarsandwithscoringof
+nelsoneacharrayastheywishtoperformdiarization. overlappedspeech.
+As system performance is strongly tied to the quality of the
+4. Datasets
+SADcomponent,wealsoincludetwoSADconditions:
+• Reference SAD – Systems are provided with a refer- 4.1. Overview
+encespeechsegmentation thatisgenerated bymerging
+The DIHARD II development and evaluation sets draw from
+speakerturnsinthereferencediarization.
+adiverse setof sourcesexhibitingwidevariationinrecording
+• SystemSAD–Systemsareprovided withjusttheraw equipment, recording environment, ambient noise, number of
+audioinputforeachrecordingsessionandareresponsi- speakers,andspeakerdemographics. Thesinglechannelinput
+bleforproducingtheirownspeechsegmentation. condition (tracks1and2) dataset isasuperset of thatused in
+DIHARD I, though 6 hours of additional material have been
+Together,thisyieldsthefollowingfourevaluationtracks:
+addedtoensurethatalldomainsarerepresentedinboththede-
+• Track1–singlechannelaudiousingreferenceSAD velopmentandevaluationset.Additionally,twodomainswhere
+• Track2–singlechannelaudiousingsystemSAD theDIHARDIannotationwasdeemedsuspect(childlanguage
+andwebvideo)havebeenentirelyresegmented. Forthemulti-
+• Track3–multichannelaudiousingreferenceSAD
+channelinputcondition(tracks3and4)weusethemulti-party
+• Track4–multichannelaudiousingsystemSAD dinner recordings originally collected for and exposed during
+theCHiME-5challenge[18]. Thedevelopmentandevaluation
+Allteamsarerequiredtoregisterforatleastoneoftrack1or
+setsaresummarizedinTable1.
+track3.
+The development set includes reference diarization and
+speechsegmentationandmaybeusedforanypurposeinclud-
+3. Performance Metrics
+ingsystemdevelopmentortraining. AswithDIHARDI,there
+AsinDIHARDI,theprimarymetricisDER[1],whichisthe isnotrainingset,withparticipantsfreetotraintheirsystemson
+sum of missed speech, false alarm speech, and speaker mis- anyproprietaryand/orpublicdata. Boththedevelopment and
+classiﬁcation error rates. Because systems are provided with evaluationsetswillbesubmittedforpublicationviaLDCatthe
+thereferencespeechsegmentationfortracks1and3,forthese endoftheevaluation.
+tracks, itexclusively measures speaker misclassiﬁcationerror.
+Thisisthemetricusedtoranksystemsontheleaderboard. 4.2. Singlechanneldata(tracks1and2)
+Foreachsystemwealsocomputeasecondarymetric,Jac-
+Thesinglechannelinputconditiondevelopmentandevaluation
+carderrorrate(JER),whichisnewlydeveloped forDIHARD setsconsistofselectionsof5-10minutedurationsamplesdrawn
+II.JERisbasedontheJaccardsimilarityindex[19,20],amet- from11conversationaldomains,eachincludingapproximately
+riccommonly usedtoevaluate theoutput ofimagesegmenta- 2 hours of audio. The full set of domains is described below
+tionsystems,whichisdeﬁnedastheratiobetweenthesizesof
+withLDC Catalog numbers where appropriate. Unless other-
+theintersectionsandunionsoftwosetsofsegments. Anopti- wisespeciﬁed,allspeechisEnglish,thoughnotnecessarilyby
+malmappingbetweenspeakersinthereferencediarizationand nativeorevenﬂuentspeakers. AllaudioisdistributedviaLDC
+speakers in the system diarization is determined and for each as16kHz,monochannelFLACﬁles.
+pairtheJaccardindexoftheirsegmentationsiscomputed. JER
+isdeﬁnedas1minustheaverageofthesescores,expressedas • audiobooks–amateurrecordingsofpublicdomainEn-
+apercentage. Thatis,itisthemeanofEq. 1acrossallrefer- glish works drawn from LibriVox; care was taken to
+encespeakersref,whereTOTAListhedurationoftheunionof avoidoverlapwithLibriSpeech[21](unpublished)
+referenceandsystemspeakersegments, FAisthetotalsystem • broadcastinterview–studentproducedinterviewswith
+speaker timenotattributedtothereferencespeaker, andMISS newsmakersofthedaytakenfromalate1970scollege
+isthetotalreferencespeaker timenot attributedtothesystem
+speaker. It ranges from 0% in the case where each reference 3https://github.com/nryant/dscoreradio show; recorded on open reel tapes before being dinner parties from 18 homes. The evaluation set isidentical
+digitizedandcontributedtoLDC(unpublished) totheCHiME-5evaluationsetandconsistsof5hoursofdin-
+• child language – day-long recordings of 6-18 month ner parties from 2 homes. Each party was recorded using 6
+old vocalizations collected at home by University of Microsoft Kinect devices (4 channel linear arrays) distributed
+RochesterresearchersfortheSEEDLingScorpus[22] throughoutthehomeinsuchawaythattheconversationwasal-
+wayspresentoneacharray.Duetoacombinationofclockdrift
+• clinical – interviews with 12-16 year old children in-
+and random frame dropping, the Kinects within each record-
+tendedtodeterminewhetherornottheyﬁttheclinicaldi-
+ingsessionexhibitmassivedesynchronization, bothwitheach
+agnosisforautism;allrecordingsconductedattheCen-
+otherandwiththebinauralrecordingdeviceswornbypartici-
+terforAutismResearch(CAR)oftheChildrensHospital
+pants. Forthisreason,eachKinectdeviceistreatedseparately
+ofPhiladelphia(CHOP)usingamixtureofcamerasand
+withtheresultingdevelopment andevaluationsetshavingdu-
+ceilingmountedmicrophones(unpublished)
+rationsof262.4hoursand31.2hoursrespectively. Allaudiois
+• courtroom–oralargumentsfromthe2001termofthe distributedviatheUniversityofShefﬁeldas16kHzWAVﬁles.
+U.S. Supreme Court that were digitized for the OYEZ
+project; recordings are summed from individual table- 4.4. Processing
+mountedmicrophones,oneperspeaker(unpublished)
+Alimitednumberofrecordingscontainedregionscarryingper-
+• maptask –recordings of map tasksinwhichone par-
+sonalidentifyinginformation(PII),whichwereremovedprior
+ticipant, the leader, describes a route drawn on a map
+to publication. For the clinical and restaurant domains, this
+to the other participant, the follower, who attempts to
+wasdoneatLDCbylow-passﬁlteringusinga10thorderBut-
+draw the same route on a copy of the map lacking the
+terworthﬁlterwithapassbandof0to400Hz. Toavoidabrupt
+routeandoptionallylackingsomelandmarks;audiowas
+transitionsintheresultingwaveform,theeffectoftheﬁlterwas
+recordedviaclose-talkingmicrophonesunderquietcon-
+graduallyfadedinandoutatthebeginningandendofthere-
+ditions(previouslyreleasedasLDC96S38)
+gions usingaramp of 40ms. Inthecaseof thesociolinguis-
+• meeting–meetingswithbetween3and7participants, ticﬁeldrecordingsdomainandtheCHiME-5data,PIIwasre-
+eachrecordedwithavarietyofclose-talkinganddistant moved by the original creators of the corpora. In the former
+microphones,fromwhichasingle,centrallylocateddis- case, PIIwasreplaced bytonesofmatchedduration, whilein
+tantmicrophonewasselected;thedevelopmentsetdraws thelattercaseitwaszeroedout. PIIcontainingregionsareig-
+fromtheNISTSpring2004RichTranscriptionEvalua- noredduringscoring.
+tion(LDC2007S11andLDC2007S12)whiletheevalu-
+ation set draws from previously upublished recordings
+4.5. Annotation
+conducted for the DARPA Robust Omnipresent Auto-
+maticRecognition(ROAR)projectatLDCin2001 Referencesegmentationandspeakerlabelingwasproducedby
+• restaurant – ≈1 hour sessions involving 3-6 diners annotatorsatLDCusingatoolequippedwithplayback,wave-
+form and spectrogram display. Annotators were instructed to
+recordedonabinauralmicrophonewornbyonepartici-
+split on pauses > 200 ms, where a pause was deﬁned as any
+pantinrestaurantswithvaryingroomacousticsandnoise
+stretchoftimeduringwhichthespeakerwasnotproducingvo-
+levels;inspiredbytheNSFHearablesChallengeandex-
+calization(e.g.,backchannels,ﬁlledpauses,singing,speecher-
+tendedbyLDCforDIHARD(unpublished)
+rorsanddisﬂuencies,infantbabblingorvocalizations,laughter,
+• sociolinguisticﬁeldrecordings– sociolinguisticinter-
+coughs,breaths,lipsmacks,andhumming)ofanykind.Bound-
+viewsrecorded under ﬁeldconditions duringthe1960s
+arieswereplacedwithin10msofthetrueboundary,takingcare
+and1970s; recordedunderdiverselocationsandcondi-
+not to truncate sounds at edges of words (e.g., utterance-ﬁnal
+tions withsubjects ranging from 15 to 81 years of age
+fricatives). Where individual close talking microphones were
+and representing diverse ethnicities, backgrounds, and
+availableforspeakers,annotationwasperformedseparatelyfor
+dialects of world English; the development set draws
+each speaker using their individual microphone. Due to time
+from SLX (LDC2003T15) and the evaluation set from
+constraints,thismanualsegmentationprocesscouldnotbeim-
+DASS(LDC2012S03&LDC2016S05)
+plementedforthemultichanneldevelopmentdata;forthisdata,
+• sociolinguistic lab recordings – sociolinguistic inter- segmentation was taken from the turn boundaries established
+viewsrecordedaspartofMIXER6(LDC2013S03)un- duringtheoriginalCHiME-5transcription.
+der quiet conditions in a controlled environment; ses- An additional post-processing step was necessary for the
+sionswererecorded withavarietyof close-talkingand CHiME-5 annotation to correct for the lack of synchroniza-
+distant microphones from which a single, centrally lo- tionbetweenbinauralrecordingdevicesandKinects. Foreach
+cateddistantmicrophonewasselected Kinect,thelagbetweenthatarrayandthebinauralrecordingde-
+• webvideo–EnglishandMandarinamateurvideoscol- viceswasestimatedatregularintervalsusingnormalizedcross-
+lected from online sharing sites (e.g., YouTube and correlation.Thespeechboundariesetablishedbyannotationon
+Vimeo)aspartoftheVideoAnnotationforSpeechTech- thebinauraldeviceswerethencorrectedforeachKinectusing
+nologies(VAST)[23]collection(mostlyunpublished) theseestimatedlags.
+4.3. Multichanneldata(tracks3and4) 5. Baselinesystem
+Themultichannel input condition development and evaluation
+5.1. Speechenhancement
+setsaredrawnfromtheCHiME-5dinner partycorpus [18], a
+corpusofconversationalspeechcollectedduringdinnerparties For speech enhancement we use a densely-connected LSTM
+heldinrealhomes.ThedevelopmentsetcombinestheCHiME- architecture [24, 25, 26] trained to predict the ideal ratio
+5traininganddevelopment setsandencompasses 45hoursof masks(IRM)[27]ofspeechfromlog-powerspectra(LPS)fea-tures.Themodelistrainedviaprogressivemulti-targetlearning Table 2: Baseline performance (measured by DER and JER)
+[24,28]using400hoursofnoisyspeechproducedbycorrupt- ondevandevalsetsforalltracks. TheEnh. columnindicates
+ing clean utterances from WSJ0 [29] and a 50 hour Chinese whetherornotspeechenhancementwasappliedpriortoSAD.
+speechcorpusfromthe863Program[30].Utteranceswerecor-
+ruptedusing115noisetypes[24]at3SNRlevels(-5dB,0dB, Track Enh. DER(%) JER(%)
+and 5dB). The trained models as well as scripts for applying Dev Eval Dev Eval
+them,aredistributedthroughGitHub4. Track1 no 23.70 25.99 56.20 59.51
+Track2 no 46.33 50.12 69.26 72.1
+Track2 yes 38.26 40.86 62.59 66.60
+5.2. Beamforming
+Track3 no 59.73 50.85 68.00 65.91
+For the multichannel tracks, we use weighted delay-and-sum Track4 no 87.55 83.41 88.08 85.12
+beamformingasimplementedinBeamformIt[31]. Beamform- Track4 yes 82.49 77.34 83.6 80.42
+ing is applied independently for each Kinect in each session
+usingallfourchannelsfollowingtheCHiME-5recipe[18].
+5.5. Baselineresults
+5.3. Speechactivitydetection
+DERandJERofthebaselinesystemonboththedevelopment
+Thebaselinesfortracks2and4useWebRTC’s5SADasimple- andevaluationsetsforeachtrackarepresentedinTable2. The
+mentedinthepy-webrtcPythonpackage6.Scriptsforperform- speechenhancementmoduleisusedonlyfortracks2and4as
+apre-processingfront-endfortheSADpipelineasthediariza-
+ing SAD using the same settings used to obtain the baseline
+resultsaredistributedthroughGitHub4. tionsystemdidnotshowimprovementsusingtheenhancedau-
+dio. The scores obtained by the challenge baseline are quite
+high,withtrack1DERroughlyinlinewiththeperformanceof
+5.4. Diarization
+thebestDIHARDIsystems[14,15,25]andtrack2DER5%
+higherthanforDIHARDI(15%withoutenhancement),which
+The diarization baseline is based on the previously published
+Kaldi[32]recipe7forJHU’ssubmissiontoDIHARDI[14].At wesuspectreﬂectsacombinationofsuperiorSADcomponents
+inthosesystemsandthemorecarefulsegmentationforthechild
+ahighlevel, thesystemperformsdiarizationbydividingeach
+language and web video domains in DIHARD II. Error rates
+recordingintoshortoverlappingsegments,extractingx-vectors
+arenoticeablyhigherfortracks3and4, reaching50.85%and
+[33,34],scoringwithprobabilisticlineardiscriminantanalysis
+77.34% respectively, though, again, these ratesareroughly in
+(PLDA) [35], and clustering using agglomerative hierarchical
+line with those observed for the best DIHARD I systems on
+clustering(AHC)[36]. IncontrasttotheoriginalJHUsystem,
+thetwomostdifﬁcultdomainsinthatchallenge:restaurantand
+we omit the Variational Bayes resegmentation step [37]. The
+trainedmodelsaredistributedthroughGitHub8. childlanguage.
+Thex-vectorextractorconﬁgurationisidenticaltothatused
+6. Conclusion
+inpreviousspeakerrecognitionanddiarizationsystems[34,14]
+withtwoexceptions: i)30dimensionalmelfrequencycepstral Theﬁeldof speaker diarization haschanged drasticallyinthe
+coefﬁcient(MFCC)featuresareusedinsteadofmelﬁlterbank twoshortyearswehavebeenrunningthischallenge.Inthelead
+features;ii)theembeddinglayeruses512dimensions. MFCCs uptoDIHARDI,theresearchcommunitywasfragmentedand
+are extracted every 10 ms using a 25 ms window and mean- mostresearchconcentratedonrelativelyeasydatasetsusingfor-
+normalized usinga3second slidingwindow. Fortrainingwe givingevaluationmetrics. Thisbothmadecomparisonofsys-
+useacombinationofVoxCeleb1andVoxCeleb2[38,39]aug- temsdifﬁcultandledsometobelievethatdiarizationwasrela-
+mentedwithadditivenoiseand reverberationaccording tothe tivelysolvedanduninteresting. However,wewerepleasedby
+recipefrom[33]. Segmentsunder 4seconds durationaredis- theresponsetoDIHARDI,bothduringtheevaluationandafter,
+carded, resultinginatrainingsetwith7,323speakers. Rever- demonstrating that there isinterestinrobust diarization. This
+berationisaddedbyconvolutionwithroomresponsesfromthe renewed energy is on display in DIHARD II, which attracted
+RIRdataset[40],whileadditivenoisesaredrawnfromtheMU- 48registeredteamsfrom17countries,morethandoublingthe
+SANdataset[41].Attesttime,x-vectorsareextractedfrom1.5 numberofteamsregisteredforDIHARDI.Itisalsoevidentin
+secondsegmentswith0.75secondoverlap. therecentannouncementoftheFearlessStepschallenge,which
+Following extraction, x-vectors are pre-processed to per- includes diarizationamong itstasks. Wehope that thisyear’s
+formdomainadaptationtotheDIHARDIIdataset.Thisisdone contributionsleadtomarkedprogresstowardthegoaloftruly
+by normalizing with a global mean and whitening transform robustdiarization.
+learned fromthe DIHARDII development set. Thewhitened
+x-vectors are then length normalized [42] and used to train a 7. Acknowledgements
+GaussianPLDAmodel[35]usingasubsetofVoxCelebconsist-
+ingofsegmentsofatleast3secondsduration.FollowingPLDA We would like to thank Harshah Vardhan MA, Prachi Singh,
+and Lei Sun for their help in preparing the baseline sytems
+scoring,clusteringisperformedusingAHCwiththethreshold
+and results. We would also like to acknowledge the gener-
+setbyminimizingDERonthedevelopmentdata.
+ous support of Agence Nationale de la Recherche (ANR-16-
+DATA-0004ACLEW,ANR-14-CE30-0003MechELex,ANR-
+4https://github.com/staplesinLA/denoising_DIHARD18 17-EURE-0017),theJ.S.McDonnellFoundation,andtheLin-
+5https://webrtc.org/ guisticDataConsortiumaswellastheCHiME-5challengefor
+6https://github.com/wiseman/py-webrtcvad allowingususeoftheirdata.
+7https://github.com/kaldi-asr/kaldi/tree/master/egs/dihard_2018/v2
+8https://github.com/iiscleap/DIHARD_2019_baseline_alltracks8. References
+[21] V. Panayotov, G. Chen, D. Povey, and S. Khudanpur, “Lib-
+riSpeech: anASRcorpusbasedonpublicdomainaudiobooks,”
+[1] J.G.Fiscus, J.Ajot, M.Michel, andJ.S.Garofolo, “TheRich
+inProc.ICASSP,2015,pp.5206–5210.
+Transcription 2006SpringMeeting Recognition Evaluation,” in
+InternationalWorkshoponMachineLearningforMultimodalIn- [22] E.Bergelson, “Bergelson Seedlings HomeBank Corpus,” 2016,
+teraction. Springer,2006,pp.309–322. doi:10.21415/T5PK6D.
+[23] J.TraceyandS.Strassel,“VAST:Acorpusofvideoannotation
+[2] G.SellandD.Garcia-Romero,“SpeakerdiarizationwithPLDA
+forspeechtechnologies,”inProc.LREC,2018.
+i-vectorscoringandunsupervisedcalibration,”inProc.IEEESpo-
+kenLanguageTechnologyWorkshop(SLT),2014,pp.413–417. [24] T.Gao,J.Du,L.-R.Dai,andC.-H.Lee,“Denselyconnectedpro-
+gressivelearningforLSTM-basedspeechenhancement,”inProc.
+[3] W. Zhu and J. Pelecanos, “Online speaker diarization using
+ICASSP,2018,pp.5054–5058.
+adaptedi-vectortransforms,”inProc.ICASSP,2016.
+[25] L. Sun, J. Du, C. Jiang, X. Zhang, S. He, B. Yin, and C.-H.
+[4] D.Garcia-Romero,D.Snyder,G.Sell,D.Povey,andA.McCree, Lee,“SpeakerdiarizationwithenhancingspeechfortheFirstDI-
+“Speakerdiarizationusingdeepneuralnetworkembeddings,”in HARDChallenge,”Proc.Interspeech,pp.2793–2797,2018.
+Proc.ICASSP,2017,pp.4930–4934.
+[26] L.Sun,J.Du,T.Gao,Y.-D.Lu,Y.Tsao,C.-H.Lee,andN.Ryant,
+[5] Q.Wang,C.Downey,L.Wan,P.A.Mansﬁeld,andI.L.Moreno, “Anovel LSTM-basedspeechpreprocessor forspeaker diariza-
+“Speaker diarization with LSTM,” in Proc. ICASSP, 2018, pp. tioninrealisticmismatchconditions,”inProc.ICASSP,2018,pp.
+5239–5243. 5234–5238.
+[6] A.Zhang,Q.Wang,Z.Zhu,J.Paisley,andC.Wang,“Fullysu- [27] S.Srinivasan, N.Roman,andD.Wang,“Binaryandratiotime-
+pervisedspeakerdiarization,”Proc.ICASSP,2019. frequencymasksforrobustspeechrecognition,”SpeechCommu-
+nication,vol.48,no.11,pp.1486–1501,2006.
+[7] M. Rouvier, G. Dupuy, P. Gay, E. Khoury, T. Merlin, and
+S.Meignier,“Anopen-sourcestate-of-the-art toolboxforbroad- [28] L.Sun, J.Du, L.-R.Dai, andC.-H.Lee, “Multiple-target deep
+castnewsdiarization,”inProc.Interspeech,2013,pp.1477–1481. learning for LSTM-RNN based speech enhancement,” in Proc.
+HSCMA,2017,pp.136–140.
+[8] I.Vin˜als, A.Ortega, J.A.V.Lo´pez, A.Miguel, andE.Lleida,
+“DomainadaptationofPLDAmodelsinbroadcastdiarizationby [29] J. S. Garofolo et al., CSR-I (WSJ0) Complete LDC93S6A.
+meansofunsupervisedspeakerclustering.”inProc.Interspeech, Philadelphia:LinguisticDataConsortium,1993.
+2017,pp.2829–2833. [30] Y.L.Qian, S.X.Lin,Y.D.Zhang,Y.Liu,H.Liu,andQ.Liu,
+“Anintroductiontocorporaresourcesof863programforChinese
+[9] S.H.YellaandH.Bourlard,“Improvedoverlapspeechdiarization
+languageprocessingandhuman-machineinteraction,”Proc.ALR,
+ofmeetingrecordingsusinglong-termconversationalfeatures,”in
+2004.
+Proc.ICASSP,2013,pp.7746–7750.
+[31] X.Anguera,C.Wooters,andJ.Hernando,“Acousticbeamform-
+[10] S.H.Yella,A.Stolcke,andM.Slaney,“Artiﬁcialneuralnetwork
+ing for speaker diarization of meetings,” IEEE Trans. Audio,
+featuresforspeakerdiarization,”inProc.IEEESpokenLanguage
+Speech,LanguageProcess,vol.15,no.7,pp.2011–2022,2007.
+TechnologyWorkshop,2014,pp.402–406.
+[32] D. Povey, A. Ghoshal, G. Boulianne, L. Burget, O. Glembek,
+[11] R.MilnerandT.Hain,“Segment-oriented evaluationofspeaker
+N.Goel,M.Hannemann,P.Motlicek,Y.Qian,P.Schwarzetal.,
+diarisationperformance,”inProc.ICASSP,2016,pp.5460–5464.
+“TheKaldispeechrecognition toolkit,” IEEESignalProcessing
+[12] N.Ryant,E.Bergelson,K.Church,A.Cristia,J.Du,S.Ganap- Society,Tech.Rep.,2011.
+athy, S.Khudanpur, D. Kowalski, M.Krishnamoorthy, R. Kul- [33] D. Snyder, P. Ghahremani, D. Povey, D. Garcia-Romero,
+shreshta et al., “Enhancement and analysis of conversational Y. Carmiel, and S. Khudanpur, “Deep neural network-based
+speech:JSALT2017,”inProc.ICASSP,2018,pp.5154–5158. speakerembeddingsforend-to-endspeakerveriﬁcation,”in2016
+[13] N. Ryant, K. Church, C. Cieri, A. Cristia, J. Du, IEEE Spoken Language Technology Workshop, 2016, pp. 165–
+S. Ganapathy, and M. Liberman, “First DIHARD chal- 170.
+lenge evaluation plan,” Tech. Rep., 2018. [Online]. Available: [34] D.Snyder,D.Garcia-Romero,G.Sell,D.Povey,andS.Khudan-
+https://zenodo.org/record/1199638 pur, “X-vectors: RobustDNNembeddings forspeakerrecogni-
+[14] G.Sell, D.Snyder, A.McCree, D.Garcia-Romero, J.Villalba, tion,”inProc.ICASSP,2018,pp.5329–5333.
+M.Maciejewski, V.Manohar,N.Dehak,D.Povey,S.Watanabe [35] S.J.PrinceandJ.H.Elder,“Probabilisticlineardiscriminantanal-
+etal.,“Diarizationishard:Someexperiencesandlessonslearned ysis for inferences about identity,” in 2007 IEEE11th Interna-
+fortheJHUteamintheinauguralDIHARDChallenge,”inProc. tionalConferenceonComputerVision,2007,pp.1–8.
+Interspeech,2018,pp.2808–2812. [36] K. J. Han, S. Kim, and S. S. Narayanan, “Strategies to im-
+[15] M. Diez, F. Landini, L. Burget, J. Rohdin, A. Silnova, provetherobustnessofagglomerativehierarchicalclusteringun-
+K. Zmolıkova´, O. Novotny`, K. Vesely`, O. Glembek, O. Plchot derdatasourcevariationforspeakerdiarization,”IEEETrans.Au-
+etal.,“BUTsystemforDIHARDSpeechDiarizationChallenge dio, Speech, Language Process, vol. 16, no. 8, pp.1590–1601,
+2018,”inProc.Interspeech,2018,pp.2798–2802. 2008.
+[16] C.Cieri,D.Miller,andK.Walker,“FromSwitchboardtoFisher: [37] M.Diez,L.Burget,andP.Matejka,“Speakerdiarizationbasedon
+Telephone collection protocols, their uses and yields,” in Proc. BayesianHMMwitheigenvoicepriors,”inProc.Odyssey,2018,
+EUROSPEECH,2003. pp.147–154.
+[38] A. Nagrani, J. S. Chung, and A. Zisserman, “VoxCeleb:
+[17] N. Ryant, K. Church, C. Cieri, A. Cristia, J. Du,
+a large-scale speaker identiﬁcation dataset,” arXiv preprint
+S. Ganapathy, and M. Liberman, “Second DIHARD chal-
+arXiv:1706.08612,2017.
+lenge evaluation plan,” Tech. Rep., 2019. [Online]. Available:
+https://coml.lscp.ens.fr/dihard/2019/second dihard eval plan v1.1.pdf [39] J.S.Chung, A.Nagrani, andA.Zisserman,“VoxCeleb2: Deep
+speakerrecognition,”Proc.Interspeech,pp.1086–1090,2018.
+[18] J. Barker, S. Watanabe, E. Vincent, and J. Trmal, “The Fifth
+‘CHiME’SpeechSeparationandRecognitionChallenge:Dataset, [40] T.Ko,V.Peddinti, D.Povey, M.L.Seltzer, andS.Khudanpur,
+taskandbaselines,”inProc.Interspeech,2018,pp.1561–1565. “Astudyondataaugmentation ofreverberant speechforrobust
+speechrecognition,”inProc.ICASSP,2017,pp.5220–5224.
+[19] L.Hamersetal.,“Similaritymeasuresinscientometricresearch:
+[41] D.Snyder,G.Chen,andD.Povey,“MUSAN:Amusic,speech,
+TheJaccard index versusSalton’s cosine formula.”Information
+andnoisecorpus,”arXivpreprintarXiv:1510.08484,2015.
+ProcessingandManagement,vol.25,no.3,pp.315–18,1989.
+[42] D.Garcia-RomeroandC.Y.Espy-Wilson,“Analysisofi-vector
+[20] R. Real and J.M.Vargas, “Theprobabilistic basis ofJaccard’s
+lengthnormalizationinspeakerrecognitionsystems,”inProc.In-
+indexofsimilarity,”SystematicBiology,vol.45,no.3,pp.380–
+terspeech,2011,pp.249–252.
+385,1996.

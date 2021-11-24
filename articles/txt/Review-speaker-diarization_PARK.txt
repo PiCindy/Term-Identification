@@ -1,0 +1,1880 @@
+A Review of Speaker Diarization: Recent Advances with Deep Learning
+TaeJinParka,∗,NaoyukiKandab,∗,DimitriosDimitriadisb,∗,KyuJ.Hanc,∗,ShinjiWatanabed,∗,ShrikanthNarayanana
+aUniversityofSouthernCalifornia,LosAngeles,USA
+bMicrosoft,Redmond,USA
+cASAPP,MountainView,USA
+dJohnsHopkinsUniversity,Baltimore,USA
+Abstract
+Speaker diarization is a task to label audio or video recordings with classes corresponding to speaker identity, or in short, a task
+1toidentify“whospokewhen”. Intheearlyyears,speakerdiarizationalgorithmsweredevelopedforspeechrecognitiononmulti-
+2speaker audio recordings to enable speaker adaptive processing, but also gained its own value as a stand-alone application over
+0time to provide speaker-speciﬁc meta information for downstream tasks such as audio retrieval. More recently, with the rise of
+2
+deeplearningtechnologythathasbeenadrivingforcetorevolutionarychangesinresearchandpracticesacrossspeechapplication
+ 
+ndomains in the past decade, more rapid advancements have been made for speaker diarization. In this paper, we review not
+aonly the historical development of speaker diarization technology but also the recent advancements in neural speaker diarization
+J
+ approaches. Wealsodiscusshowspeakerdiarizationsystemshavebeenintegratedwithspeechrecognitionapplicationsandhow
+4
+therecentsurgeofdeeplearningisleadingthewayofjointlymodelingthesetwocomponentstobecomplementarytoeachother.
+2
+By considering such exciting technical trends, we believe that it is a valuable contribution to the community to provide a survey
+ 
+] workbyconsolidatingtherecentdevelopmentswithneuralmethodsandthusfacilitatingfurtherprogresstowardsamoreeﬃcient
+S
+speakerdiarization.
+A
+Keywords: speakerdiarization,automaticspeechrecognition,deeplearning
+.
+s
+s
+e
+e1. Introduction processingtechniques,forexample,speechenhancement,dere-
+[
+  verberation,speechseparationortargetspeakerextraction,are
+ 
+1 “Diarize”isawordthatmeansmakinganoteorkeepingan utilized. Voice or speech activity detection is then applied to
+vevent in a diary. Speaker diarization, like keeping a record separate speech from non-speech events. Raw speech signals
+4
+of events in such a diary, addresses the “who spoke when” intheselectedspeechportionsaretransformedtoacousticfea-
+2
+6question [1, 2, 3] by logging speaker-speciﬁc salient events turesorembeddingvectors. Intheclusteringstage,thespeech
+9on multi-participant (or multi-speaker) audio data. Through- portionrepresentedbytheembeddingvectorsaregroupedand
+0out the diarization process, the audio data would be divided labeledbyspeakerclassesandinthepost-processingstage,the
+1.and clustered into groups of speech segments with the same clusteringresultsarefurtherreﬁned.Eachofthesesub-modules
+0speakeridentity/label. Asaresult,salientevents,suchasnon- isoptimizedindividuallyingeneral.
+1speech/speechtransition,speakerturnchanges,speakerclassi-
+2
+ﬁcation or speaker role identiﬁcation, are labeled in an auto-
+: 1.1. Historicaldevelopmentofspeakerdiarization
+vmatic fashion. In general, this process does not require any
+iprior knowledge of the speakers, such as their real identity or During the early years of diarization technology (in the
+X
+number of participating speakers in the audio data. Thanks to 1990s), the research focus was on unsupervised speech seg-
+r
+aitsinnatefeatureofseparatingaudiostreamsbythesespeaker- mentationandclusteringofacousticeventsincludingnotonly
+speciﬁcevents,speakerdiarizationcanbeeﬀectivelyemployed speaker-speciﬁc ones but also those related to environmental
+forindexingoranalyzingvarioustypesofaudiodata,e.g.,au- or background changes [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].
+dio/videobroadcastsfrommediastations,conversationsincon- In this period some of the fundamental approaches to speaker
+ferences,personalvideosfromonlinesocialmediaorhand-held changedetectionandclustering,suchasleveragingGeneralized
+devices,courtproceedings,businessmeetings,earningsreports Likelihood Ratio (GLR) and Bayesian Information Criterion
+inaﬁnancialsector,justtonameafew. (BIC), were developed and quickly became the golden stan-
+Traditionallyspeakerdiarizationsystemsconsistofmultiple, dard. MostoftheworksbeneﬁtedAutomaticSpeechRecogni-
+independent sub-modules as shown in Fig. 1. In order to mit- tion(ASR)onbroadcastnewsrecordings,byenablingspeaker
+igate any artifacts in acoustic environments, various front-end adaptive training of acoustic models [10, 15, 16, 17, 18]. All
+these eﬀorts collectively laid out a path to consolidate ac-
+tivities across research groups around the world, leading to
+∗Authorscontributedequally several research consortia and challenges in the early 2000s,
+PreprintsubmittedtoComputer,SpeechandLanguage January26,2021Audio  Input Diarization  Output
+(RTTM)
+Front-End  Speech Activity Speaker  Post
+Segmentation Clustering
+Processing Detection Embedding Processing
+Section 2.1 Section 2.2 Section 2.3 Section 2.4 Section 2.5 Section 2.6
+Fig.1:TraditionalSpeakerDiarizationSystems.
+among which there were the Augmented Multi-party Interac- correspondingtechnologiestomitigateproblemsfromtheper-
+tion(AMI)Consortium[19]supportedbytheEuropeanCom- spectiveofmeetingenvironments,wherethereareusuallymore
+mission and the Rich Transcription Evaluation [20] hosted by participantsthanbroadcastnewsorCTSdataandmulti-modal
+the National Institute of Standards and Technology (NIST). dataisfrequentlyavailable. Sincethesetwopapers,especially
+These organizations, spanning over from a few years to a thankstoleap-frogadvancementsindeeplearningapproaches
+decade, hadfosteredfurtheradvancementsonspeakerdiariza- addressingtechnicalchallengesacrossmultiplemachinelearn-
+tiontechnologiesacrossdiﬀerentdatadomainsfrombroadcast ing domains, speaker diarization systems have gone through a
+news [21, 22, 23, 24, 25, 26, 27, 28, 29] and Conversational lot of notable changes. We believe that this survey work is a
+Telephone Speech (CTS) [24, 30, 31, 32, 33, 34] to meeting valuable contribution to the community to consolidate the re-
+conversations [35, 36,37, 38, 39, 40, 41,42, 43, 44, 45]. The centdevelopmentswithneuralmethodsandthusfacilitatefur-
+new approaches resulting from these advancements include, therprogresstowardsamoreeﬃcientdiarization.
+but not limited to, Beamforming [42], Information Bottleneck
+Clustering (IBC) [44], Variational Bayesian (VB) approaches 1.3. OverviewandTaxonomyofspeakerdiarization
+[33,45],JointFactorAnalysis(JFA)[46,34]. Attempting to categorize the existing, most-diverse speaker
+Since the advent of deep learning in the 2010s, there has diarization technologies, both on the space of modularized
+been a considerable amount of research to take the advantage speaker diarization systems before the deep learning era and
+of powerful modeling capabilities of the neural networks for those based on neural networks of the recent years, a proper
+speaker diarization. One representative example is extracting groupingwouldbehelpful. Themaincategorizationweadopt
+the speaker embeddings using neural networks, such as the d- inthispaperisbasedontwocriteria,resultinginthetotalfour
+vectors[47,48,49]orthex-vectors[50],whichmostoftenare categories, as shown in Table 1. The ﬁrst criterion is whether
+embeddingvectorrepresentationsbasedonthebottlenecklayer the model is trained based on speaker diarization-oriented ob-
+outputofa“DeepNeuralNetwork”(DNN)trainedforspeaker jective function or not. Any trainable approaches to optimize
+recognition. The shift from i-vector [51, 52, 53, 54] to these modelsinamulti-speakersituationandlearnrelationsbetween
+neural embeddings contributed to enhanced performance, eas- speakersarecategorizedintothe“DiarizationObjective”class.
+iertrainingwithmoredata[55],androbustnessagainstspeaker The second criterion is whether multiple modules are jointly
+variabilityandacousticconditions. Morerecently,End-to-End optimized towards some objective function. If a single sub-
+Neural Diarization (EEND) where individual sub-modules in moduleisreplacedintoatrainableone,suchmethodiscatego-
+the traditional speaker diarization systems (c.f., Fig. 1) can rizedintothe“Single-moduleOptimization”class.Ontheother
+be replaced by one neural network gets more attention with hand,forexample,jointmodelingofsegmentationandcluster-
+promisingresults[56,57].Thisresearchdirection,althoughnot ing [55], joint modeling of speech separation and speaker di-
+fully matured yet, could open up unprecedented opportunities arization[76]orfullyend-to-endneuraldiarization[56,57]is
+to address challenges in the ﬁeld of speaker diarization, such categorizedintothe“JointOptimization”class.
+as, the joint optimization with other speech applications, with Notethatourintentionofthiscategorizationistohelpread-
+overlappingspeech, iflarge-scaledataisavailablefortraining erstoquicklyoverviewthebroaddevelopmentintheﬁeld,and
+suchpowerfulnetwork-basedmodels. it is not our intention to divide the categories into superior-
+inferior. Also,whileweareawareofmanytechniquesthatfall
+1.2. Motivation intothecategory“Non-DiarizationObjective”and“JointOpti-
+mization”(e.g.,jointfront-endandASR[67,68,69,70,71,72],
+Till now, there are two well-rounded overview papers in
+jointspeakeridentiﬁcationandspeechseparation[73,74],etc.),
+the area of speaker diarization surveying the development of
+weexcludetheminthepapertofocusonthereviewofspeaker
+speaker diarization technology with diﬀerent focuses. In [2],
+diarizationtechniques.
+various speaker diarization systems and their subtasks in the
+context of broadcast news and CTS data are reviewed up to
+1.4. PaperOrganization
+the point of mid 2000s. As such, the historical progress of
+Therestofthepaperisorganizedasfollows.
+speaker diarization technology development in the 1990s and
+early 2000s are hence covered. In contrast, the focus of [3] • In Section 2, we overview techniques belonging to the
+was put more on speaker diarization for meeting speech and “Non-Diarization Objective” and “Single-module Opti-
+its respective challenges. This paper thus weighs more in the mization” class in the proposed taxonomy, mostly those
+2Table1:TableofTaxonomy
+Non-Diarization Diarization
+Objective Objective
+Section2 Section3.1
+Single-module Front-end[58,59,60],speaker IDEC[64],aﬃnitymatrix
+Optimization embedding[61,62,50],speech reﬁnement[65],TS-VAD[66],etc.
+activitydetection[63],etc.
+Outofscope Section3.2
+Jointfront-end&ASR UIS-RNN[55],RPN[75],online
+Joint [67,68,69,70,71,72],joint RSAN[76],EEND[56,57],etc.
+Optimization speakeridentiﬁcation&speech Section4
+separation[73,74],etc. JointASR&speakerdiarization.
+[77,78,79,80],etc.
+used in the traditional, modular speaker diarization sys- each module, this section also summarizes the latest schemes
+tems. Whiletherearesomeoverlapswiththecounterpart withinthemodule.
+sectionsoftheaforementionedtwosurveypapers[2,3]in
+terms of reviewing notable developments in the past, this 2.1. Front-endprocessing
+sectionwouldaddmorelatestschemesaswellinthecorre-
+Thissectiondescribesmostlyfront-endtechniques,usedfor
+spondingcomponentsofthespeakerdiarizationsystems.
+speech enhancement, dereverberation, speech separation, and
+• InSection3,wediscussadvancementsmostlyleveraging speechextractionaspartofthespeakerdiarizationpipeline.Let
+DNNs trained with the diarization objective where single si,f,t ∈ C be the STFT representation of source speaker i on
+sub-modulesareindependentlyoptimized(subsection3.1) frequencybin f atframet.Theobservednoisysignalxt,f canbe
+orjointlyoptimized(subsection3.2)towardfullyend-to- representedbyamixtureofthesourcesignals,aroomimpulse
+endspeakerdiarization. responsehi,f,t ∈C,andadditivenoisent,f ∈C,
+• InSection4,wepresentaperspectiveofhowspeakerdi- (cid:88)K (cid:88)
+arizationhasbeeninvestigatedinthecontextofASR,re- xt,f = hi,f,τsi,f,t−τ+nt,f, (1)
+viewinghistoricalinteractionsbetweenthesetwodomains i=1 τ
+topeekthepast,presentandfutureofspeakerdiarization
+where K denotes the number of speakers present in the audio
+applications.
+signal.
+• Section5providesinformationofspeakerdiarizationchal- Thefront-endtechniquesdescribedinthissectionistoesti-
+mate the original source signal xˆ given the observation X =
+lengesandcorporatofacilitateresearchactivitiesandan- i,t
+({x } ) forthedownstreamdiarizationtask,
+chor techonology advances. We also discuss evaluation t,f f t
+metricssuchasDiarizationErrorRate(DER),JaccardEr-
+xˆ =FrontEnd(X), i=1,...,K, (2)
+ror Rate (JER) and Word-level DER (WDER) in the sec- i,t
+tion. wherexˆ ∈ CD isthei-thspeaker’sestimatedSTFTspectrum
+i,t
+• Weshareafewexamplesofhowspeakerdiarizationsys- withDfrequencybinsatframet.
+Althoughtherearenumerousspeechenhancement,dereber-
+temsareemployedinbothresearchandindustrypractices
+beration, and separation algorithms, e.g., [81, 82, 83], herein
+inSection6andconcludethisworkinSection7withpro-
+most of the recent techniques used in the DIHARD challenge
+vidingsummaryandfuturechallengesinspeakerdiariza-
+series[84,85,86],LibriCSSmeetingrecognitiontask[87,88],
+tion.
+andCHiME-6challengetrack2[89,90,91]arecovered.
+2.1.1. Speechenhancement(Denoising)
+2. ModularSpeakerDiarizationSystems
+Speech enhancement techniques focus mainly on suppress-
+Thissectionprovidesanoverviewofalgorithmsforspeaker ing the noise component of the noisy speech. Single-channel
+diarization belonging to the “Single-module Optimization, speech enhancement has shown a signiﬁcant improvement in
+Non-Diarization Objective” class mostly modular speaker, as denoising performance [92, 93, 94] thanks to deep learning,
+showninFigure1. Eachsubsectioninthissectioncorresponds when compared with classical signal processing based speech
+totheexplanationofeachmoduleinthetraditionalspeakerdi- enhancement[95].Forexample,LSTM-basedspeechenhance-
+arizationsystem. Inadditiontotheintroductoryexplanationof ment[96,94]isusedasafront-endtechniqueintheDIHARD
+3IIbaseline[85],i.e., 2.1.3. Speechseparationandtargetspeakerextraction
+Speechseparationisapromisingfamilyoftechniqueswhen
+xˆt =LSTM(X), (3) the overlapping speech regions are signiﬁcant. Similarly to
+other research areas, DL-based speech separation has become
+whereweonlyconsiderthesinglesourceexample(i.e.,K =1) popular, e.g, “Deep Clustering” [58], “Permutation Invariant
+andomitthesourceindexi.Thisisaregression-basedapproach Training” (PIT) [59], and Conv-TasNet [60]. The eﬀective-
+byminimizingtheobjectivefunction, nessofmulti-channelspeechseparationbasedonbeamforming
+has been widely conﬁrmed [102, 103], as well. For example,
+LMSE =||st−xˆt||2. (4) in the CHiME-6 challenge [89], “Guided Source Separation”
+(GSS)[103]basedmulti-channelspeechextractiontechniques
+Thelogpowerspectrumoridealratiomaskisoftenusedasthe have been used to achieve the top result. On the other hand,
+target domain of the output st. Also, the speech enhancement single-channelspeechseparationtechniquesdonotoftenshow
+usedin[95]appliesthisobjectivefunctionineachlayerbased any signiﬁcant eﬀectiveness in realistic multi-speaker scenar-
+onaprogressivemanner. ios like the LibriCSS [87] or the CHiME-6 tasks [89], where
+Theeﬀectivenessofthespeechenhancementtechniquescan speechsignalsarecontinuousandcontainbothoverlappingand
+beboostedmulti-channelprocessing,includingminimumvari- overlap-free speech regions. The single-channel speech sepa-
+ancedistortionlessresponse(MVDR)beamforming[81]. [88] ration systems often produce a redundant non-speech or even
+shows the signiﬁcant improvement of the DER from 18.3% a duplicated speech signal for the non-overlap regions, and as
+to 13.9% in the LibriCSS meeting task based on mask-based suchthe“leakage”ofaudiocausesmanyfalsealarmsofspeech
+MVDRbeamforming[97,98]. activity.Aleakageﬁlteringmethodwasproposedin[104]tack-
+ling the problem, where a signiﬁcant improvement of speaker
+diarization performance was shown after including this pro-
+2.1.2. Dereverberation
+cessingstepinthetop-rankedsystemontheVoxCelebSpeaker
+Compared with other front-end techniques, the major dere-
+RecognitionChallenge2020[105].
+verberationtechniquesusedinvarioustasksisbasedonstatis-
+tical signal processing methods. One of the most widely used
+2.2. Speechactivitydetection(SAD)
+techniquesisWeightedPredictionError(WPE)basedderever-
+beration[99,100,101].
+SAD distinguishes speech segments from non-speech seg-
+The basic idea of WPE, for the case of single source, i.e.
+ments such as background noise. A SAD system is mostly
+K =1,withoutnoise,istodecomposetheoriginalsignalmodel
+comprised of two parts. The ﬁrst one is a feature extraction
+Eq.(1)intotheearlyreﬂectionxearlyandlatereverberationxlate frontend,whereacousticfeaturessuchasMel-FrequencyCep-
+t,f t,f
+asfollows: stral Coeﬃcients (MFCCs) are extracted. The other part is a
+(cid:88) classiﬁer, where a model predicts whether the input frame is
+xt,f = hf,τsf,t−τ = xte,afrly+xtla,fte. (5) speech or not. These models may include Gaussian Mixture
+τ Models(GMMs)[106],HiddenMarkovModels(HMMs)[107]
+orDNNs[63].
+WPEtriestoestimateﬁltercoeﬃcientshˆwf,pte ∈ C,whichmain- The performance of SAD largely aﬀects the overall perfor-
+tain the early reﬂection while suppress the late reverberation
+mance of the speaker diarization system because it can cre-
+basedonthemaximumlikelihoodestimation.
+ateasigniﬁcantamountoffalsepositivesalienteventsormiss
+speechsegments[108]. Acommonpracticeinspeakerdiariza-
+(cid:88)L
+xˆearly = x − hˆwpex , (6) tiontasksistoreportDERwith“oracleSAD”setupwhichin-
+t,,f t,f f,τ f,t−τ
+τ=∆ dicatesthatthesystemoutputisusingspeechactivitydetection
+outputthatisidenticaltothegroundtruth. Ontheotherhand,
+where∆isthenumberofframestosplittheearlyreﬂectionand thesystemoutputwithanactualspeechactivitydetectorisre-
+latereverberation,andListheﬁltersize. ferredtoas“systemSAD”output.
+WPE is widely used as one of the golden standard front-
+end processing methods, e.g., it is part of the DIHARD and
+2.3. Segmentation
+CHiME both the baseline and the top-performing systems
+[84, 85, 86, 89, 90]. Although the performance improvement Speechsegmentationbreakstheinputaudiostreamintomul-
+of WPE-based dereverberation is not signiﬁcant, it provides tiple segments so that the each segment can be assigned to a
+solid performance improvement across almost all tasks. Also, speakerlabel.Beforere-segmentationphase,theunitoftheout-
+WPEisbasedonthelinearﬁlteringandsinceitdoesnotintro- put of speaker diarization system is determined by segmenta-
+duce signal distortions, it can be safely combined with down- tionprocess.Therearetwowaysofperformingspeechsegmen-
+streamfront-endandback-endprocessingsteps. Similartothe tationforspeakerdiarizationtasks: eitherwithspeakerchange
+speech enhancement techniques, WPE-based dereberberation pointdetectionoruniformsegmentation. Thesegmentationby
+shows additional peformance improvements when applied on detecting the speaker change point was the golder standard of
+multi-channelsignals. the earlier speaker diarization systems, where speaker change
+4points are detected by comparing two hypotheses: Hypothe- However,theprocessofuniformlysegmentingtheinputsig-
+sis H assumes both left and right samples are from the same nals for diarization poses some potential problems. First, uni-
+0
+speaker and hypothesis H assumes the two samples are from form segmentation introduces a trade-oﬀ error related to the
+1
+thediﬀerentspeakers. Manyalgorithmsforthehypothesistest- segmentlength: segmentsneedtobesuﬃcientlyshorttosafely
+ing,suchasKullbackLeibler2(KL2)[10],“GeneralizedLike- assume that they do not contain multiple speakers but at the
+lihoodRatio”(GLR)[109]andBIC[110,111]wereproposed same time it is necessary to capture enough acoustic informa-
+withtheBICmethodbeenthemostwidelyusedmethod. The tiontoextractameaningfulspeakerrepresentationx .
+j
+BIC approach can be applied to segmentation process as fol-
+lows:assumingthatX={x1,··· ,xN}isthesequenceofspeech 2.4. SpeakerRepresentationsandSpeakerEmbeddings
+features extracted from the given audio stream and x is drawn
+In this section, we explain a few popular methods for mea-
+fromfromanindependentmultivariateGaussianprocess:
+suring the similarity of speech segments. These methods are
+x ∼ N(µ,Σ), (7) paired with clustering algorithms, which will be explained in
+i i i
+the next section. We ﬁrst introduce GMM based hypothesis
+where µi, Σi is mean and covariance matrix of the i-th feature testingapproacheswhichareusuallyemployedwithsegmenta-
+window,twohypothesisH0andH1canbedenotedasfollows: tionapproachesbasedonaspeakerchangepointdetection. We
+thenintroducewell-knownspeakerrepresentationsforspeaker
+H :x ···x ∼ N(µ,Σ) (8)
+0 1 N diarizationsystemsthatareusuallyemployedwiththeuniform
+H1 :x1···xi ∼ N(µ1,Σ1) (9) segmentationmethodinSection2.4.2andSection2.4.3.
+xi+1···xN ∼ N(µ2,Σ2) (10)
+2.4.1. GMMspeakermodelforsimilaritymeasure
+Thus, hypothesis H models two sample windows with one
+0 Theearlydaysofspeakerdiarizationsystemswerebasedon
+Gaussian while hypothesis H models two sample windows
+1 a GMM built on acoustic features such as the MFCCs. Along
+with two Gaussians. Using the Eq. (8), the maximum likeli-
+with GMM based method, AHC was also employed for clus-
+hoodratiostatisticscanbeexpressedas
+tering, resulting in the speaker homogeneous clusters. While
+R(i)= Nlog|Σ|−N log|Σ |−N log|Σ |, (11) therearemanyhypothesistestingmethodsforspeechsegment
+1 1 2 2
+clustering process such as greedy BIC [110], GLR [114] and
+wherethesamplecovarianceΣisfrom{x ,··· ,x },Σ isfrom KL [115] methods, greedy BIC method was the most popular
+1 N 1
+{x1,··· ,xi}andΣ2 isfrom{xi+1,··· ,xN}. Finally,aBICvalue approach.WhilegreedyBICmethodalsoemploysBICvalueas
+betweentwomodelsisexpressed: inspeakerchangepointdetection,ingreedyBICmethod,BIC
+value is used for measuring the similarity between two nodes
+BIC(i)=R(i)−λP, (12) during the AHC process. For the given nodes to be clustered,
+S = {s ,··· ,s }, greedyBICmethodmodeleachnode s asa
+wherePisthepenaltyterm[110]deﬁnedas multiva1riateGakussiandistributionN(µ,Σ)whereµ andΣi are
+i i i i
+(cid:32) (cid:33) meanandcovariancematrixofthemergedsamplesinthenode
+1 1
+P= d+ d(d+1) logN, (13) s. BICvalueformergingthenodes ands iscalculatedas
+2 2 i 1 2
+anddisdimensionofthefeature. Thepenaltyweightλisgen- BIC =nlog|Σ|−n1log|Σ1|−n2log|Σ2|−λP, (15)
+erallysettoλ = 1. Thechangepointissetwhenthefollowing
+equationbecomestrue, where λ and P value are identical to Eq. (12) and n is sample
+size of the merged node (n = n +n ). During the clustering
+(cid:26) (cid:27) 1 2
+process, we merge the modes if Eq. (15) is negative. GMM
+maxBIC(i) >0. (14)
+i based hypothesis testing method with bottom-up hierarchical
+clusteringmethodwaspopularlyuseduntili-vectorandDNN-
+Asdescribedabove,thespeakerchangepointscanbedetected
+basedspeakerrepresentationsdominatethespeakerdiarization
+byusinghypothesistestingbasedonBICvaluesorothermeth-
+researchscene.
+ods such as KL2 [10], GLR [109]. However, if speech seg-
+mentation is done by speaker change point detection method,
+the length of each segment is not consistent. Therefore, after 2.4.2. JointFactorAnalysisandi-vector
+the advent of i-vector [51] and DNN-based embeddings [61] Before the advent of speaker representations such as i-
+thesegmentationbasedonspeakerchangepointdetectionwas vector [51] or x-vector [50], “Universal Background Model”
+mostlyreplacedbyuniformsegmentation[112,113,49],since (UBM) [116] framework showed success for speaker recogni-
+varyinglengthofthesegmentcreatedanadditionalvariability tion tasks by employing a large mixture of Gaussians, while
+into the speaker representation and deteriorated the ﬁdelity of covering a fairly large amount of speech data. The idea of
+thespeakerrepresentations. Inuniformsegmentationschemes, modelingandtestingthesimilarityofvoicecharacteristicswith
+the given audio stream input is segmented with a ﬁxed win- GMM-UBM [116] is largely improved by JFA [117, 118].
+dowlengthandoverlaplength. Thus, thelengthoftheunitof GMM-UBM based hypothesis testing had a problem of Max-
+speakerdiarizationresultisremainsﬁxed. imum a Posterior (MAP) adaptation that is not only aﬀected
+5byspeaker-speciﬁccharacteristicsbutalsoothernuisancefac-
+torssuchaschannelandbackgroundnoise. Therefore,thecon-
+ceptofsupervectorgeneratedbyGMM-UBMmethodwasnot
+ideal. JFA tackles this problem and decompose a supervector
+into speaker independent, speaker dependent, channel depen-
+dent and residual components. Thus, the ideal speaker super-
+vector scanbedecomposedasintheEq. (16). Atermmde-
+notes speaker independent component, U denotes channel de-
+pendent component matrix, and D denotes speaker-dependent
+residual component matrix. Along with these component ma-
+trices, vector y is for the speaker factors, vector x is for the
+channelfactorsandvectorzisforthespeaker-speciﬁcresidual
+factors. AllofthesevectorshaveapriordistributionofN(0,1).
+M(s)=m+Vy+Ux+Dz. (16)
+The idea of JFA approach is further simpliﬁed by employing
+Fig.2:Diagramofd-vectormodel.
+the so called “Total Variability” matrix T modeling both the
+channel and the speaker variability, and the vector w which is
+referredtoasthe“i-vector”[51].ThesupervectorMismodeled
+as:
+M=m+Tw, (17)
+In Eq. (17), m is the session and channel-independent com-
+ponent of the mean supervector. Similarly to JFA, w is as-
+sumedtofollowstandardnormaldistributionandcalculatedby
+MAP estimation, in [119]. The notion of speaker representa-
+tion is popularized by i-vectors, where the speaker represen-
+tation vector can contain a numerical feature that characterize
+thevocaltractofeachspeaker. Thei-vectorspeakerrepresen-
+tations have employed in not only speaker recognition studies
+butalsoinnumerousspeakerdiarizationstudies[112,120,121]
+andshowedsuperiorperformanceoverGMM-basedhypothesis
+testingmethods.
+2.4.3. NeuralNetworkBasedSpeakerRepresentations Fig.3:Diagramofx-vectorembeddingextractor.
+Speakerrepresentationsforspeakerdiarizationhasalsobeen
+heavilyaﬀectedbytheriseofneuralnetworksanddeeplearn-
+ing approaches. The idea of representation learning was ﬁrst with the cross entropy loss. The d-vector embeddings are ob-
+introduced for face recognition tasks [122, 123]. The fun- tainedinthelastfullyconnectedlayerasinFig.2.Thed-vector
+damental idea of neural network-based representations is that schemeappearsinnumerousspeakerdiarizationpapers,e.g.,in
+we can use deep neural network architecture to map the in- [49,55].
+put signal source (an image or an audio clip) to a dense vec- DNN-basedspeakerrepresentationsareevenmoreimproved
+torbysamplingtheactivationsofalayerintheneuralnetwork by x-vector [62, 50]. The x-vector showed a superior per-
+model. The neural network based representation does not re- formance by winning the NIST speaker recognition challenge
+quire eigenvalue decomposition or factor analysis model that [124] and the ﬁrst DIHARD challenge [84]. Fig. 3 shows the
+involveshand-crafteddesignoftheintrinsicfactor. Also,there structure of x-vector framework. The time-delay architecture
+is no assumption or requirement of Gaussianity for the input and statistical pooling layer diﬀerentiate x-vector architecture
+data. Thus, the representation learning process has become fromd-vectorwhilestatisticalpoolinglayermitigatestheeﬀect
+morestraight-forwardandtheinferencespeedhasbeenalsoim- of the input length. This is especially advantageous when it
+provedcomparedtothetraditionalfactoranalysisbasedmeth- comestospeakerdiarizationsincethespeakerdiarizationsys-
+ods. tems are bound to process segments that are shorter than the
+Among many of the neural network based speaker repre- regularwindowlength.
+sentations, d-vector [61] remains one of the most prominent Forspeakerdiarizationtasks,“ProbabilisticLinearDistcrim-
+speaker representation extraction frameworks. The d-vector inant Analysis” (PLDA) has been frequently used along with
+employsstackedﬁlterbankfeaturesthatincludecontextframes x-vectorori-vectortomeasuretheaﬃnitybetweentwospeech
+asaninputfeatureandtrainsamultiplefullyconnectedlayers segments.PLDAemploysthefollowingmodelingforthegiven
+6speakerrepresentationφ ofthei-thspeakerand j-thsessionas
+ij
+below:
+φ =µ+Fh +Gw +(cid:15) . (18)
+ij i ij ij
+Here, m is mean vector, F is speaker variability matrix, G is
+channel variability matrix and (cid:15) is residual component. The
+terms h and w are latent variable for F and G respectively.
+i ij
+During the training process of PLDA, m,Σ,F and G are esti-
+mated using expectation maximization (EM) algorithm where
+Σ is a covariance matrix. Based on the estimated variability Fig.4:AgglomerativeHierarchicalClustering.
+matricesandthelatentvariablesh andw ,twohypothesesare
+i ij
+tested:hypothesisH forthecasethattwosamplesarefromthe
+0
+samespeakerandhypothesis H forthecasethattwosamples
+1
+arefromdiﬀerentspeakers. Thehypothesis H canbewritten
+0
+asfollows:
+ 
+(cid:34) φφ12 (cid:35)=(cid:34) µµ (cid:35)+(cid:34) FF G0 0G (cid:35) hww112 +(cid:34) (cid:15)(cid:15)12 (cid:35). (19)
+2
+On the other hand, The hypothesis H can be modeled as the
+1
+followingequation.
+ 
+h
+(cid:34) φφ12 (cid:35)=(cid:34) µµ (cid:35)+(cid:34) F0 G0 F0 G0 (cid:35) wh121 +(cid:34) (cid:15)(cid:15)12 (cid:35). (20) Fig.5:Generalstepsofspectralclustering.
+w
+2
+3. Shiftthesearchwindowtothenewmean.
+The PLDA model projects the given speaker representation
+ontothesubspaceFtoco-varythemostwhilede-emphasizing 4. Repeattheprocessuntilconvergence.
+the subspace G pertaining to channel variability. Using the
+abovehypotheses,wecancalculatealoglikelihoodratio. Mean-shiftclusteringalgorithmwasappliedtospeakerdiariza-
+tion task with KL distance [126], i-vector and cosine distance
+s(φ1,φ2)=logp(φ1,φ2 | H0)−logp(φ1,φ2 | H1). (21) in [112, 127] and i-vector and PLDA [128]. The advantage
+of mean-shift clustering algorithm is that the clustering algo-
+Ideally,stoppingcriterionshouldbe0,butinpracticeitvaries
+rithmdoesnotrequirethenumberofclustersinadvanceunlike
+fromaroundzerovaluesandthestoppingcriterionneedstobe
+k-meansclusteringmethods.Thisbecomesasigniﬁcantadvan-
+tunedondevelopmentset.Thestoppingcriterionlargelyaﬀects
+tageinspeakerdiarizationtaskswherethenumberofspeakers
+the estimated number of speakers because the clustering pro-
+isunknownasinmostoftheapplications.
+cess stops when the distance between closest samples reaches
+thresholdandthenumberofclustersisdeterminedbythenum-
+2.5.2. AgglomerativeHierarchicalClustering(AHC)
+berofremainingclustersatthestepwhereclusteringisstopped.
+AHC is a clustering method that has been constantly em-
+ployed in many speaker diarization systems with a number of
+2.5. Clustering
+diﬀerentdistancemetricsuchasBIC[110,129],KL[115]and
+After generating the speaker representations for each seg-
+PLDA [84, 90, 130]. AHC is an iterative process of merging
+ment, clustering algorithm is applied to make clusters of seg-
+the existing clusters until the clustering process meets a crite-
+ments. Weintroducethemostcommonlyusedclusteringmeth-
+rion. AHCprocessstartsbycalculatingthesimilaritybetween
+odsforspeakerdiarizationtask.
+Nsingletonclusters. Ateachstep,apairofclustersthathasthe
+highest similarity is merged. The iterative merging process of
+2.5.1. Mean-shift
+AHCproducesadendrogramwhichisdepictedinFig.4.
+Mean-shift [125] is a clustering algorithm that assigns the
+One of the most important aspect of AHC is the stopping
+givendatapointstotheclustersiterativelybyﬁndingthemodes
+criterion. For speaker diarization task, AHC process can be
+inanon-parametricdistribution. Mean-shiftalgorithmfollows
+stopped using either a similarity threshold or a target number
+thefollowingsteps:
+of clusters. Ideally, if PLDA is employed as distance metric,
+the AHC process should be stopped at s(φ ,φ ) = 0 in Eq.
+1. Startwiththedatapointsassignedtoaclusteroftheirown. 1 2
+(18). However, itiswidelyemployedthatthestoppingmetric
+2. Computeameanfortheeachgroup. is adjusted to get an accurate number of clusters based on a
+7developmentset. Ontheotherhand,ifthenumberofspeakers whilechoosing σbyusingpredeﬁned scalarvalueβ andvari-
+is known or estimated by other methods, AHC process can be ance values from the data points while the speaker diarization
+stoppedwhentheclusterscreatedbyAHCprocessreachesthe systemin[134]didnotuseβvalueforNJWalgorithm. Onthe
+pre-determinednumberofspeakerK. otherhand,inthespeakerdiarizationsystemin[52],σ2 = 0.5
+forNJWalgorithm.
+2.5.3. SpectralClustering Aside from NJW spectral clustering algorithm, many other
+Spectral Clustering is another popular clustering approach typesofspectralclusteringweresuccessfullyappliedtospeaker
+forspeakerdiarization. Whiletherearemanyvariations,spec- diarization task. The speaker diarization system in [49] em-
+tralclusteringinvolvesthefollowingsteps. ployedGaussianblurforaﬃnityvalues,diﬀusionprocessY =
+XXT and row-wise max normalization (Y = X /max X ).
+ij ij k ik
+i. AﬃnityMatrixCalculation: Therearemanywaystogen- In the spectral clustering approach appeared in [135], similar-
+erateanaﬃnitymatrixAdependingonthewaytheaﬃnity ityvaluesthatarecalculatedfromaneuralnetworkmodelwere
+value is processed. The raw aﬃnity value d is processed usedwithoutanykernel,andtheunnormalizedgraphLaplacian
+(cid:16) (cid:17)
+by kernel such as exp −d2/σ2 where σ is a scaling pa- isemployedtoperformspectralclustering.Morerecently,auto-
+rameter. Ontheotherhand,therawaﬃnityvaluedcould tuningspectralclusteringmethodwasproposedforspeakerdi-
+alsobemaskedbyzeroingthevaluesbelowathresholdto arizationtask[136]wheretheproposedclusteringmethoddoes
+onlykeeptheprominentvalues. not require parameter tuning on a separate development set.
+The work in [136] employs binarized aﬃnity matrix with the
+ii. LaplacianMatrixCalculation[131]: ThegraphLaplacian row-wise count p and the binarization parameter p is selected
+can be calculated in the following two types; normalized bychoosingtheminimumvalueofr(p) = p/g whereg rep-
+p p
+andunnormalized. ThedegreematrixDcontainsdiagonal resents the maximum eigengap from the unnormalized graph
+elementsd = (cid:80)n a wherea istheelementofthei-th Laplacianmatrix. Thus, r(p)representshowcleartheclusters
+i j=1 ij ij
+rowand j-thcolumninanaﬃnitymatrixA. areforthegivenvalue pand pcouldbeautomaticallyselected
+toperformspectralclusteringwithouttuningthe p-value.
+(a) NormalizedGraphLaplacian:
+2.6. Post-processing
+L=D−1/2AD−1/2. (22)
+2.6.1. Resegmentation
+Resegmentation is a process to reﬁne the speaker boundary
+(b) UnnormalizedGraphLaplacian:
+thatisroughlyestimatedbytheclusteringprocedure. In[137],
+L=D−A. (23) Viterbi resegmentation method based on the Baum-Welch al-
+gorithm was introduced. In this method, estimation of Gaus-
+iii. Eigen Decomposition: The graph Laplacian matrix L is sianmixturemodelcorrespondingtoeachspeakerandViterbi-
+decomposedintotheeigenvectormatrixXandthediago- algorithm-basedresgmentationbyusingtheestimatedspeaker
+nalmatrixthatcontainseigenvalues. Thus,L=XΛX(cid:62). GMMarealternatelyapplied.
+Later,amethodtorepresentthediarizationprocessbasedon
+iv. Re-normalization(optional): therowsofXisnormalized Variational Bayeian Hidden Markov Model (VB-HMM) was
+so that y = x /(cid:16)(cid:80) x2(cid:17)1/2 where x and y are the ele- proposed, and was shown to be superior as a resegmentation
+ij ij j ij ij ij
+mentsofthei-throwand j-thcolumninmatrixXandY, method compared to Viterbi resegmentation [138, 139, 140].
+respectively. In the VB-HMM framework, the speech feature X = (xt|t =
+1,...,T) is assumed to be generated from HMM where each
+v. Speaker Counting: Speaker number is estimated by ﬁnd- HMMstatecorrespondstooneof K possiblespeakers. Given
+ingthemaximumeigengap. we have M HMM states, M-dimensional variable Z = (z|t =
+t
+1,...,T) is introduced where k-th element of z is 1 if k-th
+t
+vi. k-meansClustering: Thek-smallesteigenvaluesλ ,λ ,...,
+1 2 speakerisspeakingatthetimeindext,and0otherwise. Atthe
+λ and the corresponding eigenvectors v , v ,..., v are
+n 1 2 k sametime,thedistributionofx ismodeledbasedonahidden
+usedtomakeU ∈ Rm×n wheremisdimensionoftherow variable Y = {y |i = 1,...,K}, twhere y is a low dimensional
+k k
+vectorsinU. Finally,therowvectorsu ,u ,...,u areclus-
+1 2 n vector for k-th speaker. Given these notation, the joint proba-
+teredbyk-meansalgorithm.
+bilityofX,Y,andZisdecomposedas
+Amongmanyvariationsofspectralclusteringalgorithm,Ng- P(X,Z,Y)= P(X|Z,Y)P(Z)P(Y), (24)
+Jordan-Weiss (NJW) algorithm [132] is often employed for
+speaker diarization task. NJW algorithm employs a kernel whereP(X|Z,Y)istheemissionprobabilitymodeledbyGMM
+(cid:16) (cid:17)
+exp −d2/σ2 wheredisarawdistanceforcalculatinganaﬃn- whose mean vector is represented by Y, P(Z) is the transition
+ity matrix. The aﬃnity matrix is used for calculating a nor- probabilityoftheHMM,andP(Y)isthepriordistributionofY.
+malizedgraphLaplacian. Inaddition,NJWalgorithminvolves BecauseZrepresentsthetrajectoryofspeakers,thediarization
+renormalization before the k-means clustering process. The problem can be expressed as the inference problem of Z that
+(cid:82)
+speaker diarization system in [133] employed NJW algorithm maximize the posterior distribution P(Z|X) = P(Z,Y|X)dY.
+8Since it is intractable to directory solve this problem, Varia-
+tional Bayes method is used to estimate the model parameters
+thatapproximate P(Z,Y|X)[139,141]. TheVB-HMMframe-
+workwasoriginallydesignedasastandalonediarizationframe-
+work. However, itrequirestheparameterinitializationtostart
+VBestimation,andtheparametersareusuallyinitializedbased
+on the result of speaker clustering. In that context, VB-HMM
+canbeseenasaresegmentationmethod,andwidelyusedasthe
+ﬁnalstepofspeakerdiarization(e.g.,[142,113]).
+2.6.2. SystemFusion
+As another direction of post processing, there have been
+a series of studies on the fusion method of multiple diariza-
+tion results to improve the diarization accuracy. While it is
+widelyknownthatthesystemcombinationgenerallyyieldsbet-
+terresultforvarioussystems(e.g.,speechrecognition[143]or
+speakerrecognition[144]),combiningmultiplediarizationhy-
+potheses has several unique problems. Firstly, the speaker la-
+belingisnotstandardizedamongdiﬀerentdiarizationsystems.
+Secondly,theestimatednumberofspeakersmaydiﬀeramong
+diﬀerentdiarizationsystems.Finally,theestimatedtimebound-
+ariesmaybealsodiﬀerentamongmultiplediarizationsystems.
+System combination methods for speaker diarization systems
+Fig.6:ExampleofDOVERsystem.
+needtohandletheseproblemsduringthefusionprocessofmul-
+tiplehypotheses.
+In[145],amethodtoselectthebestdiarizationresultamong proposed a method called DOVER-Lap, in which the speak-
+multiple diarization systems were proposed. In this method, ers of multiple hypothesis are aligned by a weighted k-partite
+AHCisappliedonthesetofdiarizationresultswherethedis- graph matching, and the number of speakers K for each small
+tanceoftwodiarizationresultsaremesuredbysymmetricDER. segment is estimated based on the weighted average of multi-
+AHCisexecuteduntilthenumberofgroupsbecomestwo,and ple systemsto select thetop-K voted speakerlabels. Both the
+the diarization result that has the smallest distance to all other modiﬁed DOVER and DOVER-Lap showed the improvement
+resultsinthebiggestgroupisselectedastheﬁnaldiarizationre- ofDERforthespeakerdiarizationresultwithspeakeroverlaps.
+sult. In[146],twodiarizationsystemsarecombinedbyﬁnding
+thematchingbetweentwospeakerclusters, andthenperform- 3. Recent Advances in Speaker Diarization using Deep
+ingtheresegementationbasedonthematchingresult. Learning
+More recently, DOVER (diarization output voting error re-
+duction) method [147] was proposed to combine multiple di- This section introduces various recent eﬀorts toward deep
+arization results based on the voting scheme. In the DOVER learning-based speaker diarization techniques. Firstly, meth-
+method,speakerlabelsamongdiﬀerentdiarizationsystemsare ods that incorporate deep learning into a single component of
+aligned one by one to minimize DER between the hypotheses speaker diarization, such as clustering or post-processing, are
+(the processes 2 and 3 of Fig. 6). After every hypotheses are introduced in Section 3.1, Then, methods that unify several
+aligned,eachsystemvotesitsspeakerlabeltoeachsegmented componentsofspeakerdiarizationintoasingleneuralnetwork
+region(eachsystemmayhavediﬀerentweightforvoting),and areintroducedinSection3.2,
+thespeakerlabelthatgainsthehighestvotingweightisselected
+3.1. Single-moduleoptimization
+foreachsegmentedregion(theprocess4ofFig.6). Incaseof
+3.1.1. Speakerclusteringenhancedbydeeplearning
+multiple speaker labels get the same voting weight, a heuris-
+Several methods that enhance the speaker clustering based
+tic to break the ties (such as selecting the result from the ﬁrst
+on deep learning were proposed. A deep-learning based clus-
+system)isused.
+tering algorithm, called Improved Deep Embedded Clustering
+The DOVER method has an implicit assumption that there
+(IDEC)isproposedin[149]. Thegoalistotransformtheinput
+is no overlapping speech, i.e., at most only 1 speaker is as-
+features, herein speaker embeddings, to become more separa-
+signed for each time index. To combine the diarization hy-
+ble,giventhenumberofclusters/speakers. Thekeyideaisthat
+potheseswithoverlappingspeakers,twomethodswererecently
+eachembeddinghasaprobabilityof“belonging”toeachofthe
+proposed. In[104],theauthorsproposedthemodiﬁedDOVER
+method,wherethespeakerlabelsindiﬀerentdiarizationresults availablespeakercluster[150,64],
+are ﬁrst aligned with a root hypothesis, and the speech activ- (cid:16) (cid:17)−a+1
+1+(cid:107)z −µ (cid:107)2/a a q2/f
+istcyoroeffeoarcehacsphesapkeearkiesrefsotrimeaactehdsmbaasleldseognmtehnet.wReaigjhetteadl.v[o1t4in8g] qij = (cid:80)l(cid:0)1+(cid:107)izi−jµl(cid:107)2/a(cid:1)−a+a1, pij = (cid:80)liqj2il/ifl (25)
+9andσ(·)isanonlinearfunction. GNNwasoptimizedbymin-
+imizing the distance between the reference aﬃnity matrix and
+estimatedaﬃnitymatrix,wherethedistancewascalculatedby
+acombinationofhistogramloss[151]andnuclearnorm.
+There are also several diﬀerent approaches to generate the
+aﬃnity matrix. In [152], self-attention-based network was in-
+troduced to directly generate a similarity matrix from a se-
+quence of speaker embeddings. In [153], several aﬃnity ma-
+triceswithdiﬀerenttemporalresolutionswerefusedintosingle
+aﬃnitymatrixbasedonaneuralnetwork.
+3.1.2. LearningtheDistanceEstimator
+Data-driven techniques perform remarkably well on a wide
+variety of tasks [154]. However, traditional DL architectures
+mayfailwhentheprobleminvolvesrelationalinformationbe-
+tweenobservations[155]. Recently,RelationalRecurrentNeu-
+Fig.7:Speakerdiarizationwithgraphneuralnetwork
+ral Networks (RRNN) were introduced by [155, 156, 157] to
+solve this ”relational information learning” task. Speaker di-
+where z are the bottleneck features, µ is the centroid of i-th arization can be seen as a member of this class of tasks, since
+i i
+cluster and f is the soft cluster frequency with f = (cid:80)q . the ﬁnal decision depends on the distance relations between
+i i ij
+The clusters are iteratively reﬁned based on a target distribu- speechsegmentsandspeakerproﬁlesorcentroids.
+tion[150]basedonbottleneckfeaturesestimatedusinganau- The challenges of audio segmentation are detailed in Sec-
+toencoder. tion 2.3. Further, speaker embeddings are usually extracted
+The initial DEC approach presented some problems. As from a network trained to distinguish speakers among thou-
+such, improvedversionsofthealgorithmhavebeenproposed, sandsofcandidates[50].However,adiﬀerentlevelofgranular-
+where the possibility of trivial (empty) clusters is addressed ityinthespeakerspaceisrequired,sinceonlyasmallnumber
+(under the assumption that the distribution of speaker turns is of participants is typically involved in an interactive meeting
+uniformacrossallspeakers,i.e. allspeakerscontributeequally scenario. In addition to that, the distance metric used is of-
+to the session). This assumption is not realistic in real meet- tenheuristicand/ordependentoncertainassumptionswhichdo
+ingenvironmentsbutitconstrainsthesolutionspaceenoughto notnecessarilyhold, e.g., assumingGaussianityinthecaseof
+avoidtheemptyclusterswithoutaﬀectingoverallperformance. PLDA[158],etc.Finally,theaudiochunksaretreatedindepen-
+An additional loss term penalizes the distance from the cen- dentlyandanytemporalinformationaboutthepastandfuture
+troids µ, bringing the behavior of the algorithm closer to k- issimplyignored. Mostoftheseissuescanbeaddressedwith
+i
+means[149]. the RRNNs in [159], where a data-driven, memory-based ap-
+Basedontheseimprovements,thelossfunctionoftherevis- proach is bridging the performance gap between the heuristic
+itedDECalgorithmconsistsofthreediﬀerentlosscomponents, andthetrainabledistanceestimatingapproaches. TheRRNNs
+i.e. L the clustering error, L the uniform “speaker air-time” have shown great success on several problems requiring rela-
+c u
+distributionconstraintand L thedistanceofthebottleneck tionalreasoning[156,155,159],andspeciﬁcallyusingtheRe-
+MSE
+featuresfromthecentroids[149], lationalMemoryCore(RMC)[155].
+In this context, a novel approach of learning the distance
+L=αLc+βLr+γLu+δLMSE (26) between such centroids (or speaker proﬁles) and the embed-
+dings was proposed in [159] (Fig. 8). The diarization pro-
+allowing for the diﬀerent loss functions to be weighted diﬀer-
+cess can be seen as a classiﬁcation task on already segmented
+ently and the weights α,β,γandδ can be ﬁne-tuned on some
+audio, Section 2.3, where the audio signal is ﬁrst segmented
+held-outdata.
+either uniformly [160] or based on estimated speaker change
+In[65], adiﬀeentapproachthatpurifythesimilaritymatrix
+points [161]. As these segments are assumed to be speaker-
+for the spectral clustering based on the graph neural network
+homogeneous,speakerembeddingsx foreachsegmentareex-
+(GNN) was proposed (Fig. 7). Given a sequence of speaker j
+tractedandthencomparedagainstalltheavailablespeakerpro-
+embeddings{e ,...e }where N isthelengthofsequence. The
+1 N ﬁlesorspeakercentroids. Byminimizingaparticulardistance
+ﬁrst layer of the GNN takes the input {x0 = e|i = 1,...,N}.
+i i metric, the most suitable speaker label is assigned to the seg-
+The GNN then computes the output of the p-th layer {x(p)|i =
+i ment. The ﬁnal decision relies on a distance estimation, ei-
+1,...,N}asfollowings.
+therthecosine[51]orthePLDA[158]distance,orthedistance
+(cid:88) basedonRRNNsasproposedin[159]. Thelatermethodbased
+x(p) =σ(W L x(p−1)), (27)
+i i,j j on memory networks has shown consistent improvements in
+j
+performance.
+whereLrepresentsanormalizedaﬃnitymatrixaddedbyself-
+3.1.3. Deeplearning-basedpostprocessing
+connection, W is a trainable weight matrix for the p-th layer,
+10itedbythenumberofelementoftheoutputlayer.
+As a diﬀerent approach, Horiguchi et al. proposed to apply
+theEENDmodel(detailedinSection3.2.4)toreﬁnetheresult
+of a clustering-based speaker diarization [162]. A clustering-
+basedspeakerdiarizationmethodcanhandlealargenumberof
+speakerswhileitisnotgoodathandlingtheoverlappedspeech.
+On the other hand, EEND has the opposite characteristics. To
+Fig.8: ContinuousspeakeridentiﬁcationsystembasedonRMC.Thespeech
+complementary use two methods, they ﬁrst apply a conven-
+signalissegmenteduniformlyandeachsegmentxtiscomparedagainstallthe
+availablespeakerproﬁlesaccordingtoadistancemetricd(·,·).Aspeakerlabel tionalclusteringmethod. Then,thetwo-speakerEENDmodel
+st,jisassignedtoeachxtminimizingthismetric. isiterativelyappliedforeachpairofdetectedspeakerstoreﬁne
+thetimeboundaryofoverlappedregions.
+3.2. Jointoptimizationforspeakerdiarization
+3.2.1. Jointsegmentationandclustering
+AmodelcalledUnboundedInterleaved-StateRecurrentNeu-
+ral Networks (UIS-RNN) was proposed that replaces the seg-
+mentationandclusteringprocedureintoatrainablemodel[55].
+Given the input sequence of embeddings X = (x ∈ Rd|t =
+t
+1,...,T), UIS-RNNgeneratesthediarizationresultY = (y ∈
+t
+N|t = 1,...,T) as a sequence of speaker index for each time
+frame. ThejointprobabilityofXandYcanbedecomposedby
+thechainruleasfollows.
+(cid:89)T
+P(X,Y)=P(x ,y ) P(x,y|x ,y ). (28)
+1 1 t t 1:t−1 1:t−1
+t=2
+Tomodelthedistributionofspeakerchange,UIS-RNNthenin-
+troducealatentvariableZ = (z ∈{0,1}|t = 2,...,T),wherez
+t t
+Fig.9:TargetSpeakerVoiceActivityDetector becomes1ifthespeakerindicesattimet−1andt arediﬀer-
+ent,and0otherwise. ThejointprobabilityincludingZisthen
+decomposedasfollows.
+Thereareafewrecentstudiestotrainaneuralnetworkthat
+isappliedontopoftheresultofaclustering-basedspeakerdi- (cid:89)T
+P(X,Y,Z)=P(x ,y ) P(x,y,z|x ,y ,z ) (29)
+arization. Thesemethodcanbecategorizedasanextensionof 1 1 t t t 1:t−1 1:t−1 1:t−1
+t=2
+thepostprocessing.
+Medennikov et al. proposed the Target-Speaker Voice Ac- Finally,thetermP(x,y,z|x ,y ,z )isfurtherdecom-
+t t t 1:t−1 1:t−1 1:t−1
+tivityDetection(TS-VAD)toachieveaccuratespeakerdiariza- posedintothreecomponents.
+tionevenwithmanyspeakeroverlapsnoisyconditions[91,66].
+As shown in Fig. 9, TS-VAD takes the input of acoustic fea- P(xt,yt,zt|x1:t−1,y1:t−1,z1:t−1)
+ture(MFCC)aswellasthei-vectorofalltargetspeakers. The = P(x|x ,y )P(y|z,y )P(z|z ) (30)
+t 1:t−1 1:t t t 1:t−1 t 1:t−1
+modelhasanoutputlayerwherei-thelementbecomes1attime
+frametifi-thspeakerisspeakingatthetimeframe,and0oth- Here,P(x|x ,y )representsthesequencegenerationproba-
+t 1:t−1 1:t
+erwise. Toconverttherawoutputintoasequenceofsegment, bility,andmodeledbygatedrecurrentunit(GRU)-basedrecur-
+afurtherpost-processingbasedonheuristics(medianﬁltering, rent neural network. P(y|z,y ) represents the speaker as-
+t t 1:t−1
+binarization with the threshold, etc.) or HMM-based decod- signmentprobability,andmodeledbyadistantdependentChi-
+ingwithstatesrepresentingsilence,non-overlappingspeechof neserestaurantprocess[163],whichcanmodelthedistribution
+eachspeaker,andoverlappingspeechfromallpossiblepairsof of unbounded number of speakers. Finally, P(z|z ) repre-
+t 1:t−1
+speakers is used. Prior to inference, TS-VAD requires the i- sentsthespeakerchangeprobability,andmodeledbyBernoulli
+vectorofalltargetspeakers. Thei-vectorsareinitializedbased distribution.Sinceallmodelsarerepresentedbytrainablemod-
+ontheconventionalclustering-basedspeakerdiarizationresult. els,theUIS-RNNcanbetrainedinasupervisedwaybyﬁnding
+After initializing the i-vector, the inference by TS-VAD and parameters that maximizes logP(X,Y,Z) over training data.
+reﬁnement of i-vector based on the TS-VAD result can be re- The inference can be conducted by ﬁnding Y that maximizes
+peateduntilitconverges. TS-VADshowedasigniﬁcantlybet- logP(X,Y)givenXbasedonthebeamsearchinanonlinefash-
+ter DER compared with the conventional clustering based ap- ion. While UIS-RNN works in an online fashion, UIS-RNN
+proach[91,88]. Ontheotherhand,ithasaconstraintthatthe showedbetterDERthanthatoftheoﬄinesystembasedonthe
+maximumnumberofspeakersthatthemodelcanhandleislim- spectralclustering.
+11DSAepcteeticveticitoyhn EEmSxptbreeaadcktdieoinrng ReRfiengeimonent Remove Overlap
+...
+Neural Network
+ch
+feature map anchor freq Clustering
+time
+STFT feature freq RPN
+time ...
+audio input Neural Network Neural Network
+(a) Region proposal network (RPN) (b) Diarization by RPN
+Fig.10: (a)RPNforspeakerdiarization, (b)diarizationprocedurebasedon
+RPN. ...
+Neural Network Neural Network
+3.2.2. Joint segmentation, embedding extraction, and re-
+segmentation
+AspeakerdiarizationmethodbasedontheRegionProposal
+...
+Networks (RPN) was proposed to jointly perform segmenta-
+tion,speakerembeddingextraction,andre-segmentationproce- audio block 1 audio block 2
+duresbyasingleneuralnetwork[75]. TheRPNwasoriginally
+proposedtodetectmultipleobjectsfroma2-dimage[164],and Fig. 11: Joint speech separation, speaker counting, and speaker diarization
+1-dvariantoftheRPNisusedforspeakerdiarizationalongwith model.
+thetime-axis.RPNworksontheShort-TermFourierTransform
+(STFT) features. A neural network converts the STFT feature
+speech separation based on the spatial covariance model with
+into the feature map (Fig. 10 (a)). Then, for each candidates
+non-negative matrix factorization. They derived the EM algo-
+of time region of speech activity, called an anchor, the neural
+rithmtoestimateseparatedspeechandspeechactivityofeach
+networkjointlyperformthreetasksto(i)estimatewhetherthe
+speakerfromthemulti-channeloverlappedspeech. Whiletheir
+anchorincludesspeechactivityornot,(ii)extractaspeakerem-
+methodjointlyperformspeakerdiarizationandspeechsepara-
+beddingcorrespondingtotheanchor,and(iii)estimatethedif-
+tion,theirmethodisbasedonastatisticalmodeling,andestima-
+ferenceofthedurationandcenterpositionoftheanchorandthe
+tionwasconductedsolelybasedontheobservation,i.e.without
+referencespeechactivity. Theﬁrst,second,andthirdtaskscor-
+anymodeltraining.
+responds to the segmentation, speaker embedding extraction,
+Neumann et al. [76, 167] later proposed a trainable model,
+andre-segmentation,respectively.
+called online Recurrent Selective Attention Network (online
+TheinferenceprocedurebyRPNisdepectedinFig. 10(b).
+RSAN), for joint speech separation, speaker counting, and
+The RPN is ﬁrstly applied to every anchors on the test audio,
+speakerdiarizationbasedonasingleneuralnetwork(Fig. 11).
+and the regions with speech activity probability higher than a
+TheirneuralnetworktakestheinputofspectrogramX∈RT×F,
+pre-determinedthresholdarelistedasacandidatetimeregions.
+a speaker embedding e ∈ Rd, and a residual mask R ∈ RT×F,
+Estimated regions are then clustered by using a conventional
+whereT and F isthemaximumtimeindexandthemaximum
+clusteringmethod(e.g.,k-means)basedonthespeakerembed-
+frequency bin of the spectrogram, respectively. It output the
+dingscorrespondingtoeachregion. Finally,aprocedurecalled
+speech mask M ∈ RT×F and an updated speaker embedding
+non-maximum suppression is applied to remove highly over-
+for the speaker corresponding to e. The neural network is
+lappedsegments.
+ﬁrstly applied with R whose element is all 1, and e whose el-
+The RPN-based speaker diarization has the advantage that
+ement is all 0. After the ﬁrst inference of M, R is updated as
+it can handle overlapped speech with possibly any number of
+R ← max(R−M,0), and the neural network is again applied
+speakers.Also,itismuchsimplerthantheconventionalspeaker
+with the updated R. This procedure is repeated until sum of
+diarization system. It was shown in multiple dataset that the
+R becomes less than a threshold. A separated speech can be
+RPN-based speaker diarization system achieved signiﬁcantly
+obtained by M (cid:12) X where (cid:12) is the element-wise multiplica-
+better DER than the conventional clustering-based speaker di-
+tion. Thespeakerembeddingisusedtokeeptrackthespeaker
+arizationsystem[75,88].
+ofadjacentblocks. Thankstotheiterativeapproach, thisneu-
+ral network can cope with variable number of speakers while
+3.2.3. Jointspeechseparationanddiarization jointlyperformingspeechseparationandspeakerdiarization.
+There are also recent researches to jointly perform speech
+separation and speaker diarization. Kounades-Bastian et al.
+3.2.4. Fullyend-to-endneuraldiarization
+[165,166]proposedtoincorporateaspeechactivitymodelinto
+12diarization result attractor existing probability
+1 1 1 1 0
+Sigmoid Linear + Sigmoid
+attractors
+LSTM encoder LSTM decoder
+embedding
+EEND
+audio input
+Fig.13:EENDwithencoder-decoder-basedattractor(EDA).
+forward for the prior works. On the other hand, several limi-
+tations are also known for EEND. Firstly, the model architec-
+tureconstrainsthemaximumnumberofspeakersthatthemodel
+can cope with. Secondly, EEND consists of BLSTM or self-
+attentionneuralnetworks,whichmakesitdiﬃculttodoonline
+Fig.12:Two-speakerend-to-endneuraldiarizationmodel processing. Thirdly, it was empirically suggested that EEND
+tendstooverﬁttothedistributionofthetrainingdata[56].
+To cope with an unbounded number of speakers, several
+Recently, the framework called End-to-End Neural Diariza-
+extensions of EEND have been investigated. Horiguchi et
+tion(EEND)wasproposed[56,57],whichperformsallspeaker
+al. [169] proposed an extension of EEND with the encoder-
+diarization procedure based on a single neural network. The
+decoder-based attractor (EDA) (Fig. 13). This method ap-
+architecture of EEND is shown in Fig. 12. An input to the
+pliesanLSTM-basedencoder-decoderontheoutputofEEND
+EENDmodelisaT-lengthsequenceofacousticfeatures(e.g.,
+to generate multiple attractors. Attractors are generated until
+log mel ﬁlterbank), X = (x ∈ RF|t = 1,...,T). A neural
+t the attractor existing probability becomes less than a thresh-
+networkthenoutputsthecorrespondingspeakerlabelsequence
+old. Then, each attractor is multiplied with the embeddings
+Y = (y|t = 1,...,T) where y = [y ∈ {0,1}|k = 1,...,K].
+t t t,k generatedfromEENDtocalculatethespeechactivityforeach
+Here, y = 1 represents the speech activity of the speaker k
+t,k speaker. On the other hand, Fujita et al. [170] proposed an-
+at the time frame t, and K is the maximum number of speak-
+other approach to output the speech activity one after another
+ers that the neural network can output. Importantly, y and
+t,k by using a conditional speaker chain rule. In this method, a
+y canbeboth1fordiﬀerentspeakersk andk(cid:48),whichrepre-
+t,k(cid:48) neural network is trained to produce a posterior probability
+sentsthattwospeakerskandk(cid:48)isspeakingsimultaneously(i.e. P(y |y ,...,y ,X), where y = (y ∈ {0,1}|t = 1,...,T)
+k 1 k−1 k t,k
+overlapping speech). The neural network is trained to maxi-
+(cid:80) (cid:80) is the speech activity for k-th speaker. Then, the joint speech
+mizelogP(Y|X)∼ logP(y |X)overthetrainingdataby
+t k t,k activity probability of all speakers can be estimated from the
+assuming the conditional independence of the output y . Be-
+t,k followingspeaker-wiseconditionalchainruleas:
+cause there can be multiple candidates of the reference label
+Ybyswappingthespeakerindexk, thelossfunctioniscalcu- (cid:89)K
+latedforallpossiblereferencelabelsandthereferencelabelthat P(y1,...,yK|X)= P(yk|y1,...,yk−1,X). (31)
+has the minimum loss is used for the error back-propagation, k=1
+which is inspired by the permutation free objective used in Duringinference,theneuralnetworkisrepeatedlyapplieduntil
+speech separation [59]. EEND was initially proposed with a thespeechactivityy forthelastestimatedspeakerapproaches
+k
+bidirectionallongshort-termmemory(BLSTM)network[56], zero. Kinoshitaetal. [171]proposedadiﬀerentapproachthat
+andwassoonextendedtotheself-attention-basednetwork[57] combinesEENDandspeakerclustering.Intheirmethod,aneu-
+by showing the state-of-the-art DER for CALLHOME dataset ralnetworkistrainedtogeneratespeakerembeddingsaswellas
+(LDC2001S97)andCorpusofSpontaneousJapanese[168]. thespeechactivityprobability. Speakerclusteringconstrained
+TherearemultipleadvantagesofEEND.Firstly,itcanhan- by the estimated speech activity by EEND is applied to align
+dleoverlappingspeechinasoundway. Secondly,thenetwork theestimatedspeakersamongdiﬀerentprocessingblocks.
+isdirectlyoptimizedtowardsmaximizingdiarizationaccuracy, There are also a few recent trials to extend the EEND for
+by which we can expect a high accuracy. Thirdly, it can be onlineprocessing. Xueetal. [172]proposedamethodwitha
+retrained by a real data (i.e. not synthetic data) just by feed- speakertracingbuﬀertobetteralignthespeakerlabelsofadja-
+ing a reference diarization label while it is often not strait- centprocessingblocks. Hanetal. [173]proposedablockon-
+13lineversionofEDA-EEND[169]bycarryingthehiddenstate
+oftheLSTM-encodertogenerateattractorsblockbyblock.
+4. SpeakerDiarizationinthecontextofASR
+Fromaconventionalperspective,speakerdiarizationiscon-
+sideredapre-processingstepforASR.Inthetraditionalsystem
+structure for speaker diarization as depicted in Fig. 1, speech
+Fig.14:Integrationoflexicalinformationandacousticinformation.
+inputs are processed sequentially across the diarization com-
+ponents without considering the ASR objective, which corre-
+sponds to minimize word error rate (WER). One issue is that
+the tight boundaries of speech segments as the outcomes of
+speaker diarization have a high chance of causing unexpected
+word truncation or deletion errors in ASR decoding. In this
+sectionwediscusshowspeakerdiarizationsystemshavebeen
+developed in the context of ASR, not only resulting in better
+WERbypreventingspeakerdiarizationfromhurtingASRper-
+formance, but also beneﬁting from ASR artifacts to enhance
+diarizationperformance. Morerecently,therehavebeenafew
+pioneering proposals made for joint modeling of speaker di-
+arization and ASR, which we will introduce in the section as
+well.
+4.1. EarlyWorks
+ThelexicalinformationfromASRoutputhasbeenemployed
+for speaker diarization system in a few diﬀerent ways. First,
+theearliestapproachwasRT03evaluation[1]whichusedword
+boundaryinformationforsegmentationpurpose. In[1],agen- Fig.15:Integrationoflexicalinformationandacousticinformation.
+eral ASR system for broadcast news data was built where the
+basiccomponentsaresegmentation,speakerclustering,speaker
+adaptation and system combination after ASR decoding from “Thisis[name]”indicateswhowasthespeakerofthebroadcast
+thetwosub-systemswiththediﬀerentadaptationmethods. To newssection.Althoughtheearlyspeakerdiarizationstudiesdid
+understandtheimpactofthewordboundaryinformation,they notfullyleveragethelexicalinformationtodrasticallyimprove
+used ASR outputs to replace the segmentation part and com- DER,theideaofintegratingtheinformationfromASRoutput
+pared the diarization performance of the each system. In ad- has been employed by many studies to reﬁne or improve the
+dition, ASR result was also used for reﬁning SAD in IBM’s speakerdiarizatiohnoutput.
+submission[174]forRT07evaluation. Thesystemappearedin
+[174]incorporateswordalignmentsfromspeakerindependent
+4.2. UsinglexicalinformationfromASR
+ASR module and reﬁnes SAD result to reduce false alarms so
+that the speaker diarization system can have better clustering The more recent speaker diarization systems that take ad-
+quality. Thesegmentationsystemin[175]alsotakesadvantage vantage of the ASR transcript have employed a DNN model
+of word alignments from ASR. The authors in [175] focused tocapturethelinguisticpatterninthegivenASRoutputtoen-
+ontheword-breakageproblemwherethewordsfromASRout- hancethespeakerdiarizationresult. Theauthorsin[177]pro-
+put are truncated by segmentation results since segmentation posedawayofusingthelinguisticinformationforthespeaker
+result and decoded word sequence are not aligned. Therefore, diarization task where participants have distinct roles that are
+word-breakage(WB)ratiowasproposedtomeasuretherateof known to the speaker diarization system. Fig. 14 shows the
+change-points that are detected inside intervals corresponding diagram of speaker diarization system appeared in [177]. In
+to words. The DER and WB were reported together to mea- thissystem, aneuraltext-basedspeakerchangedetectoranda
+suretheinﬂuenceofwordtruncationproblem. Whilethefore- text-based role recognizer are employed. By employing both
+mentioned early works of speaker diarization systems that are linguisticandacousticinformation,DERwassigniﬁcantlyim-
+leveragingASRoutputarefocusingonthewordalignmentin- provedcomparedtotheacousticonlysystem.
+formationtoreﬁnetheSADorsegmentationresutl,thespeaker Lexical information from ASR output was also utilized for
+diarizationsystemin[176]createdadictionaryforthephrases speaker segmentation [178] by employing a sequence to se-
+that commonly appear in broadcast news. The phrases in this quence model that outputs speaker turn tokens. Based on the
+dictionaryprovideidentityofwhoisspeaking,whowillspeak estimatedspeakerturn,theinpututteranceissegmentedaccord-
+and who spoke in the broadcase news scenario. For example, ingly. The experimental results in [178] show that using both
+14word1 spk1 word2 word3 spk2 word4 spk1
+word hypothesis  speaker
+(with silence boundary) embeddings
+(*) colored block represents non-silence hypothesis 
+while white block represents silence hypothesis
+End-to-End ASR
+Estimation
+and Diarization
+audio input
+audio input Fig.17:JointdecodingframeworkforASRandspeakerdiarization.
+diarizationintheirexperiments. Ontheotherhand,thespeaker
+rolesorspeakeridentitytagsneedstobedeterminedandﬁxed
+Fig.16: JointASRanddiarizationbyinsertingaspeakertaginthetranscrip- duringtraining,soitisdiﬃculttocopewithanarbitrarynum-
+tion.
+berofspeakerswiththisapproach.
+A second approach is a MAP-based joint decoding frame-
+acousticandlexicalinformationcangetanextraadvantageow- work. Kanda et al. [79] formulated the joint decoding of
+ingtothewordboundarieswegetfromtheASRoutput. ASR and speaker diarization as followings (see also Fig. 17).
+[179]presentedfollow-upresearchwithintheabovethread. Assume that a sequence of observations is represented by
+Unlike the system in [178], lexical information from the ASR X = {X ,...,X }, where U is the number of segments (e.g.,
+1 U
+modulewasintegratedwiththespeechsegmentclusteringpro- generated by applying VAD on a long audio) and X is the
+u
+cess by employing an integrated adjacency matrix. The adja- acoustic feature sequence of the u-th segment. Further as-
+cencymatrixisobtainedfrommaxoperationbetweenacoustic sumethatwordhypotheseswithtimeboundaryinformationis
+information created from aﬃnities among audio segments and represented by W = {W ,...,W } where W is the speech
+1 U u
+lexicalinformationmatrixcreatedbysegmentingthewordse- recognitionhypothesescorrespondingtothesegmentu. Here,
+quence into word chunks that are likely to be spoken by the W = (W ,...,W )containsallspeakers’hypothesesinthe
+u 1,u K,u
+samespeaker. Fig.15showsadiagramthatexplainshowlex- segment u where K is the number of speakers, and W rep-
+k,u
+ical information is integrated in an aﬃnity matrix with acous- resents the speech recognition hypothesis of the k-th speaker
+tic information. The integrated adjacency matrix leads to an of the segment u. Finally, a tuple of speaker embeddings
+improved speaker diarization performance for CALLHOME E = (e ,...,e ),wheree ∈ Rd isd-dimensionalspeakerem-
+1 K j
+AmericanEnglishdataset. beddingsofk-thspeaker,isalsoassumed. Withallthesenota-
+tions,thejointdecodingframeworkofmulti-speakerASRand
+4.3. JointASRandspeakerdiarizationwithdeeplearning diarization can be formulated as a problem to ﬁnd most likely
+Wˆ as,
+Motivated by the recent success of deep learning and end-
+to-endmodeling,severalmodelshavebeenproposedtojointly Wˆ =argmaxP(W|X) (32)
+perform ASR and speaker diarization. As with the previous
+W
+section, ASR results contain a strong cue to improve speaker (cid:88)
+=argmax{ P(W,E|X)} (33)
+diarization. On the other hand, speaker diarization results can
+W E
+beusedtoimprovetheASRaccuracy,forexample,byadapting
+≈argmax{maxP(W,E|X)}, (34)
+theASRmodeltowardseachestimatedspeaker.Jointmodeling
+W E
+can leverage such inter-dependency to improve both ASR and
+speakerdiarization. Intheevaluation,aworderrorrate(WER) whereweusetheViterbiapproximationtoobtaintheﬁnalequa-
+metric that is aﬀected by both ASR errors and speaker attri- tion. This maximization problem is further decomposed into
+butionerrors,suchasspeaker-attributedWER[180]orcpWER twoiterativeproblemsas,
+[89],isoftenused.ASR-speciﬁcmetrics(e.g.,speaker-agnostic
+WER) or diarization-speciﬁc metrics (e.g., DER) is also used Wˆ (i) =argmaxP(W|Eˆ(i−1),X), (35)
+W
+complementary.
+Eˆ(i) =argmaxP(E|Wˆ (i),X), (36)
+Aﬁrstlineofapproachesisintroducingaspeakertaginthe
+E
+transcription of end-to-end ASR models (Fig. 16). Shafey et
+al. [77] proposed to insert a speaker role tag (e.g., (cid:104)doctor(cid:105) whereiistheiterationindexoftheprocedure. In[79],Eq. (35)
+and (cid:104)patient(cid:105)) in the output of a recurrent neural network- ismodeledbythetargetspeakerASR[181,182,183,71]and
+transducer (RNN-T)-based ASR system. Similarly, Mao et al. Eq. (36) is modeled by the overlap-aware speaker embedding
+[78]proposedtoinsertaspeakeridentitytagintheoutputofan estimation. This method shows a similar speaker-attributed
+attention-based encoder-decoder ASR system. These method WER compared to that of the target speaker ASR with oracle
+havebeenshowntobeabletoperformbothASRandspeaker speakerembeddings. Ontheotherhand,itrequiresaniterative
+15label prediction speaker prediction arization in the recent papers. CALLHOME dataset contains
+500 sessions of multilingual telephonic speech. Each session
+has 2 to 7 speakers while there are two dominant speakers in
+InventoryAttention
+eachconversation.
+DecoderRNN speaker query
+5.1.2. AMI
+DecoderOut SpeakerQueryRNN The AMI database [187] includes 100 hours of meeting
+Attention recordings from multiple sites in 171 meeting sessions. AMI
+database provides audio source recorded with lapel micro-
+phones which are separately recoreded and ampliﬁed for each
+speaker.Anotheraudiosourceisrecordedwithomnidirectional
+microphone arrays that are mounted on the table while meet-
+AsrEncoder SpeakerEncoder
+ing. AMI database is a suitable dataset for evaluating speaker
+diarizationsystemintegratedwithASRmodulesinceAMIpro-
+videsforcedalignmentdatawhichcontainswordandphoneme
+1 2 3 4 5 leveltimingsalongwiththetranscriptandspeakerlabel. Each
+audio input speaker profiles meetingsessioncontains3to5speakers.
+Fig.18:End-to-endspeaker-attributedASR
+5.1.3. ICSImeetingCorpus
+The ICSI meeting corpus [188] contains 75 meting corpus
+application of the target-speaker ASR and speaker embedding with4meetingtypes. ICSImeetingcorpusprovideswordlevel
+extraction, which makes it challenging to apply the method in timing along with the transcript and speaker label. The au-
+onlinemode. diosourceisrecordedwithclose-talkingindividualmicrophone
+As a third line of approaches, End-to-End (E2E) Speaker- andsixtabletopmicrophonestoprovidespeaker-speciﬁcchan-
+Attributed ASR (SA-ASR) model was recently proposed to nelandmulti-channelrecording. Eachmeetinghas3to10par-
+jointly perform speaker counting, multi-speaker ASR, and ticipants.
+speaker identiﬁcation [184, 185]. Diﬀerent from the ﬁrst two
+approaches, the E2E SA-ASR model takes the additional in- 5.1.4. DIHARDChallengedataset
+putofspeakerproﬁlesandidentiﬁestheindexofspeakerpro- DIHARD challenge dataset is created for DIHARD chal-
+ﬁles based on the attention mechanism (Fig. 18). Thanks to lenge1,2and3[189,85,190]whilefocusingonverychalleng-
+the attention mechanism for speaker identiﬁcation and multi- ing domains. DIHARD challenge development set and eval-
+talkerASRcapabilitybasedonserializedoutputtraining[186], uation set include clinical interviews, web videos, speech in
+there is no limitation of a maximum number of speakers that the wild (e.g., recordings in restaurants). DIHARD challenge
+the model can cope with. In case relevant speaker proﬁles are dataset also includes relatively less challenging datasets such
+suppliedintheinference,theE2ESA-ASRmodelcanautomat- asconversationaltelephonicspeech(CTS)andaudiobooksto
+ically transcribe the utterance while identifying the speaker of diversify the domains in development set and evaluation set.
+each utterance based on the supplied speaker proﬁles. On the Contrary to other speaker diarization datasets, domains such
+otherhand,incasetherelevantspeakerproﬁlescannotbeused asrestaurantconversationandwebvideoscontainsigniﬁcantly
+priortotheinference,theE2ESA-ASRmodelcanstillbeap- lowersignaltonoiseratio(SNR)thatmakesDERwayhigher.
+pliedwithexampleproﬁles,andspeakerclusteringontheinter- The ﬁrst DIHARD challenge, DIHARD 1, started with track
+nal speaker embeddings of the E2E SA-ASR model (“speaker 1 for diarization beginning from oracle SAD and track 2 di-
+query”inFig. 18)isusedtodiarizethespeaker[80]. arizationfromscratchusingsystemSAD.UnlikeDIHARD1,
+DIHARD 2 included multichannel speaker diarization task in
+track 3 (oracle SAD) and track 4 (system SAD) adding the
+5. EvaluationofSpeakerDiarization
+recordings drawn from CHIME-5 corpus [191]. In the latest
+Thissectiondescribestheevaluationschemeforspeakerdi- DIHARD challenge, DIHARD 3, CTS dataset was added to
+arization. The dataset that is widely used for the evaluation DIHARD3devsetandevalsetandDIHARD3removedtrack
+of speaker diarization is ﬁrst introduced in Section 5.1. Then, 3andtrack4whilekeepingonlytrack1(oracleSAD)andtrack
+the evaluation metric for speaker diarization is introduced in 2(systemSAD).
+Section 5.2. Finally, international eﬀorts to evaluate diariza-
+tionsystemsareintroducedinSection5.3. Thesummaryofthe 5.1.5. CHiME-5/6challengecorpus
+datasetisshowninTable2. TheCHiME-5corpus[191]includes50hoursofmulti-party
+realconversationsintheevery-dayhomeenvironment. Itcon-
+5.1. DiarizationEvaluationDatasets tains speaker labels, segmentation, and corresponding tran-
+5.1.1. CALLHOME:NISTSRE2000(LDC2001S97) scriptions. All of them are manually annotated. The audio
+NISTSRE2000(Disk-8),oftenreferredtoasCALLHOME sourceisrecordedbymultiple4-channelmicrophonearrayslo-
+dataset, has been the most widely used dataset for speaker di- catedinthekitchenanddining/livingroomsinahouse,andalso
+16Table2:DiarizationEvaluationDatasets
+Size(hr) Style #speakers
+CALLHOME 20 Conversation 2–7
+AMI 100 Meeting 3–5
+ICSImeeting 72 Meeting 3–10
+DIHARDITrack1,2 19(dev),21(eval) Miscellaneous 1–7
+DIHARDIITrack1,2 24(dev),22(eval) Miscellaneous 1–8
+DIHARDIITrack3,4 262(dev),31(eval) Miscellaneous 4
+DIHARDIIITrack1,2 34(dev),33(eval) Miscellaneous 1–7
+CHiME-5/6 50 Conversation 4
+VoxConverse 74 YouTubevideo 1–21
+LibriCSS 10 Readspeech 8
+recorded by binaural microphones worn by participants. The diﬀerenterrortypes: Falsealarm(FA)ofspeech,misseddetec-
+number of participants is ﬁxed as four. The CHiME-6 chal- tionofspeechandconfusionbetweenspeakerlabels.
+lengeusesthesameCHiME-5corpus,buttrack2includesthe
+FA+Missed+Speaker-Confusion
+speaker diarization problem in the challenge (i.e., no speaker DER= (37)
+labelsandsegmentationaregiven). TheCHiME-5corpuswas TotalDurationofTime
+alsousedasonetrackintheDIHARD2challenge.
+Toestablishaone-to-onemappingbetweenthehypothesisout-
+putsandthereferencetranscript,Hungarianalgorithm[195]is
+5.1.6. VoxConverse employed. In Rich Transcription 2006 evaluation [194], 0.25
+TheVoxConversedataset[192]contains74hoursofhuman second of “no score” collar is set around every boundary of
+conversationextractedfromYouTubevideo. Thedatasetisdi- referencesegmenttomitigatetheeﬀectofinconsistentannota-
+vided into development set (20.3 hours, 216 recordings), and tionandhumanerrorsinreferencetranscriptandthisevaluation
+test set (53.5 hours, 310 recordings). The number of speakers schemehasbeenmostwidelyusedinspeakerdiarizationstud-
+ineachrecordinghasawiderangeofvarietyfrom1speakerto ies.
+21speakers. Theaudioincludesvarioustypesofnoisessuchas
+backgroundmusic,laughteretc.Italsocontainsnoticeablepor- 5.2.2. JER
+tionofoverlappingspeechfrom0%to30.1%dependentonthe JaccardErrorRate(JER)wasﬁrstintroducedinDIHARDII
+recording. Whilethedatasetcontainsthevisualinformationas evaluation. The goal of JER is to evaluate each speaker with
+wellasaudio,asofJanuary2021,onlytheaudioofthedevel- equal weight. Unlike DER, JER does not use speaker error to
+opment set is released under a Creative Commons Attribution obtaintheerrorvalue.
+4.0InternationalLicenseforresearchpurpose.Theaudioofthe
+evaluationsetwasusedatthetrack4oftheVoxCelebSpeaker 1 (cid:88)Nref FA +MISS
+RecognitionChallenge2020(Section5.3)asablindtestset. JER= i i (38)
+N TOTAL
+i i
+5.1.7. LibriCSS InEq. (38),TOTALisunionofi-thspeaker’sspeakingtimein
+The LibriCSS corpus [87] is 10 hours of multi-channel referencetranscriptandi-thspeaker’sspeakingtimeinthehy-
+recordings designed for the research of speech separation, potheses. ThesumofFAandMISSdividedbyTOTALvalueis
+speech recognition, and speaker diarization. It was made by thenaveragedoverNref-speakersinthereferencescript. Since
+playingbacktheaudiointheLibriSpeechcorpus[193]inareal JER is using union operation between reference and the hy-
+meetingroom,andrecordedbya7-chmicrophonearray.Itcon- potheses,JERneverexceeds100%whileDERcansometimes
+sistsof10sessions,eachofwhichisfurtherdecomposedtosix reachwayover100%.DERandJERarehighlycorrelatedbutif
+10-min mini-sessions. Each mini-session was made by audio asubsetofspeakersaredominantinthegivenaudiorecording,
+of8speakersanddesignedtohavediﬀerentoverlapratiofrom JERtendstogethigherthanordinarycase.
+0% to 40%. To facilitate the research, the baseline system for
+speech separation and ASR [87] and the baseline system that 5.2.3. WDER
+integratesspeechseparation,speakerdiarizationandASR[88] WhileDERisbasedonthedurationofspeakingtimeofeach
+hasbeendevelopedandreleased. speaker, Word-levelDER(WDER)isdesignedtomeasurethe
+errorthatiscausedinthelexical(outputtranscription)side.The
+motivationofWDERisthediscrepencybetweenDERandthe
+5.2. DiarizationEvaluationMetrics
+accuracyofﬁnaltranscriptoutputsinceDERreliesonthedu-
+5.2.1. DER rationofspeakingtimethatisnotalwaysalignedwiththeword
+The accuracy of speaker diarization system is measured by boundaries. The concept of word-breakage was proposed in
+DiarizationErrorRate(DER)[194]whereDERissumofthree Silovsky et al. [175] where WB shares the similar idea with
+17WDER. Unlike WDER, WB measures the number of speaker [192] was used for evaluation with DER as a primary metric
+changepointoccursinsideawordboundary. TheworkinPark to determine the ranking of submitted systems. JER was also
+andGeorgiou[196]suggestedthetermWDER,evaluatingthe measuredasasecondarymetric.
+diarization output with ground-truth transcription. More re-
+cently,thejointASRandspeakerdiarizationsystemwasevalu-
+6. Applications
+atedinWDERformatinShafeyetal.[77].Althoughthewayof
+calculatingWDERwoulddiﬀeroverthestudiesbuttheunder- 6.1. MeetingTranscription
+lyingideaisthatthediarizationerroriscalculatedbycounting
+Thegoalofmeetingtranscriptionistoautomaticallygenerate
+thecorrectlyorincorrectlylabeledwords.
+speaker-attributedtranscriptsduringreal-lifemeetingsbasedon
+theiraudioandoptionallyvideorecordings. Accuratemeeting
+5.3. DiarizationEvaluationSeries
+transcriptions are the one of the processing steps in a pipeline
+The Rich Transcription (RT) Evaluation [20] is the pio-
+forseveraltaskslikesummarization,topicextraction,etc. Sim-
+neering evaluation series of initiating deeper investigation on
+ilarly, the same transcription system can be used in other do-
+speakerdiarizationinrelationwithASR.Themainpurposeof
+mains such as healthcare [198]. Although this task was in-
+thiseﬀortwastocreateASRtechnologiesthatwouldproduce
+troduced by NIST in the Rich Transcription Evaluation series
+transcriptions with descriptive metadata, like who said when,
+backin2003[180,188,199],theinitialsystemshadverypoor
+wherespeakerdiarizationplaysin. Thusthemaintasksinthe
+performance,andconsequentlycommercializationofthetech-
+evaluation were naturally ASR and speaker diarization. The
+nology was not possible. However, recent advances in the ar-
+domainsofthedataofinterestwerebroadcastnews, CTSand
+easofSpeechRecognition[200,201],far-ﬁeldspeechprocess-
+meetingrecordingswithmultipleparticipants. Throughoutthe
+ing[202,203,204],SpeakerIDanddiarization[205,206,113],
+period 2002 to 2009, the RT evaluation series promoted and
+have greatly improved the speaker-attributed transcription ac-
+gauged advances in speaker diarization as well as ASR tech-
+curacy, enabling such commercialization. Bi-modal process-
+nology.
+ingcombiningcameraswithmicrophonearrayshasfurtherim-
+DIHARD challenge [189, 85] is the most recent evaluation
+provedtheoverallperformance[207,208].Assuch,theselatest
+that focuses on challenging diarization tasks. DIHARD chal-
+trendsmotivatedustoincludeanend-to-endaudio-visualmeet-
+lengedatacontainsmanydiﬀerentchallenginganddiversedo-
+ingtranscriptionsystemoverviewinthispaper.
+mainsincludingtherecordingsfromrestaurants, meetings, in-
+Reﬂecting the variety of application scenarios, customer
+terviewvideosandcourtroom.DIHARDevaluationfocuseson needs,andbusinessscope,diﬀerentconstraintsmaybeimposed
+the performance gap of state-of-the-art diarization systems on
+on meeting transcription systems. For example, it is most of-
+challenging domains (e.g. recordings from outdoors) and rel-
+ten required to provide the resulting transcriptions in low la-
+atively clean speech (e.g. telephonic speech). DIHARD chal-
+tency, making the diarization and recognition even more chal-
+lenge employs a stricter evaluation scheme where the scoring
+lenging. Ontheotherhand,thearchitectureofthetranscription
+rule does not have “no score” collar and also evaluates over-
+systemcansubstantiallyimprovetheoverallperformance,e.g.,
+lappedregions. Inaddition,DIHARDchallengealsoemployed
+employingmicrophonearraysofknowngeometryastheinput
+JER.
+device. Also,inthecasewheretheexpectedmeetingattendees
+The CHiME-6 challenge [89] track 2 revisits the previous
+areknownbeforehand,thetranscriptionsystemcanfurtherim-
+CHiME-5challenge[191]andfurtherconsiderstheproblemof
+provespeakerattribution,allwhileprovidingtheexactnameof
+distantmulti-microphoneconversationalspeechdiarizationand
+the speaker, instead of a randomly generated discrete speaker
+recognitionineverydayhomeenvironments.Althoughtheﬁnal
+labels.
+evaluationcriterionisrankedwiththeWER,thechallengepar- Two diﬀerent scenarios in this space are presented: ﬁrst, a
+ticipantsinthistrackalsoneedtosubmitthediarizationresult.
+ﬁx-geometrymicrophonearraycombinedwithaﬁsh-eyecam-
+The evaluation metrics of the diarization follow the DIHARD
+erasystem,andsecond,anad-hocgeometrymicrophonearray
+challenge,i.e.,“noscore”collaranditalsoevaluatesoverlapped
+system without a camera. In both scenarios, a “non-binding”
+regionswhencomputingtheDERandJER.
+listofparticipantsandtheircorrespondingspeakerproﬁlesare
+TheVoxCelebSpeakerRecognitionChallenge(VoxSRC)is
+consideredknown. Inmoredetail,thetranscriptionsystemhas
+the recent evaluation series for speaker recognition systems
+accesstotheinvitees’namesandproﬁles,howevertheactualat-
+[197,105]. ThegoalofVoxSRCistoprobehowwellthecur-
+tendeesmaynotaccuratelymatchthoseinvited. Assuch,there
+rent technology can cope with the speech “in the wild”. The
+isanoptiontoeitherinclude“unannounced”participants.Also,
+evaluationdataisobtainedfromYouTubevideosofvariousdo-
+some of the invitees may not have proﬁles. In both scenarios,
+mains, such as celebrity interviews, news shows, talk shows,
+thereisaconstraintoflow-latencytranscriptions,whereinitial
+and debates. The audio includes various types of background
+resultsneedtobeshownwithlowlatency. Theﬁnalizedresults
+noises, laughter as well as noticeable portion of overlapping canbeupdatedlaterinanoﬄinefashion.
+speech,allofwhichmakethetaskverychallenging. Thiseval-
+Someofthetechnicalchallengestoovercomeare[209]:
+uation series initially started with a pure speaker veriﬁcation
+task [197], and the diarization task was added as the track 4 1. Although ASR on overlapping speech is one of the main
+at the latest evaluation at the VoxCeleb Speaker Recognition challenges in meeting transcription, limited progress has
+Challenge2020(VoxSRC-20)[105]. TheVoxConversedataset been made over the years. Numerous multi-channel
+18speech separation methods have been proposed based on Speechandspokenlanguagearecentraltoconversationalin-
+Independent Component Analysis(ICA) or Spatial Clus- teractions and carry crucial information about a speaker’s in-
+tering [210, 211, 212, 213, 214, 215], but applying them tent, emotions, identity, age and other individual and interper-
+to a meeting setup had limited success. In addition, neu- sonaltraitandstatevariablesincludinghealthstate,andcompu-
+ralnetwork-basedseparationmethodslikePermutationIn- tational advances are increasingly allowing for accessing such
+variant Training (PIT) [59] or deep clustering (DC) [58] richinformation[219,220]. Forexample,knowinghowmuch,
+cannot adequately address reverberation and background andhow, achildspeaksinaninteractionrevealscriticalinfor-
+noise[216]. mationaboutthedevelopmentalstate,andoﬀerscluestoclini-
+ciansindiagnosingdisorderssuchasAutism[221]. Suchanal-
+2. Flexible framework: It is desirable that the transcription
+yses are made possible by capturing and processing the audio
+system can process all the available information, such as
+recordingsoftheinteractions,ofteninvolvingtwoormorepeo-
+the multi-channel audio and the visual cues. The system
+ple. An important foundational step is identifying and associ-
+needs to process a dynamically changing number of au-
+ating the speech portions belonging to speciﬁc individuals in-
+dio channels without loss of performance. As such, the
+volved in the conversation. The technologies that provide this
+architectureneedstobemodularenoughtoencompassthe
+capabilityarespeechactivitydetection(SAD)andspeakerdi-
+diﬀerentsettings.
+arization. Speechportionssegmentedwithspeaker-speciﬁcin-
+formationprovidedbyspeakerdiarization,byitselfwithoutany
+3. Speaker-Attributed ASR of natural meetings requires on-
+line/streaming ASR, audio pre-processing such as dere- explicitlexicaltranscription,canoﬀerimportantinformationto
+domainexpertswhocantakeadvantageofspeakerdiarization
+verberation, and accurate diarization and speaker identi-
+resultsforquantitativeturn-takinganalysis.
+ﬁcation. These multiple processing steps are usually op-
+A domain that is the most relevant such analyses of spoken
+timized separately and thus, the overall pipeline is most
+frequentlyineﬃcient. conversationalinteractionsrelatestobehavioralsignalprocess-
+ing(BSP)[222,219]whichreferstothetechnologyandalgo-
+4. Usingmultiple, not-synchronizedaudiostreams, e.g., au- rithmsformodelingandunderstandinghumancommunicative,
+diocapturingwithmobiledevices,addscomplexitytothe aﬀective and social behavior. For example, these may include
+meeting setup and processing. In return, we gain poten- analyzing how positive or negative a person is, how empathic
+tiallybetterspatialcoveragesincethedevicesareusually an individual toward another, what does the behavior patterns
+distributed around the room and near the speakers. As revealabouttherelationshipstatus, andhealthconditionofan
+part of the application scenario, the meeting participants individual [220]. BSP involves addressing all the complexi-
+bring their personal devices, which can be re-purposed tiesofspontaneousinteractionsinconversationswithadditional
+to improve the overall meeting transcription quality. On challenges involved in handling and understanding emotional,
+the other hand, while there are several pioneering stud- socialandinterpersonalbehavioraldynamicsrevealedthrough
+ies [217], it is unclear what the best strategies are for vocalverbalandnonverbalcuesoftheinteractionparticipants.
+consolidatingmultipleasynchronousaudiostreamsandto Therefore, the knowledge of speaker speciﬁc vocal informa-
+what extent they work for natural meetings in online and tion plays a signiﬁcant role in BSP, requiring highly accurate
+oﬄinesetups. speakerdiarizationperformance. Forexample,speakerdiariza-
+tionmoduleisemployedasapre-processingmoduleforanalyz-
+Based on these considerations, an architecture of meeting
+ing psychotherapy mechanisms and quality [223], and suicide
+transcription system with asynchronous distant microphones
+riskassessment[224].
+have been proposed in [161]. In this work, various fusion
+Another popular application of speaker diarization for con-
+strategies have been investigating: from early fusion beam-
+versation interaction analysis is the medical doctor-patient in-
+forming the audio signals, to mid-fusion combining senones
+teractions.Inthesystemdescribedin[225],thenatureofmem-
+perchannel, tolatefusioncombiningthediarizationandASR
+oryproblemofapatientisdetectedfromtheconversationsbe-
+results [147]. The resulting system performance was bench-
+tweenneurologistsandpatients. Speechandlanguagefeatures
+markedonreal-worldmeetingrecordingsagainstﬁx-geometry
+extractedfromASRtranscriptscombinedwithspeakerdiariza-
+systems. As mentioned above, the requirement of speaker-
+tion results are used to predict the type of disorder. An au-
+attributedtranscriptionswithlowlatencywasadhered,aswell.
+tomated assistant system for medical domain transcription is
+In addition to the end-to-end system analysis, the paper [161]
+proposed in [226] which includes speaker diarization module,
+proposedtheideaof“leave-one-outbeamforming”intheasyn-
+ASR module and natural language generation (NLG) module.
+chronousmulti-microphonesetup, enrichingthe“diversity”of
+Theautomatedassistantmoduleacceptstheaudioclipandout-
+the resulting signals, as proposed in [218]. Finally, it is de-
+putsgrammaticallycorrectsentencesthatdescribethetopicof
+scribedhowanonline,incrementalversionofROVERcanpro-
+theconversation,subjectandsubject’ssymptom.
+cessboththeASRanddiarizationoutputs,enhancingtheover-
+allspeaker-attributedASRperformance.
+6.3. Audioindexing
+Content-based audio indexing is a well known application
+6.2. ConversationalInteractionAnalysisandBehavioralMod-
+domainforspeakerdiarization.Itcanprovidemetainformation
+eling
+suchasthecontentordatatypeofagivenaudiodatatomake
+19information retrieval eﬃcient since search query by machines more and more advancements have been made for speaker di-
+would be limited by such metadata. The more diverse infor- arization, from a method that replaces a single module into a
+mationwereavailable,thebettereﬃciencywecouldachievein deep-learning-based one, to a fully end-to-end neural diariza-
+retrievingaudiocontentsfromadatabase. tion. Furthermore, as the speech recognition technology be-
+Oneusefulpieceofinformationfortheaudioindexingwould comes more accessible, a trend to tightly integrate speaker di-
+be ASR transcripts to understand the content of speech por- arization and ASR systems has emerged, such as beneﬁting
+tionsintheaudiodata. Speakerdiarizationcanaugmentthose fromtheASRoutputtoimprovespeakerdiarizationaccuracy.
+transcriptsintermsof“whospokewhen”,whichwasthemain As of late, joint modeling for speaker diarization and speech
+purposeoftheRichTranscriptionevaluationseries[20]aswe recognition is investigated in an attempt to enhance the over-
+discussed in Sections 4.1 and 5.3. The aggregated spoken ut- all performance. Thanks to these great achievement, speaker
+terances from speakers by a speaker diarization system also diarizationsystemshavealreadybeendeployedinmanyappli-
+enableper-speakersummaryorkeywordlist-up, whichcanbe cations, including meeting transcription, conversational inter-
+usedforanotherqueryvaluestoretrieverelevantcontentsfrom actionanalysis,audioindexing,andconversationalAIsystems.
+the database. In [227], we can peek a view of how speaker As we have seen, tremendous progress has been made for
+diarization outputs can be linked for information searching in speakerdiarizationsystems. Nevertheless,therearestillmuch
+consumerfacingapplications. room for improvement. As the ﬁnal remark, we conclude this
+paperbylistinguptheremainingchallengesforspeakerdiariza-
+6.4. ConversationalAI tiontowardsfutureresearchanddevelopment.
+Thanks to the advance of ASR technology, the applications
+Online processing of speaker diarization. Most speaker di-
+of ASR are evolved from simple voice command recognition
+arization methods assume that an entire recording can be ob-
+systems to conversational AI systems. Conversational AI sys-
+servedtoexecutespeakerdiarization. However,manyapplica-
+tems,asopposedtovoicecommandrecognitionsystems,have
+tionssuchasmeetingtranscriptionsystemsorsmartagentsre-
+features that voice command recognition systems are lack of.
+quireonlyshortlatencyforassigningthespeaker. Whilethere
+The fundamental idea of conversational AI is making a ma-
+have been several attempts to make online speaker diarization
+chinethathumanscantalktoandinteractwiththesystem. In
+systembothforclustering-basedsystems(e.g.,[205])andneu-
+thissense,focusingonaninterestedspeakerinmulti-partyset-
+ralnetwork-baseddiarizationsystems(e.g.,[55,172,173]),it’s
+ting is one of the most important feature of conversational AI
+stillremainingasachallengingproblem.
+and speaker diarization becomes essential feature for conver-
+sational AI. For example, conversational AI equipped in a car
+Domainmismatch. Amodelthatistrainedonadatainaspe-
+canpayattentiontoaspeciﬁcspeakerthatisdemandingapiece
+ciﬁc domain often works poorly on a data in another domain.
+ofinformationfromthenavigationsystembyapplyingspeaker
+Forexample,itisexperimentallyknownthattheEENDmodel
+diarizationalongwithASR.
+tendstooverﬁttothedistributionofthespeakeroverlapsofthe
+Smart speakers and voice assistants are the most popular
+training data [56]. Such domain mismatch issue is universal
+products where speaker diarization plays a signiﬁcant role for
+for any training-based method. Given the growing interest for
+conversational AI. Since response time and online processing
+trainablespeakerdiarizationsystems,itwillbecomemoreim-
+arethecrucialfactorsinreal-lifesettings,thedemandforend-
+portant to assess the ability for handling the variety of inputs.
+to-endspeakerdiarizationsystemintegratedintoASRpipeline
+Theinternationalevaluationeﬀortsforspeakerdiarizationsuch
+isgrowing. Theperformanceofincremental(online)ASRand
+astheDIHARDchallenge[189,85,190]orVoxSRC[197,105]
+speaker diarization of the commercial ASR services are eval-
+willalsohavegreatimportanceforthatdirection.
+uated and compared in [228]. It is expected that the real-time
+andlowlatencyaspectofspeakerdiarizationwillbemoreem-
+Speaker overlap. Overlap of multi-talker speech is inevitable
+phasized in the speaker diarization systems in the future since
+nature of conversation. For example, average 12% to 15%
+theperformanceofonlinediarizationandonlineASRstillhave
+of speaker overlap was observed for meeting recordings [229,
+muchroomforimprovement.
+102], and it can become higher for daily conversations [230,
+191,89]. Nevertheless,manyconventionalspeakerdiarization
+7. ChallengesandtheFutureofSpeakerDiarization systems,especiallyclustering-basedsystems,treatedonlynon-
+overlappedregionofrecordingssometimesevenfortheevalua-
+This paper has provided a comprehensive overview of tionmetric.Whilethetopichasbeenstudiedforlongyears(e.g.
+speaker diarization techniques, highlighting the recent devel- earlyworks[231,232]),thereisagrowinginterestforhandling
+opment of deep learning-based diarization approaches. In the thespeakeroverlapstowardsbetterspeakerdiarization,includ-
+early days, a speaker diarization system was developed as a ingtheapplicationofspeechseparation[104],post-processing
+pipelineofsub-modulesincludingfront-endprocessing,speech [233,162],andjointmodelingofspeechseparationandspeaker
+activitydetection,segmentation,speakerembeddingextraction, diarization[76,184].
+clustering, and post-processing, leading to a standalone sys-
+tem without much connection to other components in a given Integration with ASR. Not all but many applications require
+speechapplication. Astheriseofthedeeplearningtechnology, ASRresultsalongwithspeakerdiarizationresults.Inthelineof
+20themodularcombinationofspeakerdiarizationandASR,some [10] M.A.Siegler,U.Jain,B.Raj,R.M.Stern, Automaticsegmentation,
+systemsputaspeakerdiarizationsystembeforeASR[91]while classiﬁcationandclusteringofbroadcastnewsaudio,in:Proceedingsof
+DARPASpeechRecognitionWorkshop,1997,pp.97–99.
+some systems put a diarization system after ASR [209]. Both
+[11] H.Jin,F.Kubala,R.Schwartz, Automaticspeakerclustering, in: Pro-
+types of systems showed a strong performance for a speciﬁc
+ceedingsofSpeechRecognitionWorkshop,1997.
+task,anditisstillanopenproblemthatwhatkindofsystemar- [12] H. S. Beigi, S. H. Maes, Speaker, channel and environment change
+chitectureisthebestforthespeakerdiarizationandASRtasks detection,in:ProceedingsofWorldCongressofAutomation,1998.
+[13] S.S.Chen, P.S.Gopalakrishnan, Speaker, environmentandchannel
+[88]. Furthermore, there is another line of research to jointly
+changedetectionandclusteringviatheBayesianInformationCriterion,
+performspeakerdiarizationandASR[77,78,79,184]asintro-
+in:Tech.Rep.,IBMT.J.WatsonResearchCenter,1998,pp.127–132.
+ducedinSection4.Thejointmodelingapproachcouldleverage [14] A.Solomonoﬀ,A.Mielke,M.Schmidt,H.Gish, Clusteringspeakers
+the inter-dependency between speaker diarization and ASR to bytheirvoices, in: ProceedingsofIEEEInternationalConferenceon
+Acoustics,SpeechandSignalProcessing,1998,pp.757–760.
+better perform both tasks. However, it has not yet fully inves-
+[15] J.-L.Gauvain,G.Adda,L.Lamel,M.Adda-Decker, Transcriptionof
+tigatedwhethersuch jointframeworks performbetter thanthe broadcastnews: TheLIMSINov96Hub4system, in: Proceedingsof
+well-tunedmodularsystems.Overall,theintegrationofspeaker ARPASpeechRecognitionWorkshop,1997,pp.56–63.
+diarization and ASR is one of the hottest topics that has still [16] J.-L.Gauvain,L.Lamel,G.Adda, TheLIMSI1997Hub-4Etranscrip-
+tionsystem,in:ProceedingsofDARPANewsTranscriptionandUnder-
+beenpursued.
+standingWorkshop,1998,pp.75–79.
+[17] J.-L. Gauvain, L. Lamel, G. Adda, Partitioning and transcription of
+Audio visual modeling. Visual information contains a strong broadcastnewsdata, in: ProceedingsoftheInternationalConference
+clue to identify speakers. For example, the video captured by onSpokenLanguageProcessing,1998,pp.1335–1338.
+[18] D.Liu, F.Kubala, Fastspeakerchangedetectionforbroadcastnews
+a ﬁsheye camera was used to improve the speaker diarization
+transcriptionandindexing, in:ProceedingsoftheInternationalConfer-
+accuracy in a meeting transcription task [209]. The visual in- enceonSpokenLanguageProcessing,1999,pp.1031–1034.
+formation was also used to signiﬁcantly improve the speaker [19] AMIConsortium.http://www.amiproject.org/index.html.
+diarizationaccuracyforspeakerdiarizationonYouTubevideo [20] NIST,RichTranscriptionEvaluation.https://www.nist.gov/itl/
+[192]. While these studies showed the eﬀectiveness of visual iad/mig/rich-transcription-evaluation.
+[21] J.Ajmera,C.Wooters, Arobustspeakerclusteringalgorithm, in:Pro-
+information, the audio-visual speaker diarization has yet been ceedingsofIEEEWorkshoponAutomaticSpeechRecognitionandUn-
+rarely investigated compared with audio-only speaker diariza- derstanding,2003,pp.411–416.
+tion,andtherewillbemanyroomsfortheimprovement. [22] S.E.Tranter,D.A.Reynolds, Speakerdiarisationforbroadcastnews,
+in: ProceedingsofOdysseySpeakerandLanguageRecognitionWork-
+shop,2004,pp.337–344.
+[23] C.Wooters,J.Fung,B.Peskin,X.Anguera,Towardrobustspeakerseg-
+References
+mentation:TheICSI-SRIFall2004diarizationsystem, in:Proceedings
+ofFall2004RichTranscriptionWorkshop,2004,pp.402–414.
+[1] S.E.Tranter,K.Yu,D.A.Reynolds,G.Evermann,D.Y.Kim,P.C. [24] D.A.Reynolds,P.Torres-Carrasquillo, TheMITLincolnLaboratory
+Woodland, Aninvestigationintothetheinteractionsbetweenspeaker RT-04Fdiarizationsystems: Applicationstobroadcastaudioandtele-
+diarisation systems and automatic speech transcription, CUED/F- phoneconversations, in: ProceedingsofFall2004RichTranscription
+INFENG/TR-464(2003). Workshop,2004.
+[2] S.E.Tranter,D.A.Reynolds, Anoverviewofautomaticspeakerdi- [25] D.A.Reynolds,P.Torres-Carrasquillo,Approachesandapplicationsof
+arizationsystems, IEEETransactionsonAudio,Speech,andLanguage audiodiarization, in:ProceedingsofIEEEInternationalConferenceon
+Processing14(2006)1557–1565. Acoustics,SpeechandSignalProcessing,2005,pp.953–956.
+[3] X. Anguera, S. Bozonnet, N. Evans, C. Fredouille, G. Friedland, [26] X.Zhu,C.Barras,S.Meignier,J.-L.Gauvain,Combiningspeakeriden-
+O.Vinyals, Speakerdiarization: Areviewofrecentresearch, IEEE tiﬁcationandBICforspeakerdiarization, in: ProceedingsoftheAn-
+Transactions on Audio, Speech, and Language Processing 20 (2012) nualConferenceoftheInternationalSpeechCommunicationAssocia-
+356–370. tion,2005,pp.2441–2444.
+[4] H. Gish, M. . Siu, R. Rohlicek, Segregation of speakers for speech [27] C.Barras,XuanZhu,S.Meignier,J.-L.Gauvain, Multistagespeaker
+recognitionandspeakeridentiﬁcation, in: ProceedingsofIEEEInter- diarizationofbroadcastnews, IEEETransactionsonAudio, Speech,
+nationalConferenceonAcoustics,SpeechandSignalProcessing,1991, andLanguageProcessing14(2006)1505–1512.
+pp.873–876. [28] N.Mirghafori,C.Wooters, Nutsandﬂakes:Astudyofdatacharacter-
+[5] M.-H.Siu,Y.George,H.Gish,Anunsupervised,sequentiallearningal- isticsinspeakerdiarization,in:ProceedingsofIEEEInternationalCon-
+gorithmforsegmentationforspeechwaveformswithmultiplespeakers, ferenceonAcoustics,SpeechandSignalProcessing,2006,pp.1017–
+in:ProceedingsofIEEEInternationalConferenceonAcoustics,Speech 1020.
+andSignalProcessing,1992,pp.189–192. [29] S.Meignier,D.Moraru,C.Fredouille,J.-F.Bonastre,L.Besacier,Step-
+[6] J.R.Rohlicek,D.Ayuso,M.Bates,R.Bobrow,A.Boulanger,H.Gish, by-stepandintegratedapproachesinbroadcastnewsspeakerdiarization,
+P.Jeanrenaud,M.Meteer,M.Siu, Gistingconversationalspeech, in: Computer,Speech&Language20(2006)303–330.
+ProceedingsofIEEEInternationalConferenceonAcoustics,Speechand [30] A. E. Rosenberg, A. Gorin, Z. Liu, P. Parthasarathy, Unsupervised
+SignalProcessing,1992,pp.113–116. speakersegmentationoftelephoneconversations, in: Proceedingsof
+[7] M.Sugiyama, J.Murakami, H.Watanabe, Speechsegmentationand theInternationalConferenceonSpokenLanguageProcessing,2002,pp.
+clusteringbasedonspeakerfeatures, in: ProceedingsofIEEEInterna- 565–568.
+tionalConferenceonAcoustics, SpeechandSignalProcessing, 1993, [31] D.Liu,F.Kubala, Across-channelmodelingapproachforautomatic
+pp.395–398. segmentationofconversationaltelephonespeech, in: Proceedingsof
+[8] U.Jain,M.A.Siegler,S.-J.Doh,E.Gouvea,J.Huerta,P.J.Moreno, IEEEWorkshoponAutomaticSpeechRecognitionandUnderstanding,
+B.Raj, R.M.Stern, Recognitionofcontinuousbroadcastnewswith 2003,pp.333–338.
+multipleunknownspeakersandenvironments,in:ProceedingsofARPA [32] S.E.Tranter, K.Yu, G.Evermann, P.C.Woodland, Generatingand
+SpokenLanguageTechnologyWorkshop,1996,pp.61–66. evaluatingforautomaticspeechrecognitionofconversationaltelephone
+[9] M.Padmanabhan,L.R.Bahl,D.Nahamoo,M.A.Picheny, Speaker speech,in:ProceedingsofIEEEInternationalConferenceonAcoustics,
+clusteringandtransformationforspeakeradaptationinlarge-vocabulary SpeechandSignalProcessing,2004,pp.753–756.
+speechrecognitionsystems,in:ProceedingsofIEEEInternationalCon- [33] D. A. Reynolds, P. Kenny, F. Castaldo, A study of new approaches
+ferenceonAcoustics,SpeechandSignalProcessing,1996,pp.701–704.
+21tospeakerdiarization, in: ProceedingsoftheAnnualConferenceof AnnualConferenceoftheInternationalSpeechCommunicationAssoci-
+theInternationalSpeechCommunicationAssociation,2009,pp.1047– ation,2012,pp.2174–2177.
+1050. [54] S.H.Shum,N.Dehak,R.Dehak,J.R.Glass,Unsupervisedmethodsfor
+[34] P.Kenny,D.Reynolds,F.Castaldo, Diarizationoftelephoneconversa- speakerdiarization: Anintegratedanditerativeapproach, IEEETrans-
+tionsusingfactoranalysis, IEEEJournalofSelectedTopicsinSignal actionsonAudio,Speech,andLanguageProcessing21(2013).
+Processing4(2010)1059–1070. [55] A. Zhang, Q. Wang, Z. Zhu, J. Paisley, C. Wang, Fully supervised
+[35] T. Pfau, D. Ellis, A. Stolcke, Multispeaker speech activity detection speakerdiarization, in: ProceedingsofIEEEInternationalConference
+fortheICSImeetingrecorder, in: ProceedingsofIEEEWorkshopon onAcoustics,SpeechandSignalProcessing,2019,pp.6301–6305.
+AutomaticSpeechRecognitionandUnderstanding,2001,pp.107–110. [56] Y.Fujita,N.Kanda,S.Horiguchi,K.Nagamatsu,S.Watanabe, End-
+[36] J.Ajmera,G.Lathoud,L.McCowan,Clusteringandsegmentingspeak- to-endneuralspeakerdiarizationwithpermutation-freeobjectives,Pro-
+ersandtheirlocationsinmeetings, in: ProceedingsofIEEEInterna- ceedingsoftheAnnualConferenceoftheInternationalSpeechCommu-
+tionalConferenceonAcoustics, SpeechandSignalProcessing, 2004, nicationAssociation(2019)4300–4304.
+pp.605–608. [57] Y.Fujita,N.Kanda,S.Horiguchi,Y.Xue,K.Nagamatsu,S.Watanabe,
+[37] Q.Jin,K.Laskowski,T.Schultz,A.Waibel, Speakersegmentationand End-to-endneuralspeakerdiarizationwithself-attention, in: Proceed-
+clusteringinmeetings, in:ProceedingsoftheInternationalConference ingsofIEEEWorkshoponAutomaticSpeechRecognitionandUnder-
+onSpokenLanguageProcessing,2004,pp.597–600. standing,IEEE,2019,pp.296–303.
+[38] X.Anguera, C.Wooters, B.Peskin, M.Aguilo, Robustspeakerseg- [58] J.R.Hershey,Z.Chen,J.LeRoux,S.Watanabe, Deepclustering:Dis-
+mentationformeetings:TheICSI-SRISpring2005diarizationsystem, criminativeembeddingsforsegmentationandseparation, in: Proceed-
+in:ProceedingsofMachineLearningforMultimodalInteractionWork- ingsofIEEEInternationalConferenceonAcoustics,SpeechandSignal
+shop,2005,pp.402–414. Processing,IEEE,2016,pp.31–35.
+[39] X.Anguera,C.Wooters,J.Hernando, Purityalgorithmsforspeakerdi- [59] M. Kolbæk, D. Yu, Z.-H. Tan, J. Jensen, Multitalker speech separa-
+arizationofmeetingsdata, in:ProceedingsofIEEEInternationalCon- tionwithutterance-levelpermutationinvarianttrainingofdeeprecur-
+ferenceonAcoustics, SpeechandSignalProcessing, volumeI,2006, rentneuralnetworks, IEEE/ACMTransactionsonAudio,Speech,and
+pp.1025–1028. LanguageProcessing25(2017)1901–1913.
+[40] D.Istrate,C.Fredouille,S.Meignier,L.Besacier,J.-F.Bonastre, NIST [60] Y.Luo,N.Mesgarani, Conv-tasnet: Surpassingidealtime–frequency
+RT05Sevaluation:Pre-processingtechniquesandspeakerdiarizationon magnitudemaskingforspeechseparation, IEEE/ACMTransactionson
+multiplemicrophonemeetings,in:ProceedingsofMachineLearningfor Audio,Speech,andLanguageProcessing27(2019)1256–1266.
+MultimodalInteractionWorkshop,2006. [61] E. Variani, X. Lei, E. McDermott, I. L. Moreno, J. Gonzalez-
+[41] D.A.V.Leeuwen,M.Konecny,ProgressintheAMIDAspeakerdiariza- Dominguez, Deepneuralnetworksforsmallfootprinttext-dependent
+tionsystemformeetingdata,in:ProceedingsofInternationalEvaluation speakerveriﬁcation, in:ProceedingsofIEEEInternationalConference
+WorkshopsCLEAR2007andRT2007,2007,pp.475–483. on Acoustics, Speech and Signal Processing, IEEE, 2014, pp. 4052–
+[42] X. Anguera, C. Wooters, J. Hernando, Acoustic beamforming for 4056.
+speakerdiarizationofmeetings, IEEETransactionsonAudio,Speech, [62] D.Snyder,D.Garcia-Romero,D.Povey,S.Khudanpur, Deepneural
+andLanguageProcessing15(2007)2011–2023. networkembeddingsfortext-independentspeakerveriﬁcation.,in:Pro-
+[43] X.Zhu, C.Barras, L.Lamel, J.-L.Gauvain, Multi-stagespeakerdi- ceedingsoftheAnnualConferenceoftheInternationalSpeechCommu-
+arizationforconferenceandlecturemeetings, in:ProceedingsofInter- nicationAssociation,2017,pp.999–1003.
+nationalEvaluationWorkshopsCLEAR2007andRT2007,2007,pp. [63] T.Drugman,Y.Stylianou,Y.Kida,M.Akamine, Voiceactivitydetec-
+533–542. tion:Mergingsourceandﬁlter-basedinformation,IEEESignalProcess-
+[44] D.Vijayasenan,F.Valente,H.Bourlard, Aninformationtheoreticap- ingLetters23(2015)252–256.
+proachtospeakerdiarizationofmeetingdata, IEEETransactionson [64] X.Guo,L.Gao,X.Liu,J.Yin, Improveddeepembeddedclustering
+Audio,Speech,andLanguageProcessing17(2009)1382–1393. withlocalstructurepreservation, in:ProceedingsofInternationalJoint
+[45] F.Valente,P.Motlicek,D.Vijayasenan, VariationalBayesianspeaker ConferenceonArtiﬁcialIntelligence,2017,pp.1753–1759.
+diarization of meeting recordings, in: Proceedings of IEEE Interna- [65] J. Wang, X. Xiao, J. Wu, R. Ramamurthy, F. Rudzicz, M. Brudno,
+tionalConferenceonAcoustics, SpeechandSignalProcessing, 2010, Speaker diarization with session-level speaker embedding reﬁnement
+pp.4954–4957. using graph neural networks, in: Proceedings of IEEE International
+[46] P.Kenny,G.Boulianne,P.Ouellet,P.Dumouchel, Jointfactoranaly- ConferenceonAcoustics,SpeechandSignalProcessing,IEEE,2020,
+sisversuseigenchannelsinspeakerrecognition, IEEETransactionson pp.7109–7113.
+Audio,Speech,andLanguageProcessing15(2007)1435–1447. [66] I. Medennikov, M. Korenevsky, T. Prisyach, Y. Khokhlov, M. Ko-
+[47] E.Variani,X.Lei,E.McDermott,I.L.Moreno,J.G-Dominguez,Deep renevskaya, I.Sorokin, T.Timofeeva, A.Mitrofanov, A.Andrusenko,
+neuralnetworksforsmallfootprinttext-dependentspeakerveriﬁcation, I.Podluzhny, A.Laptev, A.Romanenko, Target-speakervoiceactiv-
+in:ProceedingsofIEEEInternationalConferenceonAcoustics,Speech itydetection:anovelapproachformulti-speakerdiarizationinadinner
+andSignalProcessing,2014,pp.4052–4056. partyscenario, in: ProceedingsoftheAnnualConferenceoftheInter-
+[48] G. Heigold, I. Moreno, S. Bengio, N. Shazeer, End-to-end text- nationalSpeechCommunicationAssociation,2020,pp.274–278.
+dependentspeakerveriﬁcation, in: ProceedingsofIEEEInternational [67] D.Yu,X.Chang,Y.Qian,Recognizingmulti-talkerspeechwithpermu-
+Conference on Acoustics, Speech and Signal Processing, 2016, pp. tationinvarianttraining, ProceedingsoftheAnnualConferenceofthe
+5115–5119. InternationalSpeechCommunicationAssociation(2017)2456–2460.
+[49] Q.Wang,C.Downey,L.Wan,P.A.Mansﬁeld,I.L.Moreno,Speakerdi- [68] H.Seki,T.Hori,S.Watanabe,J.LeRoux,J.R.Hershey,Apurelyend-
+arizationwithLSTM,in:ProceedingsofIEEEInternationalConference to-endsystemformulti-speakerspeechrecognition, 2018, pp.2620–
+onAcoustics,SpeechandSignalProcessing,2018,pp.5239–5243. 2630.
+[50] D.Snyder, D.Garcia-Romero, G.Sell, D.Povey, S.Khudanpur, X- [69] X.Chang,Y.Qian,K.Yu,S.Watanabe, End-to-endmonauralmulti-
+vectors:RobustDNNembeddingsforspeakerrecognition,in:Proceed- speakerASRsystemwithoutpretraining,in:ProceedingsofIEEEInter-
+ingsofIEEEInternationalConferenceonAcoustics,SpeechandSignal nationalConferenceonAcoustics,SpeechandSignalProcessing,2019,
+Processing,2018,pp.5329–5333. pp.6256–6260.
+[51] N.Dehak, P.Kenny, R.Dehak, P.Dumouchel, P.Ouellet, Front-end [70] N.Kanda,Y.Fujita,S.Horiguchi,R.Ikeshita,K.Nagamatsu,S.Watan-
+factoranalysisforspeakerveriﬁcation, IEEETransactionsonAudio, abe,Acousticmodelingfordistantmulti-talkerspeechrecognitionwith
+Speech,andLanguageProcessing19(2011). single-andmulti-channelbranches, in: ProceedingsofIEEEInterna-
+[52] S.Shum,N.Dehak,J.Glass,Ontheuseofspectralanditerativemethods tionalConferenceonAcoustics, SpeechandSignalProcessing, 2019,
+forspeakerdiarization,in:ProceedingsoftheAnnualConferenceofthe pp.6630–6634.
+InternationalSpeechCommunicationAssociation,2012,pp.482–485. [71] N. Kanda, S. Horiguchi, R. Takashima, Y. Fujita, K. Nagamatsu,
+[53] G.Dupuy,M.Rouvier,S.Meignier,Y.Esteve, i-VectorsandILPclus- S. Watanabe, Auxiliary interference speaker loss for target-speaker
+teringadaptedtocross-showspeakerdiarization,in:Proceedingsofthe speechrecognition, in: ProceedingsoftheAnnualConferenceofthe
+22InternationalSpeechCommunicationAssociation,2019,pp.236–240. ProceedingsofIEEESpokenLanguageTechnologyWorkshop,2021.
+[72] X. Wang, N. Kanda, Y. Gaur, Z. Chen, Z. Meng, T. Yoshioka, Ex- [89] S.Watanabe, M.Mandel, J.Barker, E.Vincent, A.Arora, X.Chang,
+ploringend-to-endmulti-channelasrwithbiasinformationformeeting S.Khudanpur,V.Manohar,D.Povey,D.Raj,etal.,CHiME-6challenge:
+transcription, in:ProceedingsofIEEEWorkshoponAutomaticSpeech Tacklingmultispeakerspeechrecognitionforunsegmentedrecordings,
+RecognitionandUnderstanding,2021. in:6thInternationalWorkshoponSpeechProcessinginEverydayEnvi-
+[73] P.Wang,Z.Chen,X.Xiao,Z.Meng,T.Yoshioka,T.Zhou,L.Lu,J.Li, ronments(CHiME2020),2020.
+Speechseparationusingspeakerinventory, in: ProceedingsofIEEE [90] A.Arora,D.Raj,A.S.Subramanian,K.Li,B.Ben-Yair,M.Maciejew-
+WorkshoponAutomaticSpeechRecognitionandUnderstanding,2019, ski,P.Z˙elasko,P.Garcia,S.Watanabe,S.Khudanpur, TheJHUmulti-
+pp.230–236. microphonemulti-speakerasrsystemfortheCHiME-6challenge,arXiv
+[74] C.Han,Y.Luo,C.Li,T.Zhou,K.Kinoshita,S.Watanabe,M.Delcroix, preprintarXiv:2006.07898(2020).
+H. Erdogan, J. R. Hershey, N. Mesgarani, et al., Continuous speech [91] I. Medennikov, M. Korenevsky, T. Prisyach, Y. Khokhlov, M. Ko-
+separationusingspeakerinventoryforlongmulti-talkerrecording,arXiv renevskaya, I.Sorokin, T.Timofeeva, A.Mitrofanov, A.Andrusenko,
+preprintarXiv:2012.09727(2020). I.Podluzhny,etal., TheSTCsystemfortheCHiME-6challenge, in:
+[75] Z.Huang,S.Watanabe,Y.Fujita,P.Garc´ıa,Y.Shao,D.Povey,S.Khu- CHiME 2020 Workshop on Speech Processing in Everyday Environ-
+danpur,Speakerdiarizationwithregionproposalnetwork,in:Proceed- ments,2020.
+ingsofIEEEInternationalConferenceonAcoustics,SpeechandSignal [92] X.Lu, Y.Tsao, S.Matsuda, C.Hori, Speechenhancementbasedon
+Processing,IEEE,2020,pp.6514–6518. deepdenoisingautoencoder.,in:ProceedingsoftheAnnualConference
+[76] T. von Neumann, K. Kinoshita, M. Delcroix, S. Araki, T. Nakatani, oftheInternationalSpeechCommunicationAssociation,2013,pp.436–
+R.Haeb-Umbach, All-neuralonlinesourceseparation, counting, and 440.
+diarizationformeetinganalysis, in:ProceedingsofIEEEInternational [93] Y.Xu,J.Du,L.-R.Dai,C.-H.Lee, Aregressionapproachtospeech
+ConferenceonAcoustics,SpeechandSignalProcessing,IEEE,2019, enhancementbasedondeepneuralnetworks, IEEE/ACMTransactions
+pp.91–95. onAudio,Speech,andLanguageProcessing23(2014)7–19.
+[77] L. E. Shafey, H. Soltau, I. Shafran, Joint Speech Recognition and [94] H.Erdogan,J.R.Hershey,S.Watanabe,J.LeRoux,Phase-sensitiveand
+SpeakerDiarizationviaSequenceTransduction, in:Proceedingsofthe recognition-boostedspeechseparationusingdeeprecurrentneuralnet-
+AnnualConferenceoftheInternationalSpeechCommunicationAssoci- works,in:ProceedingsofIEEEInternationalConferenceonAcoustics,
+ation,ISCA,2019,pp.396–400. SpeechandSignalProcessing,IEEE,2015,pp.708–712.
+[78] H. H. Mao, S. Li, J. McAuley, G. Cottrell, Speech recognition and [95] P. C. Loizou, Speech enhancement: theory and practice, CRC press,
+multi-speakerdiarizationoflongconversations, in: Proceedingsofthe 2013.
+AnnualConferenceoftheInternationalSpeechCommunicationAssoci- [96] T.Gao, J.Du, L.-R.Dai, C.-H.Lee, Denselyconnectedprogressive
+ation,2020,pp.691–695. learningforlstm-basedspeechenhancement, in: ProceedingsofIEEE
+[79] N.Kanda,S.Horiguchi,Y.Fujita,Y.Xue,K.Nagamatsu,S.Watanabe, InternationalConferenceonAcoustics,SpeechandSignalProcessing,
+Simultaneousspeechrecognitionandspeakerdiarizationformonaural IEEE,2018,pp.5054–5058.
+dialoguerecordingswithtarget-speakeracousticmodels, in: Proceed- [97] J.Heymann,L.Drude,R.Haeb-Umbach,Neuralnetworkbasedspectral
+ingsofIEEEWorkshoponAutomaticSpeechRecognitionandUnder- maskestimationforacousticbeamforming, in: ProceedingsofIEEE
+standing,2019,pp.31–38. InternationalConferenceonAcoustics,SpeechandSignalProcessing,
+[80] N.Kanda,X.Chang,Y.Gaur,X.Wang,Z.Meng,Z.Chen,T.Yosh- IEEE,2016,pp.196–200.
+ioka, Investigationofend-to-endspeaker-attributedASRforcontinu- [98] H. Erdogan, J. R. Hershey, S. Watanabe, M. I. Mandel, J. Le Roux,
+ousmulti-talkerrecordings, in:ProceedingsofIEEESpokenLanguage Improved MVDR beamforming using single-channel mask prediction
+TechnologyWorkshop,2021. networks, ProceedingsoftheAnnualConferenceoftheInternational
+[81] R. Haeb-Umbach, S. Watanabe, T. Nakatani, M. Bacchiani, SpeechCommunicationAssociation(2016)1981–1985.
+B.Hoﬀmeister,M.L.Seltzer,H.Zen,M.Souden,Speechprocessingfor [99] T. Nakatani, T. Yoshioka, K. Kinoshita, M. Miyoshi, B.-H. Juang,
+digitalhomeassistants:Combiningsignalprocessingwithdeep-learning Speech dereverberation based on variance-normalized delayed linear
+techniques,IEEESignalProcessingMagazine36(2019)111–124. prediction, IEEETransactionsonAudio,Speech,andLanguagePro-
+[82] E.Vincent,T.Virtanen,S.Gannot,Audiosourceseparationandspeech cessing18(2010)1717–1731.
+enhancement,JohnWiley&Sons,2018. [100] T.Yoshioka,T.Nakatani,Generalizationofmulti-channellinearpredic-
+[83] D.Wang,J.Chen,Supervisedspeechseparationbasedondeeplearning: tionmethodsforblindmimoimpulseresponseshortening,IEEETrans-
+Anoverview,IEEE/ACMTransactionsonAudio,Speech,andLanguage actionsonAudio,Speech,andLanguageProcessing20(2012)2707–
+Processing26(2018)1702–1726. 2720.
+[84] G.Sell,D.Snyder,A.McCree,D.Garcia-Romero,J.Villalba,M.Ma- [101] L. Drude, J. Heymann, C. Boeddeker, R. Haeb-Umbach, NARA-
+ciejewski,V.Manohar,N.Dehak,D.Povey,S.Watanabe,etal.,Diariza- WPE:Apythonpackageforweightedpredictionerrordereverberation
+tionishard:SomeexperiencesandlessonslearnedfortheJHUteamin innumpyandtensorﬂowforonlineandoﬄineprocessing, in: Speech
+theinauguralDIHARDchallenge., in:ProceedingsoftheAnnualCon- Communication;13thITG-Symposium,VDE,2018,pp.1–5.
+ferenceoftheInternationalSpeechCommunicationAssociation,2018, [102] T.Yoshioka,H.Erdogan,Z.Chen,X.Xiao,F.Alleva,Recognizingover-
+pp.2808–2812. lappedspeechinmeetings: Amultichannelseparationapproachusing
+[85] N.Ryant,K.Church,C.Cieri,A.Cristia,J.Du,S.Ganapathy,M.Liber- neuralnetworks,in:ProceedingsoftheAnnualConferenceoftheInter-
+man, ThesecondDIHARDdiarizationchallenge: Dataset, task, and nationalSpeechCommunicationAssociation,2018,pp.3038–3042.
+baselines, ProceedingsoftheAnnualConferenceoftheInternational [103] C.Boeddecker,J.Heitkaemper,J.Schmalenstroeer,L.Drude,J.Hey-
+SpeechCommunicationAssociation(2019)978–982. mann,R.Haeb-Umbach,Front-endprocessingfortheCHiME-5dinner
+[86] M.Diez,F.Landini,L.Burget,J.Rohdin,A.Silnova,K.Zmol´ıkova´, partyscenario, in: ProceedingsofCHiME2018WorkshoponSpeech
+O.Novotny`,K.Vesely`,O.Glembek,O.Plchot,etal., BUTsystemfor ProcessinginEverydayEnvironments,2018,pp.35–40.
+DIHARDspeechdiarizationchallenge2018., in: Proceedingsofthe [104] X.Xiao, N.Kanda, Z.Chen, T.Zhou, T.Yoshioka, Y.Zhao, G.Liu,
+AnnualConferenceoftheInternationalSpeechCommunicationAssoci- J. Wu, J. Li, Y. Gong, Microsoft speaker diarization system for
+ation,2018,pp.2798–2802. the voxceleb speaker recognition challenge 2020, arXiv preprint
+[87] Z.Chen,T.Yoshioka,L.Lu,T.Zhou,Z.Meng,Y.Luo,J.Wu,X.Xiao, arXiv:2010.11458(2020).
+J.Li, Continuousspeechseparation:Datasetandanalysis, in:Proceed- [105] A. Nagrani, J. S. Chung, J. Huh, A. Brown, E. Coto, W. Xie,
+ingsofIEEEInternationalConferenceonAcoustics,SpeechandSignal M. McLaren, D. A. Reynolds, A. Zisserman, VoxSRC 2020: The
+Processing,IEEE,2020,pp.7284–7288. second VoxCeleb speaker recognition challenge, arXiv preprint
+[88] D.Raj,P.Denisov,Z.Chen,H.Erdogan,Z.Huang,M.He,S.Watanabe, arXiv:2012.06867(2020).
+J.Du,T.Yoshioka,Y.Luo,N.Kanda,J.Li,S.Wisdom,J.R.Hershey, [106] T.Ng, B.Zhang, L.Nguyen, S.Matsoukas, X.Zhou, N.Mesgarani,
+Integrationofspeechseparation,diarization,andrecognitionformulti- K.Vesely`,P.Mateˇjka, Developingaspeechactivitydetectionsystem
+speakermeetings: Systemdescription, comparison, andanalysis, in: forthedarparatsprogram,in:ProceedingsoftheAnnualConferenceof
+23theInternationalSpeechCommunicationAssociation,2012,pp.1969– [127] M.Senoussaoui,P.Kenny,P.Dumouchel,T.Stafylakis, Eﬃcientiter-
+1972. ativemeanshiftbasedcosinedissimilarityformulti-recordingspeaker
+[107] R.Sarikaya,J.H.Hansen, Robustdetectionofspeechactivityinthe clustering,in:ProceedingsofIEEEInternationalConferenceonAcous-
+presenceofnoise, in: ProceedingsoftheInternationalConferenceon tics,SpeechandSignalProcessing,IEEE,2013,pp.7712–7715.
+SpokenLanguageProcessing,volume4,Citeseer,1998,pp.1455–8. [128] I.Salmun,I.Shapiro,I.Opher,I.Lapidot,Plda-basedmeanshiftspeak-
+[108] D.Haws,D.Dimitriadis,G.Saon,S.Thomas,M.Picheny, Ontheim- ers’ short segments clustering, Computer Speech and Language 45
+portanceofeventdetectionforasr,in:ProceedingsofIEEEInternational (2017)411–436.
+ConferenceonAcoustics,SpeechandSignalProcessing,2016. [129] K.J.Han,S.S.Narayanan, Arobuststoppingcriterionforagglomera-
+[109] S.Meignier,D.Moraru,C.Fredouille,J.-F.Bonastre,L.Besacier,Step- tivehierarchicalclusteringinaspeakerdiarizationsystem,in:Proceed-
+by-stepandintegratedapproachesinbroadcastnewsspeakerdiarization, ingsoftheAnnualConferenceoftheInternationalSpeechCommunica-
+ComputerSpeechandLanguage20(2006)303–330. tionAssociation,2007.
+[110] S.Chen,P.Gopalakrishnan,etal., Speaker,environmentandchannel [130] S. Novoselov, A. Gusev, A. Ivanov, T. Pekhovsky, A. Shulipa,
+changedetectionandclusteringviathebayesianinformationcriterion, A. Avdeeva, A. Gorlanov, A. Kozlov, Speaker diarization with deep
+in:ProceedingsDARPAbroadcastnewstranscriptionandunderstanding speaker embeddings for dihard challenge ii., in: Proceedings of the
+workshop,volume8,Virginia,USA,1998,pp.127–132. AnnualConferenceoftheInternationalSpeechCommunicationAssoci-
+[111] P.Delacourt,C.J.Wellekens, Distbic: Aspeaker-basedsegmentation ation,2019,pp.1003–1007.
+foraudiodataindexing,SpeechCommunication32(2000)111–126. [131] U.VonLuxburg, Atutorialonspectralclustering, Statist.andComput.
+[112] M. Senoussaoui, P. Kenny, T. Stafylakis, P. Dumouchel, A study of 17(2007)395–416.
+thecosinedistance-basedmeanshiftfortelephonespeechdiarization, [132] A.Ng,M.Jordan,Y.Weiss, Onspectralclustering:Analysisandanal-
+IEEE/ACMTransactionsonAudio,Speech,andLanguageProcessing gorithm, Advancesinneuralinformationprocessingsystems14(2001)
+22(2013)217–227. 849–856.
+[113] G.Sell,D.Snyder,A.McCree,D.Garcia-Romero,J.Villalba,M.Ma- [133] H.Ning,M.Liu,H.Tang,T.S.Huang, Aspectralclusteringapproach
+ciejewski,V.Manohar,N.Dehak,D.Povey,S.Watanabe,S.Khudan- tospeakerdiarization, in: ProceedingsoftheInternationalConference
+pur, Diarizationishard: someexperiencesandlessonslearnedforthe onSpokenLanguageProcessing,2006,pp.2178–2181.
+JHUteamintheinauguralDIHARDchallenge, in: Proceedingsofthe [134] J.Luque,J.Hernando,Ontheuseofagglomerativeandspectralcluster-
+AnnualConferenceoftheInternationalSpeechCommunicationAssoci- inginspeakerdiarizationofmeetings,in:ProceedingsofOdyssey:The
+ation,2018,pp.2808–2812. SpeakerandLanguageRecognitionWorkshop,2012,pp.130–137.
+[114] W.-H.Tsai, S.-S.Cheng, H.-M.Wang, Speakerclusteringofspeech [135] Q.Lin, R.Yin, M.Li, H.Bredin, C.Barras, LSTMbasedsimilarity
+utterancesusingavoicecharacteristicreferencespace, in:Proceedings measurementwithspectralclusteringforspeakerdiarization, in: Pro-
+oftheInternationalConferenceonSpokenLanguageProcessing,2004. ceedingsoftheAnnualConferenceoftheInternationalSpeechCommu-
+[115] J.E.Rougui,M.Rziza,D.Aboutajdine,M.Gelgon,J.Martinez,Fastin- nicationAssociation,2019,pp.366–370.
+crementalclusteringofgaussianmixturespeakermodelsforscalingup [136] T.J.Park,K.J.Han,M.Kumar,S.Narayanan, Auto-tuningspectral
+retrieval in on-line broadcast, in: Proceedings of IEEE International clusteringforspeakerdiarizationusingnormalizedmaximumeigengap,
+Conference on Acoustics, Speech and Signal Processing, volume 5, IEEESignalProcessingLetters27(2019)381–385.
+IEEE,2006,pp.V–V. [137] P.Kenny,D.Reynolds,F.Castaldo, Diarizationoftelephoneconversa-
+[116] D.A.Reynolds,T.F.Quatieri,R.B.Dunn, Speakerveriﬁcationusing tionsusingfactoranalysis, IEEEJournalofSelectedTopicsinSignal
+adaptedgaussianmixturemodels, Digitalsignalprocessing10(2000) Processing4(2010)1059–1070.
+19–41. [138] M.Diez,L.Burget,P.Matejka, Speakerdiarizationbasedonbayesian
+[117] P.Kenny,G.Boulianne,P.Ouellet,P.Dumouchel, Speakerandsession hmmwitheigenvoicepriors.,in:ProceedingsofOdyssey:TheSpeaker
+variability in gmm-based speaker veriﬁcation, IEEE Transactions on andLanguageRecognitionWorkshop,2018,pp.147–154.
+Audio,Speech,andLanguageProcessing15(2007)1448–1460. [139] M.Diez,L.Burget,F.Landini,J.Cˇernocky`,Analysisofspeakerdiariza-
+[118] P.Kenny,P.Ouellet,N.Dehak,V.Gupta,P.Dumouchel, Astudyof tionbasedonbayesianhmmwitheigenvoicepriors, IEEE/ACMTrans-
+interspeakervariabilityinspeakerveriﬁcation, IEEETransactionson actionsonAudio,Speech,andLanguageProcessing28(2019)355–368.
+Audio,Speech,andLanguageProcessing16(2008)980–988. [140] M.Diez,L.Burget,S.Wang,J.Rohdin,J.Cernocky`, Bayesianhmm
+[119] P. Kenny, G. Boulianne, P. Dumouchel, Eigenvoice modeling with basedx-vectorclusteringforspeakerdiarization.,in:Proceedingsofthe
+sparsetrainingdata, IEEETransactionsonSpeechandAudioProcess- AnnualConferenceoftheInternationalSpeechCommunicationAssoci-
+ing13(2005)345–354. ation,2019,pp.346–350.
+[120] G.Sell,D.Garcia-Romero, Speakerdiarizationwithpldai-vectorscor- [141] F.Landini,J.Profant,M.Diez,L.Burget, Bayesianhmmclusteringof
+ingandunsupervisedcalibration,in:ProceedingsofIEEESpokenLan- x-vectorsequences(vbx)inspeakerdiarization:theory,implementation
+guageTechnologyWorkshop,IEEE,2014,pp.413–417. andanalysisonstandardtasks,arXivpreprintarXiv:2006.07898(2020).
+[121] W. Zhu, J. Pelecanos, Online speaker diarization using adapted i- [142] G. Sell, D. Garcia-Romero, Diarization resegmentation in the factor
+vectortransforms,in:ProceedingsofIEEEInternationalConferenceon analysissubspace,in:ProceedingsofIEEEInternationalConferenceon
+Acoustics,SpeechandSignalProcessing,IEEE,2016,pp.5045–5049. Acoustics,SpeechandSignalProcessing,IEEE,2015,pp.4794–4798.
+[122] Y.Sun,X.Wang,X.Tang, Deeplearningfacerepresentationfrompre- [143] J.G.Fiscus,Apost-processingsystemtoyieldreducedworderrorrates:
+dicting10,000classes,in:ProceedingsoftheIEEEConferenceonCom- Recognizeroutputvotingerrorreduction(ROVER), in:Proceedingsof
+puterVisionandPatternRecognition,2014,pp.1891–1898. IEEEWorkshoponAutomaticSpeechRecognitionandUnderstanding,
+[123] Y.Taigman,M.Yang,M.Ranzato,L.Wolf, Deepface:Closingthegap IEEE,1997,pp.347–354.
+tohuman-levelperformanceinfaceveriﬁcation, in:Proceedingsofthe [144] N.Brummer,L.Burget,J.Cernocky,O.Glembek,F.Grezl,M.Karaﬁat,
+IEEEconferenceoncomputervisionandpatternrecognition,2014,pp. D.A.vanLeeuwen,P.Matejka,P.Schwarz,A.Strasheim, Fusionof
+1701–1708. heterogeneousspeakerrecognitionsystemsintheSTBUsubmissionfor
+[124] J.Villalba,N.Chen,D.Snyder,D.Garcia-Romero,A.McCree,G.Sell, theNISTspeakerrecognitionevaluation2006, IEEETransactionson
+J.Borgstrom,F.Richardson,S.Shon,F.Grondin,etal., State-of-the- Audio,Speech,andLanguageProcessing15(2007)2072–2084.
+artspeakerrecognitionfortelephoneandvideospeech: TheJHU-MIT [145] M.Huijbregts,D.vanLeeuwen,F.Jong, Themajoritywins:amethod
+submissionforNISTSRE18., in: ProceedingsoftheAnnualConfer- forcombiningspeakerdiarizationsystems, in: ProceedingsoftheAn-
+enceoftheInternationalSpeechCommunicationAssociation,2019,pp. nualConferenceoftheInternationalSpeechCommunicationAssocia-
+1488–1492. tion,ISCA,2009,pp.924–927.
+[125] D.Comaniciu,P.Meer, Meanshift: Arobustapproachtowardfeature [146] S.Bozonnet,N.Evans,X.Anguera,O.Vinyals,G.Friedland,C.Fre-
+spaceanalysis, IEEETransactionsonpatternanalysisandmachinein- douille, Systemoutputcombinationforimprovedspeakerdiarization,
+telligence24(2002)603–619. in: ProceedingsoftheAnnualConferenceoftheInternationalSpeech
+[126] T.Stafylakis,V.Katsouros,G.Carayannis, Speakerclusteringviathe CommunicationAssociation,ISCA,2010,pp.2642–2645.
+meanshiftalgorithm,Recall2(2010)7. [147] A. Stolcke, T. Yoshioka, DOVER: A method for combining diariza-
+24tionoutputs, in:ProceedingsofIEEEWorkshoponAutomaticSpeech speakerdiarizationforanunknownnumberofspeakerswithencoder-
+RecognitionandUnderstanding,IEEE,2019,pp.757–763. decoderbasedattractors, in: ProceedingsoftheAnnualConferenceof
+[148] D.Raj,L.P.Garcia-Perera,Z.Huang,S.Watanabe,D.Povey,A.Stol- theInternationalSpeechCommunicationAssociation, 2020, pp.269–
+cke, S.Khudanpur, DOVER-Lap: Amethodforcombiningoverlap- 273.
+awarediarizationoutputs, in: ProceedingsofIEEESpokenLanguage [170] Y. Fujita, S. Watanabe, S. Horiguchi, Y. Xue, J. Shi, K. Nagamatsu,
+TechnologyWorkshop,2021. Neuralspeakerdiarizationwithspeaker-wisechainrule, arXivpreprint
+[149] D. Dimitriadis, Enhancements for Audio-only Diarization Systems, arXiv:2006.01796(2020).
+arXivpreprintarXiv:1909.00082(2019). [171] K.Kinoshita, M.Delcroix, N.Tawara, Integratingend-to-endneural
+[150] J.Xie,R.Girshick,A.Farhadi,Unsuperviseddeepembeddingforclus- andclustering-baseddiarization:Gettingthebestofbothworlds, arXiv
+teringanalysis,in:ProceedingsofInternationalConferenceonMachine preprintarXiv:2010.13366(2020).
+Learning,2016,pp.478–487. [172] Y.Xue, S.Horiguchi, Y.Fujita, S.Watanabe, K.Nagamatsu, Online
+[151] E.Ustinova,V.Lempitsky, Learningdeepembeddingswithhistogram end-to-endneuraldiarizationwithspeaker-tracingbuﬀer,arXivpreprint
+loss, ProceedingsofAdvancesinNeuralInformationProcessingSys- arXiv:2006.02616(2020).
+tems29(2016)4170–4178. [173] E.Han, C.Lee, A.Stolcke, BW-EDA-EEND:Streamingend-to-end
+[152] Q.Lin,Y.Hou,M.Li, Self-attentivesimilaritymeasurementstrategies neural speaker diarization for a variable number of speakers, arXiv
+in speakerdiarization, Proceedingsof theAnnual Conference ofthe preprintarXiv:2011.02678(2020).
+InternationalSpeechCommunicationAssociation(2020)284–288. [174] J. Huang, E. Marcheret, K. Visweswariah, G. Potamianos, The ibm
+[153] T.J.Park,M.Kumar,S.Narayanan,Multi-scalespeakerdiarizationwith rt07evaluationsystemsforspeakerdiarizationonlecturemeetings, in:
+neuralaﬃnityscorefusion,arXivpreprintarXiv:2011.10527(2020). MultimodalTechnologiesforPerceptionofHumans,Springer,2007,pp.
+[154] Y.LeCun,Y.Bengio,G.Hinton, DeepLearning, Nature521(2015) 497–508.
+436. [175] J.Silovsky,J.Zdansky,J.Nouza,P.Cerva,J.Prazak, Incorporationof
+[155] A.Santoro,R.Faulkner,D.Raposo,J.Rae,M.Chrzanowski,T.Weber, theasroutputinspeakersegmentationandclusteringwithinthetaskof
+D.Wierstra,O.Vinyals,R.Pascanu,T.Lillicrap, RelationalRecurrent speakerdiarizationofbroadcaststreams,in:InternationalWorkshopon
+NeuralNetworks, in: ProceedingsofAdvancesinNeuralInformation MultimediaSignalProcessing,IEEE,2012,pp.118–123.
+ProcessingSystems,2018,pp.7299–7310. [176] L.Canseco-Rodriguez, L.Lamel, J.-L.Gauvain, Speakerdiarization
+[156] A.Santoro,S.Bartunov,M.Botvinick,D.Wierstra,T.Lillicrap, Meta- fromspeechtranscripts,in:ProceedingsoftheInternationalConference
+learningwithMemory-AugmentedNeuralNetworks, in: Proceedings onSpokenLanguageProcessing,volume4,2004,pp.3–7.
+ofInternational Conference on Machine Learning, 2016, pp. 1842—- [177] N.Flemotomos,P.Georgiou,S.Narayanan,Linguisticallyaidedspeaker
+1850. diarizationusingspeakerroleinformation,arXiv(2019)arXiv–1911.
+[157] S.Sukhbaatar,J.Weston,R.Fergus,etal., End-to-EndMemoryNet- [178] T.J.Park,P.Georgiou, Multimodalspeakersegmentationanddiariza-
+works, in: ProceedingsofAdvancesinNeuralInformationProcessing tion using lexical and acoustic cues via sequence to sequence neural
+Systems,2015,pp.2440–2448. networks, ProceedingsoftheAnnualConferenceoftheInternational
+[158] D.Garcia-Romero,C.Y.Espy-Wilson,Analysisofi-vectorLengthNor- SpeechCommunicationAssociation(2018)1373–1377.
+malizationinSpeakerRecognitionSystems,in:ProceedingsoftheAn- [179] T. J. Park, K. J. Han, J. Huang, X. He, B. Zhou, P. Georgiou,
+nualConferenceoftheInternationalSpeechCommunicationAssocia- S.Narayanan, Speakerdiarizationwithlexicalinformation, Proceed-
+tion,2011,pp.249–252. ingsoftheAnnualConferenceoftheInternationalSpeechCommunica-
+[159] N. Flemotomos, D. Dimitriadis, A Memory Augmented Architec- tionAssociation(2019)391–395.
+tureforContinuousSpeakerIdentiﬁcationinMeetings, arXivpreprint [180] J.Fiscus, J.Ajot, J.Garofolo, TheRichTranscription2007meeting
+arXiv:2001.05118(2020). recognitionevaluation,2007,pp.373–389.
+[160] Z.Zaj´ıc,M.Kunesˇova´,V.Radova´, InvestigationofSegmentationini- [181] K. Zmolikova, M. Delcroix, K. Kinoshita, T. Higuchi, A. Ogawa,
+vectorBasedSpeakerDiarizationofTelephoneSpeech,in:International T. Nakatani, Speaker-aware neural network based beamformer for
+ConferenceonSpeechandComputer,2016,pp.411–418. speaker extraction in speech mixtures., in: Proceedings of the An-
+[161] T.Yoshioka,D.Dimitriadis,A.Stolcke,W.Hinthorn,Z.Chen,M.Zeng, nualConferenceoftheInternationalSpeechCommunicationAssocia-
+H.Xuedong, MeetingTranscriptionUsingAsynchronousDistantMi- tion,2017,pp.2655–2659.
+crophones, in: ProceedingsoftheAnnualConferenceoftheInterna- [182] M.Delcroix,K.Zmolikova,K.Kinoshita,A.Ogawa,T.Nakatani, Sin-
+tionalSpeechCommunicationAssociation,2019,pp.2968–2972. glechanneltargetspeakerextractionandrecognitionwithspeakerbeam,
+[162] S. Horiguchi, P. Garcia, Y. Fujita, S. Watanabe, K. Nagamatsu, in:ProceedingsofIEEEInternationalConferenceonAcoustics,Speech
+End-to-end speaker diarization as post-processing, arXiv preprint andSignalProcessing,IEEE,2018,pp.5554–5558.
+arXiv:2012.10055(2020). [183] M.Delcroix,S.Watanabe,T.Ochiai,K.Kinoshita,S.Karita,A.Ogawa,
+[163] D.M.Blei, P.I.Frazier, Distancedependentchineserestaurantpro- T.Nakatani, End-to-endSpeakerBeamforsinglechanneltargetspeech
+cesses.,JournalofMachineLearningResearch12(2011). recognition., in: ProceedingsoftheAnnualConferenceoftheInterna-
+[164] S.Ren,K.He,R.Girshick,J.Sun, FasterR-CNN:Towardsreal-time tionalSpeechCommunicationAssociation,2019,pp.451–455.
+objectdetectionwithregionproposalnetworks, IEEETransactionson [184] N.Kanda,Y.Gaur,X.Wang,Z.Meng,Z.Chen,T.Zhou,T.Yoshioka,
+PatternAnalysisandMachineIntelligence39(2016)1137–1149. Jointspeakercounting, speechrecognition, andspeakeridentiﬁcation
+[165] D.Kounades-Bastian,L.Girin,X.Alameda-Pineda,S.Gannot,R.Ho- foroverlappedspeechofanynumberofspeakers,in:Proceedingsofthe
+raud, AnEMalgorithmforjointsourceseparationanddiarisationof AnnualConferenceoftheInternationalSpeechCommunicationAssoci-
+multichannel convolutive speech mixtures, in: Proceedings of IEEE ation,2020,pp.36–40.
+InternationalConferenceonAcoustics,SpeechandSignalProcessing, [185] N. Kanda, Z. Meng, L. Lu, Y. Gaur, X. Wang, Z. Chen, T. Yosh-
+IEEE,2017,pp.16–20. ioka, Minimum bayes risk training for end-to-end speaker-attributed
+[166] D.Kounades-Bastian,L.Girin,X.Alameda-Pineda,R.Horaud,S.Gan- asr,arXivpreprintarXiv:2011.02921(2020).
+not, Exploitingtheintermittencyofspeechforjointseparationanddi- [186] N.Kanda,Y.Gaur,X.Wang,Z.Meng,T.Yoshioka, Serializedoutput
+arization,in:ProceedingsofIEEEWorkshoponApplicationsofSignal trainingforend-to-endoverlappedspeechrecognition, in:Proceedings
+ProcessingtoAudioandAcoustics,IEEE,2017,pp.41–45. oftheAnnualConferenceoftheInternationalSpeechCommunication
+[167] K.Kinoshita,M.Delcroix,S.Araki,T.Nakatani, Tacklingrealnoisy Association,2020,pp.2797–2801.
+reverberant meetings with all-neural source separation, counting, and [187] J. Carletta, S. Ashby, S. Bourban, M. Flynn, M. Guillemot, T. Hain,
+diarizationsystem, in: ProceedingsofIEEEInternationalConference J. Kadlec, V. Karaiskos, W. Kraaij, M. Kronenthal, et al., The ami
+onAcoustics,SpeechandSignalProcessing,IEEE,2020,pp.381–385. meetingcorpus: Apre-announcement, in: Internationalworkshopon
+[168] K.Maekawa, Corpusofspontaneousjapanese: Itsdesignandevalua- machinelearningformultimodalinteraction,Springer,2005,pp.28–39.
+tion, in: ISCA&IEEEWorkshoponSpontaneousSpeechProcessing [188] A.Janin,D.Baron,J.Edwards,D.Ellis,D.Gelbart,N.Morgan,B.Pe-
+andRecognition,2003,pp.7–12. skin,T.Pfau,E.Shriberg,A.Stolcke,C.Wooters, TheICSImeeting
+[169] S.Horiguchi,Y.Fujita,S.Watanabe,Y.Xue,K.Nagamatsu,End-to-end corpus,in:ProceedingsofIEEEInternationalConferenceonAcoustics,
+25SpeechandSignalProcessing,2003,pp.I–364–I–367. tem, in: Proceedings of the Annual Conference of the International
+[189] N.Ryant,K.Church,C.Cieri,A.Cristia,J.Du,S.Ganapathy,M.Liber- SpeechCommunicationAssociation,2017,pp.2739–2743.
+man, Theﬁrstdihardspeechdiarizationchallenge, in: Proceedingsof [206] A.Zhang,Q.Wan,Z.Zhu,J.Paisley,C.Wang,Fullysupervisedspeaker
+theAnnualConferenceoftheInternationalSpeechCommunicationAs- diarization,arXivpreprintarXiv:1810.04719(2018).
+sociation,2018. [207] K.He,X.Zhang,S.Ren,J.Sun,Deepresiduallearningforimagerecog-
+[190] N.Ryant,K.Church,C.Cieri,J.Du,S.Ganapathy,M.Liberman,Third nition,in:IEEEConf.ComputerVision,PatternRecognition,2016,pp.
+dihard challenge evaluation plan, arXiv preprint arXiv:2006.05815 770–778.doi:10.1109/CVPR.2016.90.
+(2020). [208] K. He, G. Gkioxari, P. Dolla´r, R. Girshick, Mask R-CNN,
+[191] J.Barker,S.Watanabe,E.Vincent,J.Trmal, Theﬁfth’chime’speech CoRRabs/1703.06870(2017).URL:http://arxiv.org/abs/1703.
+separationandrecognitionchallenge:Dataset,taskandbaselines, Pro- 06870.arXiv:1703.06870.
+ceedingsoftheAnnualConferenceoftheInternationalSpeechCommu- [209] T.Yoshioka,I.Abramovski,C.Aksoylar,Z.Chen,M.David,D.Dimi-
+nicationAssociation(2018)1561–1565. triadis,Y.Gong,I.Gurvich,X.Huang,Y.Huang,A.Hurvitz,L.Jiang,
+[192] J.S.Chung,J.Huh,A.Nagrani,T.Afouras,A.Zisserman, Spotthe S.Koubi,E.Krupka,I.Leichter,C.Liu,P.Parthasarathy,A.Vinnikov,
+conversation: Speakerdiarisationinthewild, in: Proceedingsofthe L. Wu, X. Xiao, W. Xiong, H. Wang, Z. Wang, J. Zhang, Y. Zhao,
+AnnualConferenceoftheInternationalSpeechCommunicationAssoci- T.Zhou, AdvancesinOnlineAudio-VisualMeetingTranscription, in:
+ation,2020,pp.299–303. ProceedingsofIEEEWorkshoponAutomaticSpeechRecognitionand
+[193] V.Panayotov,G.Chen,D.Povey,S.Khudanpur, LibriSpeech:anASR Understanding,2019,pp.276–283.
+corpusbasedonpublicdomainaudiobooks, in: ProceedingsofIEEE [210] H. Buchner, R. Aichner, W. Kellermann, A generalization of blind
+InternationalConferenceonAcoustics,SpeechandSignalProcessing, sourceseparationalgorithmsforconvolutivemixturesbasedonsecond-
+IEEE,2015,pp.5206–5210. orderstatistics, IEEETransactionsonSpeechandAudioProcessing13
+[194] J.G.Fiscus,J.Ajot,M.Michel,J.S.Garofolo, Therichtranscription (2005)120–134.
+2006springmeetingrecognitionevaluation,in:ProceedingsofInterna- [211] H.Sawada, S.Araki, S.Makino, Measuringdependenceofbin-wise
+tionalWorkshoponMachineLearningandMultimodalInteraction,May separatedsignalsforpermutationalignmentinfrequency-domainBSS,
+2006,pp.309–322. in:Int.Symp.Circ.,Syst.,2007,pp.3247–3250.
+[195] P. E. Black, Hungarian algorithm, 2019. [212] F.Nesta, P.Svaizer, M.Omologo, Convolutivebssofshortmixtures
+Https://xlinux.nist.gov/dads/HTML/HungarianAlgorithm.html. byicarecursivelyregularizedacrossfrequencies,IEEETransactionson
+[196] T. J. Park, P. Georgiou, Multimodal speaker segmentation and di- Audio,Speech,andLanguageProcessing19(2011)624–639.
+arizationusinglexicalandacousticcuesviasequencetosequenceneu- [213] H.Sawada, S.Araki, S.Makino, Underdeterminedconvolutiveblind
+ral networks, in: Proceedings of the Annual Conference of the In- source separation via frequency bin-wise clustering and permutation
+ternationalSpeechCommunicationAssociation,2018,pp.1373–1377. alignment, IEEETransactionsonAudio, Speech, andLanguagePro-
+URL: http://dx.doi.org/10.21437/Interspeech.2018-1364. cessing19(2011)516–527.
+doi:10.21437/Interspeech.2018-1364. [214] N.Ito,S.Araki,T.Yoshioka,T.Nakatani, Relaxeddisjointnessbased
+[197] J.S.Chung,A.Nagrani,E.Coto,W.Xie,M.McLaren,D.A.Reynolds, clusteringforjointblindsourceseparationanddereverberation,in:Pro-
+A.Zisserman, VoxSRC2019: TheﬁrstVoxCelebspeakerrecognition ceedingsofInternationalWorkshoponAcousticEchoandNoiseCon-
+challenge,arXivpreprintarXiv:1912.02522(2019). trol,2014,pp.268–272.
+[198] C. Chiu, A. Tripathi, K. Chou, C. Co, N. Jaitly, D. Jaunzeikare, [215] L.Drude, R.Haeb-Umbach, Tightintegrationofspatialandspectral
+A. Kannan, P. Nguyen, H. Sak, A. Sankar, J. Tansuwan, N. Wan, featuresforBSSwithdeepclusteringembeddings, in: Proceedingsof
+Y. Wu, X. Zhang, Speech recognition for medical conversations, theAnnualConferenceoftheInternationalSpeechCommunicationAs-
+CoRRabs/1711.07274(2017).URL:http://arxiv.org/abs/1711. sociation,2017,pp.2650–2654.
+07274.arXiv:1711.07274. [216] M.Maciejewski,G.Sell,L.P.Garcia-Perera,S.Watanabe,S.Khudan-
+[199] J. Carletta, S. Ashby, S. Bourban, M. Flynn, M. Guillemot, T. Hain, pur, Buildingcorporaforsingle-channelspeechseparationacrossmul-
+J.Kadlec,V.Karaiskos,W.Kraaij,M.Kronenthal,G.Lathoud,M.Lin- tipledomains, CoRRabs/1811.02641(2018).URL:http://arxiv.
+coln,A.Lisowska,I.McCowan,W.P.andD.Reidsma,P.Wellner, The org/abs/1811.02641.arXiv:1811.02641.
+AMI meeting corpus: a pre-announcement, in: Proceedings of Int. [217] S.Araki,N.Ono,K.Kinoshita,M.Delcroix, Meetingrecognitionwith
+Worksh.MachineLearningforMultimodalInteraction,2006,pp.28– asynchronousdistributedmicrophonearrayusingblock-wisereﬁnement
+39. ofmask-basedMVDRbeamformer, in: ProceedingsofIEEEInterna-
+[200] W.Xiong,J.Droppo,X.Huang,F.Seide,M.Seltzer,A.Stolcke,D.Yu, tionalConferenceonAcoustics, SpeechandSignalProcessing, 2018,
+G.Zweig,Achievinghumanparityinconversationalspeechrecognition, pp.5694–5698.
+CoRRabs/1610.05256(2016).URL:http://arxiv.org/abs/1610. [218] A.Stolcke, Makingthemostfrommultiplemicrophonesinmeeting
+05256.arXiv:1610.05256. recordings,in:ProceedingsofIEEEInternationalConferenceonAcous-
+[201] G.Saon,G.Kurata,T.Sercu,K.Audhkhasi,S.Thomas,D.Dimitriadis, tics,SpeechandSignalProcessing,2011,pp.4992–4995.
+X.Cui,B.Ramabhadran,M.Picheny,L.Lim,B.Roomi,P.Hall,English [219] S.Narayanan,P.G.Georgiou, Behavioralsignalprocessing: Deriving
+conversationaltelephonespeechrecognitionbyhumansandmachines, humanbehavioralinformaticsfromspeechandlanguage, Proceedings
+CoRRabs/1703.02136(2017).URL:http://arxiv.org/abs/1703. oftheIEEE101(2013)1203–1233.
+02136.arXiv:1703.02136. [220] D.Bone,C.-C.Lee,T.Chaspari,J.Gibson,S.Narayanan, Signalpro-
+[202] T.Yoshioka,N.Ito,M.Delcroix,A.Ogawa,K.Kinoshita,M.Fujimoto, cessingandmachinelearningformentalhealthresearchandclinicalap-
+C.Yu,W.Fabian,M.Espi,T.Higuchi,S.Araki,T.Nakatani, TheNTT plications,IEEESignalProcessingMagazine34(2017)189–196.
+CHiME-3system:advancesinspeechenhancementandrecognitionfor [221] M.Kumar,S.H.Kim,C.Lord,S.Narayanan, Speakerdiarizationfor
+mobilemulti-microphonedevices, in: ProceedingsofIEEEWorkshop naturalisticchild-adultconversationalinteractionsusingcontextualin-
+onAutomaticSpeechRecognitionandUnderstanding,2015,pp.436– formation., JournaloftheAcousticalSocietyofAmerica147(2020)
+443. EL196–EL200.doi:10.1121/10.0000736.
+[203] J.Du,Y.Tu,L.Sun,F.Ma,H.Wang,J.Pan,C.Liu,J.Chen,C.Lee, [222] P.G.Georgiou,M.P.Black,S.S.Narayanan, Behavioralsignalpro-
+TheUSTC-iFlyteksystemforCHiME-4challenge, in: Proceedingsof cessingforunderstanding(distressed)dyadicinteractions: somerecent
+CHiME-4Workshop,2016,pp.36–38. developments, in: ProceedingsofthejointACMworkshoponHuman
+[204] B.Li,T.N.Sainath,A.Narayanan,J.Caroselli,M.Bacchiani,A.Misra, gestureandbehaviorunderstanding,2011,pp.7–12.
+I.Shafran,H.Sak,G.Punduk,K.Chin,K.C.Sim,R.J.Weiss,K.W. [223] B. Xiao, C. Huang, Z. E. Imel, D. C. Atkins, P. Georgiou, S. S.
+Wilson,E.Variani,C.Kim,O.Siohan,M.Weintrauba,E.McDermott, Narayanan,Atechnologyprototypesystemforratingtherapistempathy
+R.Rose,M.Shannon, AcousticmodelingforGoogleHome, in: Pro- fromaudiorecordingsinaddictioncounseling,PeerJComputerScience
+ceedingsoftheAnnualConferenceoftheInternationalSpeechCommu- 2(2016)e59.
+nicationAssociation,2017,pp.399–403. [224] S.N.Chakravarthula,M.Nasir,S.-Y.Tseng,H.Li,T.J.Park,B.Bau-
+[205] D.Dimitriadis,P.Fousek, Developingon-linespeakerdiarizationsys- com, C. J. Bryan, S. Narayanan, P. Georgiou, Automatic prediction
+26of suicidal risk in military couples using multimodal interaction cues
+fromcouplesconversations,in:ProceedingsofIEEEInternationalCon-
+ferenceonAcoustics,SpeechandSignalProcessing,IEEE,2020,pp.
+6539–6543.
+[225] B. Mirheidari, D. Blackburn, K. Harkness, T. Walker, A. Venneri,
+M.Reuber,H.Christensen, Towardtheautomationofdiagnosticcon-
+versation analysis in patients with memory complaints, Journal of
+Alzheimer’sDisease58(2017)373–387.
+[226] G.P.Finley,E.Edwards,A.Robinson,N.Sadoughi,J.Fone,M.Miller,
+D.Suendermann-Oeft, M.Brenndoerfer,N.Axtmann, Anautomated
+assistantformedicalscribes., in: ProceedingsoftheAnnualConfer-
+enceoftheInternationalSpeechCommunicationAssociation,2018,pp.
+3212–3213.
+[227] A.Guo,A.Faria,J.Riedhammer,Remeeting–Deepinsightstoconver-
+sations, in: ProceedingsoftheAnnualConferenceoftheInternational
+SpeechCommunicationAssociation,2016,pp.1964–1965.
+[228] A.Addlesee,Y.Yu,A.Eshghi, Acomprehensiveevaluationofincre-
+mentalspeechrecognitionanddiarizationforconversationalai,in:Pro-
+ceedingsoftheInternationalConferenceonComputationalLinguistics,
+2020,pp.3492–3503.
+[229] O.Cetin,E.Shriberg, SpeakeroverlapsandASRerrorsinmeetings:
+Eﬀectsbefore,during,andaftertheoverlap, in: ProceedingsofIEEE
+InternationalConferenceonAcoustics,SpeechandSignalProcessing,
+volume1,IEEE,2006,pp.357–360.
+[230] N. Kanda, C. Boeddeker, J. Heitkaemper, Y. Fujita, S. Horiguchi,
+K. Nagamatsu, R. Haeb-Umbach, Guided source separation meets a
+strongASRbackend: Hitachi/PaderbornUniversityjointinvestigation
+for dinner party ASR, Proceedings of the Annual Conference of the
+InternationalSpeechCommunicationAssociation(2019)1248–1252.
+[231] S. Otterson, M. Ostendorf, Eﬃcient use of overlap information in
+speakerdiarization, in: ProceedingsofIEEEWorkshoponAutomatic
+SpeechRecognitionandUnderstanding,IEEE,2007,pp.683–686.
+[232] K.Boakye,B.Trueba-Hornero,O.Vinyals,G.Friedland, Overlapped
+speechdetectionforimprovedspeakerdiarizationinmultipartymeet-
+ings, in: ProceedingsofIEEEInternationalConferenceonAcoustics,
+SpeechandSignalProcessing,IEEE,2008,pp.4353–4356.
+[233] L.Bullock,H.Bredin,L.P.Garcia-Perera, Overlap-awarediarization:
+Resegmentationusingneuralend-to-endoverlappedspeechdetection,
+in:ProceedingsofIEEEInternationalConferenceonAcoustics,Speech
+andSignalProcessing,IEEE,2020,pp.7114–7118.
+27

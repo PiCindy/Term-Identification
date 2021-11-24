@@ -1,0 +1,344 @@
+See discussions, stats, and author profiles for this publication at: https://www.researchgate.net/publication/221480626
+The Detection of Overlapping Speech with Prosodic Features for Speaker
+Diarization.
+Conference Paper · January 2011
+Source: DBLP
+CITATIONS READS
+22 470
+2 authors:
+Martin Zelenák Javier Hernando
+Universitat Politècnica de Catalunya Universitat Politècnica de Catalunya
+7 PUBLICATIONS   91 CITATIONS    251 PUBLICATIONS   2,167 CITATIONS   
+SEE PROFILE SEE PROFILE
+Some of the authors of this publication are also working on these related projects:
+Deep Networks for Speaker Recognition View project
+Harmonic decomposition applied to automatic speech recognition (Columbo) View project
+All content following this page was uploaded by Javier Hernando on 18 April 2014.
+The user has requested enhancement of the downloaded file.INTERSPEECH 2011
+The Detection of Overlapping Speech with Prosodic Features for Speaker
+Diarization
+MartinZelena´k,JavierHernando
+UniversitatPolite`cnicadeCatalunya,Barcelona,Spain
+{martin.zelenak,javier.hernando}@upc.edu
+Abstract ing,butexperimentswereperformedonartiﬁciallyoverlapped
+speech.
+Overlapping speech is responsible for a certain amount of er-
+In[8]theauthorspresentedasystem,whichexploitscross-
+rorsproducedbystandardspeakerdiarizationsystemsinmeet-
+correlation-basedspatialfeaturesforoverlappingspeechdetec-
+ingenvironment. Weareinvestigatingasetofprosody-based
+tioninamulti-microphoneenvironment.Inthispaper,weshift
+long-termfeaturesasapotentialcomplementtoouroverlapde-
+ourfocusbacktosingledistantmicrophonescenarioandpro-
+tectionsystemrelyingonshort-termspectralparameters. The
+pose the use of several long-term prosody-based features for
+mostrelevantfeaturesareselectedinatwo-stepprocess. They
+thedetectionofoverlappingspeech. Webelievethattheymay
+are ﬁrstly evaluated and sorted according to mRMR criterion
+actcomplementarytotheshort-termspectralfeatures. Theset
+andthentheoptimalnumberisdeterminedbyiterativewrapper
+of the most appropriate prosodic features is determined from
+approach. We show that the addition of prosodic features de-
+the candidate set in a two-step process. In the ﬁrst step, the
+creasedoverlapdetectionerror. Detectedoverlapsegmentsare
+featuresaresortedaccordingtominimal-redundancy-maximal-
+usedinspeakerdiarizationtorecovermissedspeechbyassign-
+relevance(mRMR)criterionandthen,inthesecondstep,astan-
+ingmultiplespeakerlabelsandtoincreasethepurityofspeaker
+dardwrapperselectionmethodisapplied.
+clusters.
+Ourspeakerdiarizationsystemassignsmultiplespeakerla-
+Index Terms: overlapping speech detection, prosody, feature
+bels for the obtained overlap regions in order to decrease the
+selection,speakerdiarization
+missedspeecherror.Overlapsegmentscanalsobeusedtoindi-
+catedatawhichshouldnotbeusedformodelbuildingwiththe
+1. Introduction
+aimofapurerclustering. Theexperimentswereconductedon
+Humanconversationoftenincludescertainamountofoverlap- theAMIMeetingcorpus.
+pingspeech. Severalworksidentiﬁedthesespeciﬁcconversa- Thispaperisorganizedasfollows. Overlapdetectionsys-
+tioneventsasachallengeformanyautomatichumanlanguage temisdescribedinSection2. Thecandidateprosodicfeatures
+technologies [1, 2]. One of these technologies is speaker di- andfeatureselectionprocessisdiscussedinSection3.Speaker
+arization,which,givenarecording,strivestoanswertheques- diarizationsystemanditsimprovementsarebrieﬂyoutlinedin
+tion“Whospokewhen?” withoutanypriorknowledgeabout Section 4. Experimental results and conclusions are given in
+thespeakers. Theproblemisthatconventionaldiarizationsys- Section5and6,respectively.
+tems assign only one speaker label per segment and, conse-
+quently,missspeechfromoverlappingspeakers. Furthermore, 2. Overlappingspeechdetection
+itisreasonabletoassumethatoverlappingspeechincludedinto
+Thebaselineoverlapdetectionsystem,whichwaspresentedin
+the training data of a single-speaker model can lead to some
+[8],reliesonanumberofspectral-basedfeatures. Firstparam-
+levelofcorruptionofthemodels.
+eter kind is the cepstrum, thus 12 MFCCs were extracted ev-
+Prosody describes the rhythm, intonation and stress of
+ery 10ms over a window of 30ms. Next, assuming that lin-
+speech. It can reﬂect various things about the speaker or the
+earpredictivecoding(LPC)ofareasonablychosenordercan
+utterance,e.g.,theemotionalstate. Therehasbeensigniﬁcant
+modelthespectrumofasinglespeakerquitewell,butwillfail
+efforttousethiskindofhigher-levelspeechinformationforvar-
+foraregionwithmultiplespeakers[9],wecomputedtheresid-
+ioustaskslikespeakerveriﬁcationandidentiﬁcation.Recently,
+ual energy of a 12th-order LPC (LPCRE) over a 25ms win-
+prosodicfeatureswerealsosuccessfullyappliedforspeakerdi-
+dow. Residualenergy,whichcorrespondstothepredictioner-
+arization[3,4].
+ror,shouldbehigherinoverlappingspeakersituations.Another
+A few studies were published which researched the rela-
+feature is the spectral ﬂatness (SF) extracted over a window
+tionship between prosodic cues and the interaction of conver-
+of30ms. Thisfeaturewasappliedfordiscriminationbetween
+sation participants, e.g., one speaker jumping into the talk of
+speechandnon-speech[10],butcaneventuallyconveyalsoin-
+another. The work by Ward and Tsukahara [5] suggests that
+formationaboutthenumberofspeakersspeaking. Thissetof
+stretchesoflowpitchcantriggerback-channelfeedbackfrom
+spectralparametersisextendedwiththeirﬁrstorderderivatives
+listener(yeah, uh-huh, right). Shribergetal. [6]showedthat
+and all features were mean-variance normalized according to
+speakersraisetheirvoiceswhenstartingtheirutteranceduring
+statisticsobtainedfromtrainingdata.
+somebody else’s talk, compared to starting in silence. Some-
+The system considers three acoustic classes representing
+what related work was presented in [7], where a speciﬁc fea-
+non-speech,single-speakerspeechandoverlappingspeech.For
+turebasedonpitchpredictionwasusedforspeakercountlabel-
+each class an HMM is deﬁned. For a more accurate model-
+This work has been funded by the Spanish project SARAI ing of transitions between classes the HMM has three states,
+(TEC2010-21040-C02-01). which also works as a minimum duration constraint. Every
+Copyright © 2011 ISCA 1041 28-31 August 2011, Florence, Italymin and max value. Long-term statistics are extracted from
+Distant microphone 
+500ms windows with 10ms step for synchronization reasons
+with spectral features. Prosodic features were extracted with
+thehelpofPraat1.
+The feature selection process can be divided into two
+stages. In the ﬁrst, we applied a mRMR algorithm [11] on
+Spectral Prosodic
+held-out development data to score individually the candidate
+Features Features
+featuresagainstthetargetclass(overlappingspeechvs. single-
+speaker speech) and sorted them according to their minimum
+redundancyandmaximalrelevance.Theorderedﬁrst25outof
+total42candidatefeaturesaregiveninTable1.
+Table1: Candidateprosodicfeaturessortedaccordingtothe
+Overlap HMM
+mRMRcriterion,f0—pitch,int—intensity,f1-4—formants
+Detection  Decoder
+System
+1. f0 max 10. f3 max 19. f0 std
+2. f4 max 11. int diff 20. int min
+Overlapped speech 3. f4 12. f3 min 21. f4 std
+hypothesis 4. f0 min 13. f0 22. f1
+5. int 14. f2 23. f2 max
+6. f2 min 15. f2 std 24. int std
+7. f4 min 16. f0 med 25. f3 med
+Speaker 
+8. f1 min 17. f4 med
+Diarization 9. f2 med 18. f1 max
+Figure1:Overlapdetectionsystemblockdiagram The second feature selection stage involves conventional
+hillclimbingwrapperapproach, i.e., iterativelyaddingcandi-
+datefeaturestothefeatureset,creatingamodelandevaluating
+stateismodeledwithaGMMusingdiagonalcovariance.Since thesystemonthedevelopmentdata.Theoverlapdetectionper-
+theamountoftrainingdataisnotbalancedamongclasses,we formanceforthebaselinespectralsystemandﬁveprosodicsub-
+use256Gaussiancomponentsforsingle-speakerspeechand64 setsaregiveninFigure2. Itcanbeseenthatthesystemswith
+components for overlapping speech and non-speech. GMMs prosodicfeaturesachievelowererrorespeciallyforlowpenal-
+arecreatedbyiterativeGaussian-splittingtechniqueandsubse- izationvalueswhencomparedtothespectral-onlysystem.
+quentre-estimation.Adiagramoftheoverlapdetectionsystem Unfortunately,itisnotclearfromthegraphicwhatnumber
+withlinktospeakerdiarizationisgiveninFigure1. ofprosodicfeaturesistheoptimalvalue. Inordertosolvethis
+Detection hypothesis is obtained by Viterbi (maximum- problem, we suggest to calculate the area under the curves in
+likelihood)decodingandapplyingawordnetwork. Thetran- Figure2anduseitasadecisionfactor. Theamountofareare-
+sition probabilities between different HMMs are not trained. ﬂectstheoverlapdetectionerrorofaparticularsystem. Fora
+They are set manually. In order to increase the precision, the faircomparison,everycurveisextendedwiththesameﬁctional
+transitionfromsingle-speakerspeechtooverlappingspeechcan starting point (Recall=100%, False Alarm=100%) and end-
+bepenalizedwithanoverlapinsertionpenalty(OIP)andcertain ingpoint(Recall=0%, FalseAlarm=0%). Thevaluesofthis
+transitionsarecompletelyforbidden. “overlapdetectionerror”areafordifferentnumberofprosodic
+OverlapdetectionperformanceismeasuredwithRecall— features are given in Figure 3. Based on these results it was
+ratio between true detected and reference overlap time, determinedtoselecttheﬁrst20prosodicfeaturesfromTable1.
+Precision—ratiobetweentrueandalldetectedoverlaptime,and The fusion strategy is very similar to the one in [8]. The
+withError—thesumofmissedandfalseoverlaptimedivided emissionprobabilitiesareweightedby0.9and0.1forspectral
+by reference overlap time. Results depend very much on the andprosodicfeaturestream,respectively. Theseweightswere
+valueoftheOIP,whichcontrolstheamountofoverlapsthesys- deﬁnedinasimilarwayastheoptimalnumberofprosodicfea-
+tem will hypothesize. It can be perceived as a compensation turesonthedevelopmentdata.
+for an undertrained model. Initially, four values of OIP were
+selectedbasedonresultsondevelopmentdata, accountingfor 4. Speakerdiarizationsystem
+hypotheses with the highest recall (OIP=0, no penalization),
+the highest F-ratio (OIP=−10), the low detection error rate Our speaker diarization system, detailed in [12], follows the
+(OIP=−50)andanacceptablyhighprecision(OIP=−100). commonlyusedagglomerativeclusteringapproach. Inthebe-
+ginning, speech is broken into rather short uniform segments
+3. Prosodicfeaturesandfeatureselection andthesuccessiveclusteringstagegroupsacousticallysimilar
+segmentsandassignsthemtospeakerclusters. Thenumberof
+Theprosodicfeaturesthatwearecomputingcanbeassignedto initial clusters is determined automatically from audio length
+following categories: pitch, intensity and (four) formant fre- withminimalandmaximalvalueconstraints.Clustersaremod-
+quencies. For each of these feature categories we estimate eled with GMMs and cluster pair merging in each iteration is
+besides the actual value for every given time point also long-
+termstatisticalcharacteristicssuchasmean,median,minimum, 1Praat:doingphoneticsbycomputer[Computerprogram].Version
+maximum, standard deviation and the difference between the 5.2.04,retrievedfromhttp://www.praat.org/
+1042False AlarmRate 0,48
+0% 20% 40% 60%
+0,47
+20%
+Spct ea0,46
+r
+A
+25% Spct + Prosod_5 or 0,45
+Spct + Prosod_10 Err0,44
+Spct + Prosod_15 D 
+30% O0,43
+Spct + Prosod_20
+0,42
+Spct + Prosod_25
+35% 0,41
+all 0 10 20 30
+c
+e # Prosodic Features
+R
+40%
+Figure 3: The amounts of area under the ROC-like curves of
+Figure2fordifferentnumberofselectedprosodicfeatures.The
+areavaluereﬂectsoveralloverlapdetectionerror.
+45%
+workingwithfar-ﬁeldmicrophonearraychannelssampledat16
+kHz. WeusedrecordingsfromtheIdiapsiteanddividedthem
+50%
+into training set (22 recordings), development set (3 record-
+ings)andevaluationset(11recordings). Theaverageamount
+of overlapping speech was 14.40%. Training and evaluation
+55% of the overlap detection system were performed with forced-
+alignmentannotationsobtainedbytheSRI’sDECIPHERrecog-
+Figure2: Overlapdetectionperformanceondevelopmentdata
+nizer. Wedidnotapplyanyforgivenesscollararoundsegment
+for spectral features (Spct) and combinations of spectral and
+boundaries in scoring to make sure that overlap segments are
+variousnumberofprosodicfeatures(Spct+Prosod5–25).Per-
+considered,becausethemedianoverlapdurationinthiscorpus
+formanceismeasuredatfourOIPvalues(0,-10,-50,-100).
+israthershort(0.46s).
+drivenbyBayesianinformationcriterion(BIC).Thesystemop- 5.2. Overlapdetectionresults
+erateswith20MFCCsextractedfrom30msframes.
+The system can be improved by multi-channel approach The comparison of overlap detection performance in terms of
+based on conventional techniques. We applied speech signal recall, precision and detection error for the pure spectral and
+techniquessuchasWienerﬁlteringandbeamformingforsignal combined—spectral and prosodic—system on evaluation data
+enhancement, and we also combined the time-delay-of-arrival is given in Figure 4. The combined features outperform the
+(TDOA)informationasasecondstreaminthediarization[13]. spectralintermsoferrorforallOIPswiththelowestvalueof
+Theperformanceofthespeakerdiarizationwasevaluated 75%atOIP-50. Ontheotherhand,thesituationisnotsoun-
+bymeansofthediarizationerrorrate(DER).DeﬁnedbyNIST, equivocalwithprecision.Theprecisiondoesnotrisesosteeply
+the DER is a time-weighted metric composed of the sum of withincreasingOIPinthenewsystem. Fromourexperience,
+missedspeakertime,falsealarmsandspeakererrortime. thisbehaviorcouldbepossiblyrelatedwiththehigheramount
+ofmodelparameterswhichneedtobetrainedinthecombined
+Overlap handling in diarization comprises the labeling
+system.
+and/or exclusion of simultaneous speech. The ﬁrst technique
+seekstoselectthetwomostlikelyclustersinViterbidecoding
+insteadofonlyone.Inthiswaythemissedspeakertimeshould 5.3. Speakerdiarizationresults
+be decreased. Overlap exclusion blocks overlap frames from
+Basedonpreviousresultsondevelopmentdata,weusetheover-
+beingincludedintoclusterinitializationandGMMtraining,but
+laphypothesisatOIP-100foroverlaplabelinginthediariza-
+doesnotpreventdecodingthem.Theaimofthistechniqueisto
+tionsystemandOIP0hypothesisforoverlapexclusion. Table
+getlowerspeakerdetectionerrorrateswithmorepreciseclus-
+2showstheDERimprovementsofbaselinediarizationsystem
+ters.
+when handling overlap detected either with the spectral over-
+Inordertoevaluatejusttheimpactofoverlappingspeechon
+lapdetectionsystem,orwiththecombinedsystem. Thediffer-
+speaker segmentation, detected overlaps are masked with ref-
+ence is not dramatic, but still, it can be seen a slight increase
+erencespeech/non-speechsegmentsbeforegiventodiarization
+ofimprovementwhenoverlapsegmentsaredetectedalsowith
+system. Thediarizationsystemisusingreferencespeechseg-
+prosodicfeatures.
+mentsaswell.
+Theresultsofasimilarsetofexperimentswherethebase-
+line diarization was improved with both beamforming and
+5. Experiments
+TDOAfeaturestreamareinTable3.Here,asexpected,theab-
+soluteDERvaluesarebetter,comparedwithTable2.Therela-
+5.1. Databaseandexperimentalsetup
+tiveDERimprovementsbyoverlaplabelingarehigherforboth
+TheexperimentswereconductedontheAMIMeetingcorpus, featuresets,becausetheclusteringisimprovedandthesecond
+which consists of 100 hours of meeting recordings. We were label assignment is consequently more precise. Interesting is
+1043Table3: Speakerdiarizationimprovedwithbeamformingand
+100%
+TDOAs with labeling and exclusion of overlapping speech.
+Comparison of using overlaps detected with spectral (Spct)
+orcombinedspectral-prosodic(Spct+Prosod 20)system. DER
+andrel.improvementsoverthenewbaseline(in%)
+80% Baseline+Beam.+TDOAs 35.7
+or Overlap.det.: +Labeling +Labl.+Excl.
+r
+r
+E Spct 33.8/+5.3 34.0/+4.9
+n,  Spct Rcl. Spct+Prosod 20 33.4/+6.5 33.9/+5.0
+o
+cisi60% Spct Prec.
+e Spct Error
+r 7. References
+P
+ecall,  SSppcctt  ++  PPrroossoodd__2200  RPrcel.c. [1] Ew.hyShernibgeinrge,er“sSsphoonutladnecoaures,”spineePcrho:c.HEouwroppeeoapnleCroenafl.lyontaSlkpeaenchd
+R Spct + Prosod_20 Error CommunicationandTechnology(Eurospeech),Lisbon,Portugal,
+2005,pp.1781–1784.
+40%
+[2] N.Morganetal.,“TheMeetingProjectatICSI,”inProc.1stInter-
+nationalConferenceonHumanLanguageTechnologyResearch,
+SanDiego,USA,2001,pp.1–7.
+[3] G. Friedland and O. Vinyals and Y. Huang and C. M´’uller,
+“Prosodic and other Long-Term Features for Speaker Diariza-
+20% tion,”IEEETransactionsonAudio,Speech,andLanguagePro-
+cessing,vol.17,no.5,pp.985–993,Jul.2009.
+0 - 50 -100
+[4] J.ZˇibertandF.Mihelicˇ,“FusionofAcousticandProsodicFea-
+OIP turesforSpeakerClustering,”LectureNotesinComputerScience,
+vol.5729/2009,pp.210–217,2009.
+Figure 4: Overlap detection performance for evaluation data
+using spectral features only (Spct), and the combination of [5] N.WardandW.Tsukahara,“Prosodicfeatureswhichcueback-
+channelresponsesinEnglishandJapanese,”JournalofPragmat-
+spectraland20prosodicfeatures(Spct+Prosod20)interms
+ics,vol.32/2000,pp.1177–1207,2000.
+ofdetectionerror(solidlines),precision(dottedline)andrecall
+(dashedline). [6] E.Shriberg,A.Stolcke,andD.Baron,“Canprosodyaidtheauto-
+maticprocessingofmulti-partymeetings?Evidencefrompredict-
+ingpunctuation,disﬂuencies,andoverlappingspeech,”inProc.
+Table 2: Comparison of using overlapping speech detected
+ISCA Workshopon Prosody in SpeechRecognition and Under-
+with spectral (Spct) or combined spectral-prosodic system
+standing,RedBank,USA,2001,pp.13–16.
+(Spct+Prosod 20)forlabelingandexclusioninspeakerdiariza-
+[7] M.A.LewisandR.P.Ramachandran,“Cochannelspeakercount
+tion.DERandrel.improvementsoverthebaseline(in%)
+labellingbasedontheuseofcepstralandpitchpredictionderived
+features,”PatternRecognition,vol.34,no.2,pp.499–507,Feb.
+Baseline 38.3 2001.
+[8] M.Zelena´k,C.Segura,andJ.Hernando,“Overlapdetectionfor
+Overlap.det.: +Labeling +Labl.+Excl. speaker diarization by fusing spectral and spatial features,” in
+Proc.Interspeech’10,Makuhari,Japan,2010,pp.2302–2305.
+Spct 36.5/+4.7 35.6/+6.9
+Spct+Prosod 20 36.2/+5.5 35.5/+7.2 [9] N.Sundaram,R.Yantorno,B.Smolenski,andA.Iyer,“Usable
+speechdetectionusinglinearpredictiveanalysis-amodelbased
+approach,”inProceedingsofISPACS,AwajiIsland,Japan,2003,
+pp.231–235.
+that overlap exclusion did not lead to further improvement of
+[10] R. Yantorno, “The Spectral Autocorrelation Peak Valley Ratio
+theDERsinthiscase.Thereisprobablysomesortofimprove-
+(SAPVR)–Ausablespeechmeasureemplyedasaco-channel
+mentredundancybetweentheoverlapexclusiontechniqueand detectionsystem,”inProc.ofIEEEWorkshoponIntelligentSig-
+beamformingwithTDOAsinspeakerdiarization. nalProcessing,2001.
+[11] H.Peng,F.Long,andC.Ding,“FeatureSelectionBasedonMu-
+6. Conclusions tualInformation: CriteriaofMax-Dependency,Max-Relevance,
+and Min-Redundancy,” IEEE Transactions on Pattern Analysis
+We have proposed the use of prosodic features for the detec- andMachineIntelligence, vol.27, no.8, pp.1226–1238, Aug.
+tion of simultaneous speech on distant channel data. Final 2005.
+subset from all candidate features was selected according to [12] J.Luque,X.Anguera,A.Temko,andJ.Hernando,“Speakerdi-
+mRMRcriterionandsuccessivehill-climbingwrapperselection arizationforconferenceroom: TheUPCRT07sevaluationsys-
+method. The obtained results after fusing short-term spectral tem,” Multimodal Technologies for Perception of Humans, vol.
+4625/2008,pp.543–553,2008.
+andlong-termprosodicfeaturesindicatethatprosodyconveys
+somecomplementaryinformationforthedetectionofspeaker [13] X.Anguera,C.Wooters,andJ.Hernando,“Acousticbeamform-
+overlap.Handlingdetectedoverlapsegmentsinspeakerdiariza- ingforspeakerdiarizationofmeetings,” IEEETransactionson
+Audio, Speech, and Language Processing, vol. 15, no. 7, pp.
+tionsothatasecondspeakerlabelisassigneddidimproveboth
+2011–2022,2007.
+diarizationbaselineanddiarizationextendedwithbeamforming
+andTDOAfeaturestream.
+1044
+VViieeww  ppuubblliiccaattiioonn  ssttaattss

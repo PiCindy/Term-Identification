@@ -1,0 +1,424 @@
+INTERSPEECH 2017
+August 20–24, 2017, Stockholm, Sweden
+Speaker Diarization Using Convolutional Neural Network for Statistics
+Accumulation Reﬁnement
+ZbyneˇkZaj´ıc1,MarekHru´z1,LudeˇkMu¨ller1,2
+UniversityofWestBohemia
+FacultyofAppliedSciences
+1NTIS-NewTechnologiesfortheInformationSocietyand2Dept. ofCybernetics,
+Univerzitn´ı8,30614Plzenˇ,CzechRepublic
+zzajic@ntis.zcu.cz, mhruz@ntis.zcu.cz, muller@ntis.zcu.cz
+Abstract processanduseasimpleconstantlengthwindowsegmentation
+ofspeech[3,5].
+Theaimofthispaperistoinvestigatethebeneﬁtofinformation
+The success of DNNs in the speech recognition task [13]
+fromaspeakerchangedetectionsystembasedonConvolutional
+leadsinrecenttimestotheirexploitationinSDsystems.DNNs
+NeuralNetwork(CNN)whenappliedtotheprocessofaccumu-
+are utilized in the task of the segmentation [11, 14] or in the
+lationofstatisticsforani-vectorgeneration. Theinvestigation
+clusteringprocess[15,16]. In[17]DNNsareusedtoreplace
+iscarriedoutontheproblemofdiarization. Inoursystem,the
+unsupervisedUniversalBackgroundModel(UBM)fortheac-
+output of the CNN is a probability value of a speaker change
+cumulation of statistics in the i-vector generation. DNN was
+inaconversationforagiventimesegment. Accordingtothis
+alsoappliedtotherepresentationofthespeakerin[18,19]or
+probability,wecuttheconversationintoshortsegmentsthatare
+veryrecentlyin[20]andin[21],wherethetripletlossparadigm
+thenrepresentedbythei-vector(todescribeaspeakerinit).We
+wasusedfortrainingtheDNNdescriptorwithextremelyshort
+propose a technique to utilize the information from the CNN
+speechturn.
+for the weighting of the acoustic data in a segment to reﬁne
+thestatisticsaccumulationprocess. Thistechniqueenablesus In our previous papers [14, 22] we applied a CNN to the
+torepresentthespeakerbetterintheﬁnali-vector. Theexperi- problem of SCD. The main difference between our approach
+mentsontheEnglishpartoftheCallHomecorpusshowthatour andtheoneinothersworksliesinthefactthatweintroducea
+proposedreﬁnementofthestatisticsaccumulationisbeneﬁcial spectrogramtoaCNNandletthenetcomputeitsownfeatures.
+withtherelativeimprovementofDiarizationErrorRatealmost CNNs were introduced in [23] to cope with the prob-
+by16%whencomparedtothespeakerdiarizationsystemwith- lem of image classiﬁcation. They were popularized by
+outstatisticsreﬁnement. Krizhevskyetal.[24]withupdateddesignblockssuchasRec-
+Index Terms: convolutional neural network, speaker change tiﬁedLinearUnits(ReLU)ormaxpoolinginsteadofaverage
+detection,speakerdiarization,i-vector,statisticsaccumulation pooling. When a CNN is trained on large scale datasets one
+canobserveitscapabilitytolearndiscriminativefeaturesonits
+1. Introduction own. Furthermore,thenetisabletolearnasemanticrepresen-
+tationofthedata. OurexperimentswiththeCNNinthetask
+The problem of Speaker Diarization (SD) is crucial for many
+ofSCDexhibitedbetterresultsthanclassicalapproachesbased
+speech applications dealing with real data, where only one
+onBIC.Theinputofthenetworkisaspectrogramofasegment
+speakeroccurrenceinarecordingcannotbeensured. TheSD
+of the original waveform and the output is a probability that
+problemisdeﬁnedasataskofcategorizingspeakersinanun-
+thereisaspeakerchangeinthemiddleofthesegment. When
+labeled conversation, without any prior information regarding
+theCNNisappliedtothewholerecordinginaslidingwindow
+thenumberandidentitiesofthespeakers.Differentapproaches
+fashionaprobabilitysignalofthespeakerchangeisobtained.
+were proposed to solve this task [1]. The most common ap-
+Furtherprocessingofthissignalisneededtodeterminewhere
+proachtotheSDconsistsofthesegmentationofaninputsig-
+achangeoccurs.Inourpreviouswork,wedetectedpeaksusing
+nal,followedbythemergingofthesegmentsintoclusterscor-
+non-maximumsuppression.
+respondingtoindividualspeakers[2,3]. Alternatively,theseg-
+In this paper, our goal is to determine whether the CNN
+mentationandtheclusteringstepcanbecombinedintoasingle
+alsooffersanyusefulinformationaboutthehomogeneityofa
+iterativeprocess[4]. Inthispaper,weinvestigatethestate-of-
+speakerinasegment.Forthispurpose,weproposeareﬁnement
+the-artoff-lineSDsystembasedonthei-vectorrepresentation
+ofaccumulationofstatisticsfori-vectorgenerationandapplyit
+ofthespeechsegments[3,5](otherapproachesutilizee.g.Hid-
+toourSDsystem[14].
+denMarkovModels[6,7]).
+Thespeakerchangedetection(SCD)isoftenappliedtothe
+audiosignaltoobtainsegmentswhichideallycontainaspeech 2. SpeakerDiarizationSystem
+ofasinglespeaker[2].CommonlyusedapproachestotheSCD
+includetheBayesianInformationCriterion(BIC),Generalized Our SD system [14] is based on the i-vectors [25] that repre-
+Likelihood Ratio (GLR), Kullback-Leibler divergence [8, 9], sent speech segments, as introduced in [26]. These segments
+Support Vector Machine (SVM) [10] and Deep Neural Net- areobtainedfromthepreviousstepusingSCDbasedonCNN.
+works(DNNs)[11,12]. However,inaspontaneoustelephone Theresultingi-vectorsareclusteredinordertodeterminewhich
+conversation containing very short speaker turns and frequent partsofthesignalwereproducedbythesamespeaker. Adia-
+overlapping speech, diarization systems often omit the SCD gramofourdiarizationsystemcanbeseeninFigure1.
+Copyright © 2017 ISCA 3562 http://dx.doi.org/10.21437/Interspeech.2017-51The speaker’s supervector ψ [28] for given data O is a con-
+catenationofthezerothandﬁrststatisticalmomentsofO.Our
+proposedreﬁnementofthisprocessofstatisticsaccumulationis
+describedinSection3.
+Next, we extract the i-vectors from the supervectors. Su-
+Figure1:Diagramofthediarizationprocess.
+pervectorshaveusuallyahighdimensionD =M ∗(D +1)
+f
+that is given by the number of mixtures M in the UBM and
+theD dimensionalityofthefeaturevectorso . Thei-vectors
+2.1. Segmentation f t
+areacompactrepresentationoftheinformationencodedinthe
+Forthesegmentationstep,weusetheSCDapproachbasedon supervectors, mostly the information about the identity of the
+CNN [14]. The CNN as a regressor is trained supervised on speaker. Factor Analysis (FA) [29] (or extended Joint Factor
+spectrogramsoftheacousticsignalwithareferenceinformation Analysis(JFA)[30]tohandlemoresessionsofeachspeaker)is
+Labouttheexistingspeakerchanges.Thevalueofthefunction usedfordimensionalityreductionofthesupervectorofstatis-
+LintimetiscomputedviatheformulainEquation1. Wecall tics.Thegenerativei-vectormodelhastheform
+thislabelingafuzzylabeling. Ithasashapeofatriangleand
+the main idea behind it is to model the uncertainty of human ψ=m0+Tw+(cid:15), w∼N(0,I), (cid:15)∼N(0,Σ), (5)
+labeling.
+whereT (ofsizeD×D )iscalledthetotalvariabilityspace
+(cid:18) (cid:19) w
+L(t)=max 0,1− mini(|t−si|) , (1) matrix, w is the segment’s i-vector of dimension Dw having
+τ standard Gaussian distribution, m is the mean vector of ψ,
+0
+howeveroftenapproximatedbytheUBM’smeansupervector,
+wheres isthetimeofith speakerchangeandτ = 0.6isthe
+i and(cid:15)isresidualnoisewithadiagonalcovariancematrixΣwith
+tolerance which models the level of uncertainty of the man-
+covariancematrices C ,...,C ofthe UBMordered onthe
+1 M
+ual labeling. Figure 2 depicts an example of a spectrogram,
+diagonal. The i-vectors are also length-normalized [31]. De-
+thevaluesofthelabelingandtheCNNoutputasaprobability
+tailsaboutthetrainingoftotalvariabilityspacematrix T can
+of speaker change P (a number between zero and one). The
+befoundin[32,33].
+speaker changes are identiﬁed as peaks in the signal P using
+Becauseofthedifferencesbetweeneachconversation(and
+non-maximum suppression with a suitable window size. The
+thesimilarityinoneconversation),wealsocomputeaconver-
+detectedpeaksarethenthresholdedtoremoveinsigniﬁcantlo-
+sation dependent Principal Component Analysis (PCA) trans-
+calmaxima. Thesignalbetweentwodetectedspeakerchanges
+formation[26],whichfurtherreducesthedimensionalityofthe
+is considered as one segment. The minimum duration of one
+i-vector. The beneﬁt of using PCAinstead of FA approachis
+segmentislimitedtoonesecond,smallersegmentsarejoinedto
+theadditionalinformationabouttheimportanceofeachcompo-
+theadjacentoneinordertoobtainsufﬁcientinformationabout
+nentgivenbytheeigenvalueofthecorrespondingeigenvector.
+thespeaker.
+The reduced dimension in the PCA latent space can be found
+foreachconversationseparatelydependingonlyontheratioof
+2.2. Segmentdescription
+eigenvaluemass.
+Todescribeasegmentweﬁrstconstructasupervectorofaccu-
+mulatedstatistics. Supervectorshavebeenusedintheprocess 2.3. ClusteringandResegmentation
+ofspeakeradaptation[27]wheretheyserveasadescriptorof
+Given i-vector representations of the extracted segments, we
+anewspeaker. Theycontainthezerothandﬁrststatisticalmo-
+perform a clustering into sets of i-vectors describing different
+mentsofspeakers’datarelatedtoaUBM.TheUBMismod-
+speakers.Thisisacoarseclusteringonthelevelofthesegmen-
+eledasaGaussianMixtureModel(GMM)fromahugeamount
+tation given by SCD. To make the ﬁnal diarization more pre-
+ofspeechdataformdifferentspeakers. Theparametersofthe
+cisewereﬁneitbyresegmentation. WecomputeGMMsover
+modelareλ ={ω ,µ ,C }M ,whereM isthenum-
+UBM m m m m=1 thefeaturevectorso ,oneGMMperspeakercluster. Thenthe
+berofmixturesintheUBM,ω ,µ ,C aretheweight,mean t
+m m m wholeconversationisredistributedframebyframeaccordingto
+and covariance of the mth mixture, respectively. We consider
+thelikelihoodsoftheGMMs.
+onlydiagonalcovariancematrices.
+LetO = {o }T bethesetofT featurevectorso ofa
+t t=1 t 3. StatisticsReﬁnement
+dimensionDofonesegmentofconversation,and
+ω N(o ;µ ,C ) Because of the uncertainty about the assumption that there is
+γm(ot)= (cid:80)Mmω Nt(om;µ m,C ) (2) a speech of only one speaker in a segment, not all data from
+m=1 m t m m thesegmentcancontributetothesupervectorequally.Inatele-
+betheposteriorprobabilityofmthmixturegivenafeaturevec- phone conversation, crosstalk is frequent around the place of
+toro .Thesoftcountofthemthmixture(zerothstatisticalmo- speakerchangeandalsorapidchangesofthespeakersarecom-
+t
+mentoffeaturevectors)is mon.
+InSubsection2.2,allstatisticsareaccumulatedintothesu-
+(cid:88)T pervector with the weight ωm obtained only from the UBM.
+n = γ (o ) (3)
+m m t Thisweightω inEquation(2)informsabouttherelevanceof
+m
+t=1 theacousticdatato”theuniversalspeaker”,inotherwords,how
+and the sum of the ﬁrst statistical moments of feature vectors likelyitistobeapartofaspeech. Thisweighttellsusnothing
+withrespecttothemthmixtureis about the homogeneity of the speaker in the segment. Super-
+vectoraccumulation,originallyusedinthespeakeradaptation
+T
+(cid:88) task,doesnothavetoconsiderthehomogeneityofthespeaker
+b = γ (o )o . (4)
+m m t t
+indata.
+t=1
+3563Figure2: TheinputspeechasspectrogramisprocessedbytheCNNintotheoutputfunctionP (aprobabilityofchangeintime). The
+L-function(thereferencespeakerchange)fortheCNNtrainingisdepictedontop.Note:theoutputofCNNintimetisonlyanumber.
+Forthispurpose,weareexploringtheoutputoftheCNN-
+basedSCDasaprobabilityofthespeakerchangeinthesignal.
+Althoughtheaudiosignaliscutintosegmentsaccordingtothe
+maximapeaksinthefunctionP (theCNNoutput),theshapeof
+thefunctioncanalsoindicateasuspiciouspartofthesegment.
+Thepartoftheaudiosegmentintimetwithahighprobabil-
+ityofaspeakerchangeP islessappropriatetorepresentthe
+t
+speakerthanapartwithasmallprobabilityP . Thus, weuse
+t
+the value of 1−P as a weighting factor of the signal in the
+t Figure3: Twospeechsegmentswiththeprobabilityofspeaker
+accumulationprocess. ThereﬁnementofEquation(2)isrepre-
+changeP,theﬁrstonewithcrosstalkontheendofthesegment
+sentedbytheformula
+andthesecondonewithnoisedisturbanceinthemiddleofthe
+segment.
+(1−P )ω N(o ;µ ,C )
+γ (o )= t m t m m . (6)
+m t (cid:80)M ω N(o ;µ ,C )
+m=1 m t m m
+Theequations(3)and(4)staythesamebecausetheybothde-
+pendonthereﬁnedγ (o )fromtheEquation(6).Theamount
+m t
+of data for the statistics accumulation stay the same only the
+importanceofeachdataischanged.
+4. Discussion
+The limitation of the segmentation step in the SD system is Figure4: Shortspeechsegmentwiththeprobabilityofspeaker
+a minimal length of the segment from which the identity of changeP containingtwospeakers. Inthisexample, theSCD
+the speaker can be extracted. In telephone conversations, the systemfailsandtheP weightofstatisticsdoesnothelptoreﬁne
+speaker change can occur arbitrarily often in time. In these theaccumulationprocess.
+conditions, the segments should be long enough to allow the
+extractionofspeakeridentifyinginformationwhilelimitingthe
+riskofaspeakerchangebeingpresentwithinthesegment.Still,
+The other SCD approaches (e.g. GLR used in [14]) have
+onlyonespeakerinthewholesegmentcannotbealwaysgua-
+analogicaloutputasthelikelihoodfunctionofaspeakerchange.
+ranteed. Ahighprobabilityvalueofaspeakerchangefromthe
+But for the purpose of weighting, the information from other
+CNNrepresentstheinstabilityofhomogeneityofaspeakerin
+SCDsystemsisinappropriatebecauseusuallythevalueofthe
+thesegment. Thisinstabilityleadstothepropagationoffaulty
+changeisnotintheinterval(cid:104)0,1(cid:105)andtheintervalischanged
+featuresintothesupervectoraccumulationprocess.Suchfaulty
+foreveryconversation.
+featuresusuallyoccurontheboundariesofthesegment,where
+ahighriskofcrosstalkiscommonoranywhereinthesegmentif
+5. Experiments
+somedisturbanceintheacousticsignalispresent,seeFigure3.
+WhenusingtheCNNoutputforthereﬁnementofthestatistics
+The experiment was designed to investigate our proposed ap-
+accumulationwesuppresstheeffectofthesefaultyfeaturesby
+proachtoreﬁnementoftheaccumulationofstatisticsrepresent-
+weightingthemdown.
+ingthespeakerinthesegmentofconversation.
+Nevertheless, there are still known limitations of our pro-
+posed approach. In rare situations, when the speaker change
+5.1. Corpus
+ismissedbytheSCDasseeninFigure4,wewillonlypenal-
+izethefeaturescorrespondingtoboundariesandtothemissed The experiment was carried out on telephone conversations
+speakerchange.Thusthesegmentwillbedescribedbyfeatures from the English part of CallHome corpus [34]. The original
+from two different speakers, resulting into inaccurate i-vector twochannelshavebeenmixedintoone.Onlytwospeakercon-
+representation. versationswereselectedsothattheclusteringcanbelimitedto
+3564twoclusters. Thisis109conversationsintotaleachwithabout Table1: DER[%]oftheSDsystemswiththei-vectorspeaker
+10mindurationinasingletelephonechannelsampledat8kHz. representation with constant length window segegmentation
+FortrainingoftheCNN,only35conversationswereused,the andSCDbasedonCNN(withandwithoutreﬁnedstatisticsac-
+restwasusedfortestingtheSDsystem. cumulation).
+5.2. System system DER[%]
+Constantlengthwindowseg. 9.23
+The SD system presented in our papers [14, 35] uses the fea- CNN-SCDwithoutreﬁnement 9.31
+tureextractionbasedonLinearFrequencyCepstralCoefﬁcients CNN-SCDwithreﬁnement 7.84
+(LFCCs), Hamming window of length 25ms with 10ms shift
+ofthewindow. Thereare25triangularﬁlterbankswhichare
+spreadlinearlyacrossthefrequencyspectrum, and20LFCCs
+window segmentation is small because of the resegmentation
+are extracted. Delta coefﬁcients were added leading to a 40-
+step, which repairs the inaccurate segmentation produced by
+dimensional feature vector (D = 40). Instead of the voice
+f theconstantlengthwindow[14]. Theeffectofresegmentation
+activitydetector,thereferenceannotationaboutmissedspeech
+isstrongbecausethereissufﬁcientamountofdataavailablein
+wasused.
+eachconversationforefﬁcienttrainingofGMM.However,our
+For segmentation, CNN described in [14] was used. The
+proposedapproachtoreﬁnedstatisticsaccumulationusingthe
+input of the net is a spectrogram of speech of length 1.4 sec-
+outputfromtheCNN-basedSCDbringsamorepreciseinfor-
+onds and the shift is 0.1 seconds. The CNN consists of three
+mation to the speaker description. This improvement can be
+convolutionallayerswithReLUactivationfunctions. Thereis
+seenontheﬁnalDERofthesystemevenafterresegmentation
+amax-poolinglayeraftereachconvolutionallayer. Batchnor-
+step.
+malization [36] is used for layer output normalization. There
+are two fully connected layers with sigmoid activation func-
+6. Conclusions
+tionattheend. Intheﬁrstconvolutionallayer,thereareﬁlters
+with rectangular shapes that serve as feature extractors. The Most of the DNN based SD systems introduced in Section 1
+twointermediateconvolutionallayerslearnahigherlevelrep- use DNN to describe a speaker in a relatively short segment
+resentationofthesefeatures. Theoutputlayerconsistsofjust ofconversationandthencomparetworepresentationsofadja-
+oneneuronwithsigmoidactivationfunction.Thustheoutputis cent segments (e.g. so called d-vectors [12]) to decide if the
+limitedbetweenzeroandone. Itrepresentstheprobabilityofa speakerchangeoccurred. Onthecontrary,ourapproachusing
+speakerchangeinthemiddleoftheobservedspectrogram. For theCNN-basedSCDﬁndsthepossiblespeakerchangesinspec-
+the training of the CNN, we use a Binary Cross Entropy loss togramandadditionallyusestheinformationforthereﬁnement
+function. ItisoptimizedbyStochasticGradientDescentwith of accumulation process of statistics. These reﬁned statistics
+a batch size of 64. The learning rate is changed after a ﬁxed representthespeakerinformationinthesegmentbetterthanthe
+numberofiterationsbyafactorof0.1. Whenthelossfunction classical approach to the statistics accumulation, so the com-
+isstabilizedweuseRMSPropalgorithmforﬁnetuningofthe putedi-vectorismorepreciseandtheﬁnaldiarizationerrorof
+network’sweights. thewholeSDsystemisreduced. Ournextgoalistotrainthe
+For the purpose of training the i-vector we have used the CNN to represent the probability of the speaker homogeneity
+following corpora: NIST SRE 2004, NIST SRE 2005, NIST intheacousticssignalinsteadoftheprobabilityofthespeaker
+SRE2006speakerrecognitionevaluations[37,38,39]andthe change. Also, we want to replace the i-vector with a DNN-
+Switchboard1Release2andSwitchboard2Phase3[40,41]. basedvectorandusetheCNNprobabilityofthespeakerchange
+WemodeltheUBMasaGMMwithM = 1024components. asapriorwhenconstructingthisvector.
+We have set the dimension of the i-vector to D = 400 and
+w
+wehaveusedtheconversationaldependentPCAtoreducethe 7. Acknowledgements
+dimensionfurther. Weuseeigenvectorswiththeratiooftheir
+eigenvalue mass p = 0.5. We have used K-means clustering TheworkwassupportedbytheMinistryofEducation, Youth
+withcosinedistancetoobtainthespeakerclusters. andSportsoftheCzechRepublicprojectNo.LO1506.Access
+to computing and storage facilities (CESNET LM2015042) is
+5.3. Results greatlyappreciated.
+We use the Diarization Error Rate (DER) for the evaluation
+8. References
+of our approach. It has been described and used by NIST in
+theRTevaluations[42]. Weusethestandard250mstolerance [1] X.A.Miro,S.Bozonnet,N.Evans,C.Fredouille,G.Friedland,
+aroundthereferenceboundaries.DERisacombinationofsev- andO.Vinyals,“SpeakerDiarization: AReviewofRecentRe-
+eraltypesoferrors(missedspeech,mislabelednon-speech,in- search,”Audio,Speech,andLanguageProcessing,vol.20,no.2,
+pp.356–370,2012.
+correctspeakercluster). Weassumetheinformationaboutthe
+silenceinalltestingaudiosisavailableandcorrect.Thatmeans [2] M. Rouvier, G. Dupuy, P. Gay, E. Khoury, T. Merlin, and
+S.Meignier,“AnOpen-sourceState-of-the-artToolboxforBroad-
+that our results represent only the error of incorrect speaker
+castNewsDiarization,”inInterspeech,Lyon,2013,p.5.
+clusters. TheresultsoftheexaminedsystemsareshowninTa-
+ble 1. For comparison, the result of segmentation using only [3] G.SellandD.Garcia-Romero,“SpeakerDiarizationwithPLDA
+I-vectorScoringandUnsupervisedCalibration,”inIEEESpoken
+constantlengthwindowisalsoshown. Usingthisapproacha
+Language Technology Workshop, South Lake Tahoe, 2014, pp.
+conversationisdividedintoshortsegmentsandthesystemthen
+413–417.
+reliesontheclusteringandfurtherresegmentationtoreﬁnethe
+[4] S.H.Shum,N.Dehak,R.Dehak,andJ.R.Glass,“Unsupervised
+boundaries.
+Methods for Speaker Diarization: An Integrated and Iterative
+ThedifferenceintheresultsofthesystemusingCNN-SCD Approach,” Audio, Speech, and Language Processing, vol. 21,
+without reﬁnement and system using only the constant length no.10,pp.2015–2028,2013.
+3565[5] M.Senoussaoui,P.Kenny,T.Stafylakis,andP.Dumouchel,“A [26] S. Shum, N. Dehak, E. Chuangsuwanich, D. Reynolds, and
+Study of the Cosine Distance-Based Mean Shift for Telephone J.Glass, “ExploitingIntra-ConversationVariabilityforSpeaker
+Speech Diarization,” Audio, Speech and Language Processing, Diarization,”inInterspeech,Florence,2011,pp.945–948.
+vol.22,no.1,pp.217–227,2014.
+[27] Z.Zaj´ıc,L.Machlica,andL.Mu¨ller,“RobustAdaptationTech-
+[6] C.Fredouille,S.Bozonnet,andN.Evans,“TheLIA-EURECOM niquesDealingwithSmallAmountofData,”inTSD2012.Lec-
+RT09SpeakerDiarizationSystem,”inNISTRichTranscription tureNotesinComputerScience,vol.7499,Brno,2012,pp.418–
+Workshop(RT09),Melbourne,USA,2009. 487.
+[7] O. Ben-Harush, O. Ben-Harush, I. Lapidot, and H. Guterman, [28] ——, “RobustStatisticEstimatesforAdaptationintheTaskof
+“InitializationofIterative-BasedSpeakerDiarizationSystemsfor SpeechRecognition,” inTSD2010.LectureNotesinComputer
+TelephoneConversations,”IEEETransactionsonAudio,Speech, Science,vol.6231. Brno: Springer,Berlin,Heidelberg,2010,
+andLanguageProcessing,vol.20,no.2,pp.414–425,2012. pp.464–471.
+[8] A. G. Adami, S. S. Kajarekar, and H. Hermansky, “A New [29] P.KennyandP.Dumouchel,“ExperimentsinSpeakerVeriﬁcation
+SpeakerChangeDetectionMethodforTwo-SpeakerSegmenta- UsingFactorAnalysisLikelihoodRatios,”inOdyssey-Speaker
+tion,”inICASSP,vol.4,2002,pp.3908–3911. andLanguageRecognitionWorkshop,Toledo,2004,pp.219–226.
+[9] J. Ajmera, I. McCowan, and H. Bourlard, “Robust Speaker [30] P.Kenny,“JointFactorAnalysisofSpeakerandSessionVariabil-
+ChangeDetection,”SignalProcessingLetters,IEEE,vol.11,pp. ity:TheoryandAlgorithms,”Tech.Rep.,2006.
+649–651,2004.
+[31] D.Garcia-RomeroandC.Y.Espy-Wilson,“AnalysisofI-vector
+[10] B.Fergani,M.Davy,andA.Houacine,“SpeakerDiarizationUs- LengthNormalizationinSpeakerRecognitionSystems,”inInter-
+ing One-Class Support Vector Machines,” Speech Communica- speech,Florence,2011,pp.249–252.
+tion,vol.50,no.5,pp.355–365,2008.
+[32] P. Kenny, P. Ouellet, N. Dehak, V. Gupta, and P. Dumouchel,
+[11] V.Gupta,“SpeakerChangePointDetectionUsingDeepNeural “A Study of Interspeaker Variability in Speaker Veriﬁcation,”
+Nets,”inICASSP,Brisbane,2015,pp.4420–4424. IEEETransactionsonAudio,Speech,andLanguageProcessing,
+vol.16,no.5,pp.980–988,2008.
+[12] R.Wang,M.Gu,L.Li,M.Xu,andT.F.Zheng,“SpeakerSeg-
+mentationUsingDeepSpeakerVectorsforFastSpeakerChange [33] L.MachlicaandZ.Zaj´ıc,“FactorAnalysisandNuisanceAttribute
+Scenarios,”inICASSP,NewOrleans,2017,pp.5420–5424. ProjectionRevisited,”inInterspeech,Portland,2012,pp.1570–
+1573.
+[13] S.FuruiandD.Itoh,“Neural-Network-BasedHMMAdaptation
+forNoisySpeech,”inICASSP,SaltLakeCity,2001,pp.365–368. [34] A.Canavan,D.Graff,andG.Zipperlen,“CALLHOMEAmerican
+EnglishSpeech, LDC97S42,” inLDCCatalog. Philadelphia:
+[14] M. Hru´z and Z. Zaj´ıc, “Convolutional Neural Network for
+LinguisticDataConsortium,1997.
+SpeakerChangeDetectioninTelephoneSpeakerDiarizationSys-
+tem,”inICASSP,NewOrleans,2017,pp.4945–4949. [35] Z. Zaj´ıc, M. Kunesˇova´, and V. Radova´, “Investigation of Seg-
+mentation in i-Vector Based Speaker Diarization of Telephone
+[15] J.R.Hershey,Z.Chen,J.L.Roux,andS.Watanabe,“DeepClus-
+Speech,”inSpecom. Budapest:SpringerInternationalPublish-
+tering:DiscriminativeEmbeddingsforSegmentationandSepara-
+ing,2016,pp.411–418.
+tion,”inICASSP,Shanghai,2016,pp.31–35.
+[36] S. Ioffe and C. Szegedy, “Batch Normalization: Accelerating
+[16] R. Milner and T. Hain, “DNN-Based Speaker Clustering for
+Deep Network Training by Reducing Internal Covariate Shift,”
+SpeakerDiarisation,”inInterspeech,vol.08-12-Sept,SanFran-
+Arxiv,vol.abs/1502.0,2015.
+cisco,2016,pp.2185–2189.
+[37] A.MartinandM.Przybocki,“2004NISTSpeakerRecognition
+[17] G. Sell, D. Garcia-Romero, and A. Mccree, “Speaker Diariza-
+Evaluation,LDC2006S44,”inLDCCatalog. Philadelphia:Lin-
+tionwithI-VectorsfromDNNSenonePosteriors,”inInterspeech,
+guisticDataConsortium,2011.
+Dresden,2015,pp.3096–3099.
+[38] NIST Multimodal Information Group, “2005 NIST Speaker
+[18] S. H. Yells, A. Stolcke, and M. Slaney, “Artiﬁcial Neural Net-
+Recognition Evaluation Training Data, LDC2011S01,” in LDC
+work Features for Speaker Diarization,” in Proc. IEEE Spoken
+Catalog. Philadelphia:LinguisticDataConsortium,2011.
+LanguageTechnologyWorkshop. IEEE,2014,pp.402–406.
+[39] ——,“2006NISTSpeakerRecognitionEvaluationTrainingSet,
+[19] N.Dawalatabad, S.Madikeri, C.C.Sekhar, andH.A.Murthy,
+LDC2011S09,”inLDCCatalog,2011.
+“Two-PassIBBasedSpeakerDiarizationSystemUsingMeeting-
+Speciﬁc ANN Based Features,” in Interspeech, San Francisco, [40] D.Graff,D.Miller,andK.Walker,“Switchboard-2PhaseIIIAu-
+2016,pp.2199–2203. dio,”inLDCCatalog. Philadelphia:LinguisticDataConsortium,
+1999.
+[20] D.Garcia-Romero,D.Snyder,G.Sell,D.Povey,andA.McCree,
+“SpeakerDiarizationUsingDeepNeuralNetworkEmbedings,” [41] D.Graff,K.Walker,andA.Canavan,“Switchboard-2PhaseII,
+inICASSP,NewOrleans,2017,pp.4930–4934. LDC99S79,” in LDC Catalog. Philadelphia: Linguistic Data
+Consortium,2002.
+[21] H.Bredin, “TristouNet: TripletLossforSpeakerTurnEmbed-
+ding,”inICASSP,NewOrleans,2017,pp.5430–5434. [42] J. G. Fiscus, N. Radde, J. S. Garofolo, A. Le, J. Ajot, and
+C.Laprun,“TheRichTranscription2006SpringMeetingRecog-
+[22] M. Hru´z and M. Kunesˇova´, “Convolutional Neural Network in
+nitionEvaluation,”MachineLearningforMultimodalInteraction,
+theTaskofSpeakerChangeDetection,”inSpecom. Budapest:
+vol.4299,pp.309–322,2006.
+SpringerInternationalPublishing,2016,pp.191–198.
+[23] Y.LeCun,B.Boser,J.S.Denker,D.Henderson,R.E.Howard,
+W. Hubbard, and L. D. Jackel, “Backpropagation Applied to
+HandwrittenZipCodeRecognition,”NeuralComputation,vol.1,
+no.4,pp.541–551,1989.
+[24] A.Krizhevsky,I.Sutskever,andG.E.Hinton,“ImageNetClassi-
+ﬁcationwithDeepConvolutionalNeuralNetworks,”inAdvances
+inNeuralInformationProcessingSystems,2012,pp.1106–1114.
+[25] N. Dehak, P. J. Kenny, R. Dehak, P. Dumouchel, and P. Ouel-
+let,“Front-EndFactorAnalysisforSpeakerVeriﬁcation,”IEEE
+Transactions on Audio, Speech, and Language Processing,
+vol.19,no.4,pp.788–798,2011.
+3566

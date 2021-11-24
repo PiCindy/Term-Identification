@@ -1,0 +1,412 @@
+Deep Neural Network Embeddings for Text-Independent Speaker Veriﬁcation
+DavidSnyder,DanielGarcia-Romero,DanielPovey,SanjeevKhudanpur
+CenterforLanguageandSpeechProcessing&HumanLanguageTechnologyCenterofExcellence,
+TheJohnsHopkinsUniversity,USA
+{david.ryan.snyder, dpovey}@gmail.com, {dgromero, khudanpur}@jhu.edu
+Abstract model(UBM)thatisusedtocollectsufﬁcientstatistics,alarge
+projectionmatrixtoextracti-vectors,andaprobabilisticlinear
+Thispaperinvestigatesreplacingi-vectorsfortext-independent
+discriminantanalysis(PLDA)backendtocomputeasimilarity
+speaker veriﬁcation with embeddings extracted from a feed-
+scorebetweeni-vectors[2,3,4,5,6,7].
+forward deep neural network. Long-term speaker characteris-
+tics are captured in the network by a temporal pooling layer Traditionally, the UBM is a Gaussian mixture model
+thataggregatesovertheinputspeech.Thisenablesthenetwork (GMM) trained on acoustic features. Recent work has shown
+to be trained to discriminate between speakers from variable- that incorporating an ASR DNN acoustic model can improve
+lengthspeechsegments. Aftertraining,utterancesaremapped theUBM’sabilitytomodelphoneticcontent[8,9,10,11,12].
+directlytoﬁxed-dimensionalspeakerembeddingsandpairsof However, this comes at the cost of greatly increased compu-
+embeddingsarescoredusingaPLDA-basedbackend.Wecom- tational complexity compared to traditional systems [11]. In
+pareperformancewithatraditionali-vectorbaselineonNIST addition, theadvantagesofincorporatingASRDNNsintothe
+SRE2010and2016. Weﬁndthattheembeddingsoutperform i-vectorpipelinehavebeenlargelyisolatedtoEnglishlanguage
+i-vectorsforshortspeechsegmentsandarecompetitiveonlong speech; [13]foundnobeneﬁtinamulti-languagesetting. For
+durationtestconditions. Moreover,thetworepresentationsare these reasons, we restrict the scope of study to traditional i-
+complementary,andtheirfusionimprovesonthebaselineatall vectorsystemsusingGMMs.
+operatingpoints. Similarsystemshaverecentlyshownpromis-
+ingresultswhentrainedonverylargeproprietarydatasets,but
+1.2. SpeakerveriﬁcationwithDNNs
+tothebestofourknowledge,thesearethebestresultsreported
+for speaker-discriminative neural networks when trained and
+It may be possible to produce more powerful SV systems by
+testedonpubliclyavailablecorpora.
+trainingthemtodirectlydiscriminatebetweenspeakers. Some
+Index Terms: speaker recognition, speaker veriﬁcation, deep
+studieshaveinvestigateddiscriminativelytrainingcomponents
+neuralnetworks
+ofthei-vectorsystem[14,15]. Giventheirsuccessinotherar-
+easofspeechtechnology,anaturalalternativeistouseDNNs
+1. Introduction
+trainedonspeaker-discriminativetasks. Inearlysystems,neu-
+ralnetworksaretrainedtoclassifytrainingspeakers[16,17]or
+Speaker veriﬁcation (SV) is the task of authenticating the
+inSiamesearchitecturestoseparatesame-speakeranddifferent-
+claimed identity of a speaker, based on some speech signal
+speakerpairs[18,19,20]. Aftertraining,frame-levelfeatures
+and enrolled speaker record. Typically, low-dimensional rep-
+areextractedfromthenetworksandusedasinputtoGaussian
+resentationsrichinspeakerinformationareextractedforboth
+speakermodels. However,wearenotawareofanyworksug-
+enrollment and test speech, and compared to enable a same-
+gestingthatthosemethodsarecompetitivewithmoderni-vector
+or-different speaker decision. In modern systems, the repre-
+systemsfortext-independentSV.
+sentations are usually i-vectors. If the lexical content of the
+utterancesisﬁxedtosomephrase,thetaskisconsideredtext- Progresshasbeenprimarilyconcentratedintext-dependent
+dependent,otherwiseitistext-independent. Thispaperinvesti- SVonlargeproprietarydatasets. In[21],afeed-forwardDNN
+gatesreplacingi-vectorswithembeddingsproducedbyadeep istrainedtoclassifyspeakersattheframe-level,onthephrase
+neural network (DNN) for text-independent SV. The relative “OKGoogle.” Aftertraining, thesoftmaxoutputlayerisdis-
+strengths and weaknesses of this approach are assessed under carded and speaker representations (called d-vectors) are cre-
+a variety of conditions. In some practical applications, ver- ated by averaging hidden layer activations. [22] built on this
+iﬁcation must be performed using only a limited amount of approach for the same application, by training an end-to-end
+testspeech, eithertoavoidlatencyinanonlineapplicationor system to discriminate between same-speaker and different-
+duetolimitedavailability. Tosupplementthecore2010NIST speakerpairs.
+speakerrecognitionevaluation(SRE),weconstructamodiﬁed
+Recently, [23] showed that an end-to-end system that
+versioninwhichtheenrollmentutterancesarefull-length, but
+jointlylearnsembeddingsalongwithasimilaritymetriccould
+thetestutteranceshavebeentruncatedtotheﬁrstfewseconds
+outperformatraditionali-vectorbaselinefortext-independent
+of speech. Finally, we assess performance on the Cantonese
+SV. However, the approach required a large number of in-
+and Tagalog NIST SRE 2016, which combines short-duration
+domaintrainingspeakerstobeeffective. Oursystemisbased
+testconditionswithlanguage-mismatch.
+on [23], but modiﬁed in an effort to improve performance on
+smaller,publiclyavailabledatasets.Wesplittheend-to-endap-
+1.1. Speakerveriﬁcationwithi-vectors
+proachintotwoparts:aDNNtoproduceembeddingsandasep-
+Most text-independent SV systems are based on i-vectors [1]. aratebackendtocomparepairsofembeddings.Finally,instead
+Thestandardsystemconsistsofapipelineofgenerativemod- oftrainingthesystemtoseparatesame-speakeranddifferent-
+els, trained on independent subtasks: a universal background speakerpairs,theDNNlearnstoclassifytrainingspeakers.3.3. Neuralnetworkarchitecture
+Thenetwork,illustratedinFigure1,consistsoflayersthatop-
+erateonspeechframes,astatisticspoolinglayerthataggregates
+overtheframe-levelrepresentations,additionallayersthatoper-
+ateatthesegment-level,andﬁnallyasoftmaxoutputlayer.The
+nonlinearitiesarerectiﬁedlinearunits(ReLUs).
+The ﬁrst 5 layers of the network work at the frame level,
+with a time-delay architecture [26]. Suppose t is the current
+timestep.Attheinput,wesplicetogetherframesat{t−2,t−
+1,t,t+1,t+2}.Thenexttwolayerssplicetogethertheoutput
+ofthepreviouslayerattimes{t−2,t,t+2}and{t−3,t,t+3},
+respectively.Thenexttwolayersalsooperateattheframe-level,
+but without any added temporal context. In total, the frame-
+levelportionofthenetworkhasatemporalcontextoft−8to
+t+8frames.Layersvaryinsize,from512to1536,depending
+onthesplicingcontextused.
+Thestatisticspoolinglayerreceivestheoutputoftheﬁnal
+frame-level layer as input, aggregates over the input segment,
+andcomputesitsmeanandstandarddeviation.Thesesegment-
+levelstatisticsareconcatenatedtogetherandpassedtotwoad-
+Figure1:DiagramoftheDNN.Segment-levelembeddings(e.g.,
+ditional hidden layers with dimension 512 and 300 (either of
+aorb)canbeextractedfromanylayerofthenetworkafterthe
+whichmaybeusedtocomputeembeddings)andﬁnallythesoft-
+statisticspoolinglayer.
+maxoutputlayer. Excludingthesoftmaxoutputlayer(because
+itisnotneededaftertraining)thereisatotalof4.4millionpa-
+rameters.
+2. Baselinei-vectorsystem
+3.4. Training
+Thebaselineisatraditionali-vectorsystemthatisbasedonthe
+Thenetworkistrainedtoclassifytrainingspeakersusingamul-
+GMM-UBMKaldirecipedescribedin[11]. Thefront-endfea-
+ticlasscrossentropyobjectivefunction(Equation1). Thepri-
+tures consist of 20 MFCCs with a frame-length of 25ms that
+marydifferencebetweenthisandtrainingin[16,17,21]isthat
+aremean-normalizedoveraslidingwindowofupto3seconds.
+our system is trained to predict speakers from variable-length
+Deltaandaccelerationareappendedtocreate60dimensionfea-
+segments,ratherthanframes. SupposethereareK speakersin
+turevectors.Anenergy-basedVADselectsfeaturescorrespond-
+N trainingsegments. ThenP(spkr | x(n))istheprobabil-
+ing to speech frames. The UBM is a 2048 component full- k 1:T
+covariance GMM. The system uses a 600 dimension i-vector ityofspeakerk givenT inputframesx(1n),x(2n),...x(Tn). The
+extractor. Prior to PLDA scoring, i-vectors are centered, di- quantitydnk is1ifthespeakerlabelforsegmentnisk,other-
+mensionalityreducedto150usingLDA,andlengthnormalized. wiseit’s0.
+PLDAscoresarenormalizedusingadaptives-norm[24].
+N K
+E =−(cid:88)(cid:88)d ln(P(spkr |x(n))) (1)
+nk k 1:T
+3. DNNembeddingsystem n=1k=1
+TheDNNistrainedonthecombinedSWBDandSREdata
+3.1. Overview
+describedinSection4.1.Wereﬁnethedatasetbyremovingany
+recordings that are less than 10 seconds long, and any speak-
+Theproposedsystemisafeed-forwardDNN(depictedinFig-
+erswithfewerthan4recordings. Thisleavesatotalof4,733
+ure1)thatcomputesspeakerembeddingsfromvariable-length
+speakers,whichisthesizeofthesoftmaxoutputlayer.
+acousticsegments. Thearchitectureisbasedontheend-to-end
+To reduce sensitivity to utterance length, it is desirable to
+systemdescribedin[23].However,anend-to-endapproachre-
+traintheDNNonspeechchunksthatcapturetherangeofdu-
+quires a large amount of in-domain data to be effective. We
+rationsweexpecttoencounterattesttime(e.g.,afewseconds
+replacetheend-to-endlosswithamulticlasscrossentropyob-
+to a few minutes). However, GPU memory limitations force
+jective.Inaddition,aseparatelytrainedPLDAbackendisused
+a tradeoff between minibatch size and maximum training ex-
+to compare pairs of embeddings. This enables the DNN and
+ample length. As a comprise, we pick examples that range
+similaritymetrictobetrainedonpotentiallydifferentdatasets.
+from2to10seconds(200to1000frames)alongwithamini-
+Thenetworkisimplementedusingthennet3neuralnetworkli-
+batchsizeof32to64.Theexamplespeechchunksaresampled
+braryintheKaldiSpeechRecognitionToolkit[25].
+denselyfromtherecordings,resultinginabout3,400examples
+per speaker. The network is trained for several epochs using
+3.2. Features
+naturalgradientstochasticgradientdescent[27].
+The features are 20 dimensional MFCCs with a frame-length
+3.5. Speakerembeddings
+of 25ms, mean-normalized over a sliding window of up to 3
+seconds. The same energy-based VAD from Section 2 ﬁlters Ultimately, thegoaloftrainingthenetworkistoproduceem-
+outnonspeechframes. Insteadofstackingframesattheinput, beddings that generalize well to speakers that have not been
+short-term temporal context is handled by a time-delay DNN seeninthetrainingdata.Wewouldlikeembeddingstocapture
+architecture. speakercharacteristicsovertheentireutterance, ratherthanattheframe-level.Thus,anylayerafterthestatisticspoolinglayer ingpoints[29].TheprimarymetricsareabbreviatedtoDCF10
+is a sensible place to extract the embedding from. We do not andDCF16respectively.
+considerthepresoftmaxafﬁnelayerbecauseofitslargesizeand
+dependenceonthenumberofspeakers. Inthenetworkusedin 4.3. Results
+thiswork,weareleftwithtwoafﬁnelayersfromwhichtoex-
+Inthefollowingresults,ivectorreferstothetraditionali-vector
+tractembeddings.ThesearedepictedinFigure1asembeddings
+baseline described in Section 2. The labels embedding a and
+aandb. Embeddingaistheoutputofanafﬁnelayerdirectly
+embeddingbdenotethesystemsconsistingofembeddingsex-
+ontopofthestatistics.Embeddingbisextractedfromthenext
+tractedfromeitherembeddinglayerofthesameDNN(seeSec-
+afﬁnelayerafteraReLU,andsoitisanonlinearfunctionofthe
+tion3.5)andusedasfeaturestotheirownPLDAbackends.The
+statistics.SincetheyarepartofthesameDNN,ifembeddingb
+labelembeddingsistheaverageofthePLDAbackendsforthe
+iscomputedthenwegetembeddingafor“free.”
+individual embeddings. In the following results, we focus on
+comparing the i-vector baseline with these combined embed-
+3.6. PLDAbackend
+dings.Finally,fusionreferstotheequallyweightedsumfusion
+Weusethesamebackendfori-vectorsandembeddings. Em- ofthePLDAscoresofivectorandembeddings.
+beddings are centered and dimensionality is reduced using
+LDA.Asinthei-vectorsystem,wefoundthatanLDAdimen- 4.3.1. NISTSRE10
+sion of 25% of the original worked well. After dimensional-
+ityreduction,theembeddingsarelengthnormalizedandpairs
+  40  
+of embeddings are compared using PLDA. PLDA scores are
+normalized using adaptive s-norm [24]. As described in Sec-
+tion3.5,theDNNarchitecturepresentstheoptionofusingem-
+beddings a or b or in combination. Instead of concatenating   20  
+embeddingstogether,wecomputeseparatePLDAbackendsfor %)
+eachembedding,andaveragethescores. n   10  
+y (i
+4. Experiments bilit   5   
+a
+b
+o
+4.1. Trainingdata pr   2   
+s 
+s
+The training data consists of telephone speech, the bulk of Mi   1   
+whichisEnglish. TheSWBDportionconsistsofSwitchboard
+ 0.5   ivector
+2Phases1,2,and3,andSwitchboardCellular. TheSREpor-
+embeddings
+tion contains NIST SREs from 2004 through 2008. In total, fusion
+thereareabout65,000recordingsfrom6,500speakers. Thei-   0.1 
+vectorUBMandextractoraswellasthespeakerdiscriminative  0.01    0.1   0.5    1     2      5     10     20     40  
+DNNaretrainedonthisdata. BothsystemsusePLDA-based False Alarm probability (in %)
+backendstrainedonjusttheSREdata. Finally,the2016NIST
+Figure2:DETcurveforthepooled5-60sportionofSRE10.
+SREwasdistributedwithanunlabeledsetof2,472utterancesin
+CantoneseandTagalog.Forbothsystems,weusethistocenter
+thecorrespondingevaluationutterancesandforscorenormal-
+ization. Table1:EER(%)onNISTSRE10
+4.2. Evaluation 10s-10s 5s 10s 20s 60s full
+ivector 11.0 9.1 6.0 3.9 2.3 1.9
+WeassessperformanceonNIST2010and2016speakerrecog-
+embeddinga 11.0 9.5 5.7 3.9 3.0 2.6
+nition evaluations [28, 29]. In the remaining sections, these
+embeddingb 9.2 8.8 6.6 5.5 4.4 3.9
+willbeabbreviatedasSRE10andSRE16respectively. SRE10
+embeddings 7.9 7.6 5.0 3.8 2.9 2.6
+consistsofEnglishtelephonespeech. Ourevaluationisbased
+on the extended core condition 5 and the 10s-10s condition. fusion 8.1 6.8 4.3 2.9 2.1 1.8
+To supplement the core SRE10 condition, we produce addi-
+tional conditions in which the enrollment utterances are full-
+length, but the test utterances have been truncated to the ﬁrst
+T ∈ {5,10,20,60} seconds of speech, as determined by an Table2:DCF10onNISTSRE10
+energy-basedVAD.The10s-10sconditionwaspartoftheofﬁ-
+cialSRE10andconsistsoftestandenrollmentutterancesthat 10s-10s 5s 10s 20s 60s full
+contain about 10 seconds of speech. SRE16 is comprised of ivector 0.962 0.901 0.749 0.613 0.460 0.403
+TagalogandCantoneselanguagetelephonespeech.Theenroll-
+embeddinga 0.907 0.902 0.790 0.654 0.518 0.468
+mentutterancescontainabout60secondsofspeechwhilethe
+embeddingb 0.951 0.927 0.866 0.828 0.782 0.768
+testutterancesrangefrom10to60secondsofspeech.
+embeddings 0.854 0.875 0.738 0.667 0.567 0.539
+In addition to equal error-rate (EER), results are reported
+fusion 0.859 0.788 0.645 0.556 0.432 0.383
+usingtheofﬁcialperformancemetricforeachSRE.ForSRE10,
+thismetricwastheminimumofthenormalizeddetectioncost
+function(DCF)withP =10−3[28].TheprimarySRE16
+Target
+metricwasabalanced(equalized)DCFaveragedattwooperat- Inthissection,welookatperformanceontheSRE10con-ditionsdescribedinSection4.2.Tables1and2demonstratethe Table3:EER(%)onNISTSRE16
+interplaybetweenutterance-lengthandperformanceonSRE10.
+Weseethati-vectorsarestilldominantforthelongestrecord- Cantonese Tagalog pool
+ings,andoutperformembeddingsatboththeEERandDCF10 ivector 8.3 17.6 13.6
+operating points. However, as the test utterance length de- embeddinga 7.7 17.6 13.1
+creases, theperformanceoftheembeddingsimprovesrelative embeddingb 7.8 17.4 13.1
+to the baseline. At 20 seconds of test speech, the combined embeddings 6.5 16.3 11.9
+embeddingsare3%betterthani-vectorsinEERbut8%worse
+fusion 6.3 15.4 11.3
+atDCF10. Withjust10and5secondsoftestspeech,theem-
+beddingsare17%and16%betterinEERandslightlybetterat
+DCF10. The relative advantage of embeddings appears to be
+largest when both enrollment and test utterances are short: in Table4:DCF16onNISTSRE2016
+thecolumnlabeled10s-10sboththetestandenrollutterances
+contain only about 10 seconds of speech, and we see that the Cantonese Tagalog pool
+combinedembeddingsare28%betterinEERand11%betterin ivector 0.549 0.842 0.711
+DCF10. Figure2illustratesthedetectionerrortradeoff(DET) embeddinga 0.532 0.835 0.689
+curves for the systems when pooled across the truncated test embeddingb 0.630 0.851 0.741
+conditions.AlthoughembeddingsarebetterattheEERoperat-
+embeddings 0.508 0.803 0.658
+ingpoint, theyfavorthelowmissrate, andareslightlyworse
+fusion 0.442 0.794 0.622
+whencomparedataverylowfalsealarmrate.
+Sincethei-vectorandDNNsystemsaresodissimilar, we
+expectgoodperformancefromtheirfusion.Weobserveanim-
+provementoverusingi-vectorsaloneatalloperatingpointsand
+conditions.ThelargestimprovementisinEERonthe10scon- spectively. Pooledacrosslanguages,weseethatthecombined
+dition,whichis28%betterthanthebaseline. Evenonthefull- embeddingsoutperformsthei-vectorbaselineby13%inEER
+length condition, where i-vectors are strongest, there is a 5% and 7% in DCF16. After combining with i-vectors, the im-
+improvementoverusingthei-vectorsalone,inbothDCF10and provementincreasesto17%inEERand13%inDCF16. The
+EER. DETplotinFigure3showsthattheseimprovementsarecon-
+sistentacrossoperatingpoints.
+4.3.2. NISTSRE16 AlthoughtheembeddingsalsoperformbetteronTagalog,
+improvementislargestfortheCantoneseportion.Comparedto
+thei-vectorbaseline,theembeddingsare22%betterintermsof
+  80  
+EERand7%inDCF16. Thefusedsystemisevenbetter,and
+improvesonthei-vectorbaselineby24%inEERand19%in
+  60   DCF16.
+5. Conclusions
+%)  40  
+n 
+y (i Inthispaper,weinvestigateddeepneuralnetworkembeddings
+abilit  20   fdoinrgtesxatp-ipnedaerpteonbdeenctosmppeaektietirvveewriiﬁthcaatiotrna.diOtiovnearallil-,vtehcetoermbbaesde--
+b
+o line and are complementary when fused. We found that, al-
+pr
+s   10   though i-vectors are more effective on the full-length SRE10,
+s
+Mi embeddingsarebetterontheshortdurationconditions.Thisun-
+  5    derscorestheﬁndingsof[23,30]thatDNNsmaybecapableof
+ivector
+producingmorepowerfulrepresentationsofspeakersfromshort
+embeddings
+  2    fusion speechsegments. SRE16presentedthechallengeoflanguage
+  1    mismatchbetweenthepredominantlyEnglishtrainingdataand
+ 0.01    0.1   0.5    1     2      5     10     20     40   theCantoneseandTagalogevaluation.Wesawthatembeddings
+False Alarm probability (in %) outperformedi-vectorsonbothlanguages,suggestingthatthey
+maybemorerobusttothisdomainmismatch.Althoughthere-
+Figure3: DETcurveforSRE16,pooledacrossCantoneseand
+sultsarequitepromising,webelievethatPLDAmaynotbethe
+Tagalog.
+optimalsimilaritymetricfortheembeddings. Infuturework,
+we will use the method described in this paper as pretraining
+Inthissection,weevaluatethesamesystemsfromSection forthefullyend-to-endapproachin[23],sothatamoreappro-
+4.3.1onSRE16. Usingthesameembeddingandi-vectorsys- priatesimilaritymetricislearnedalongwiththeembeddings.
+temsforbothSRE10andSRE16avoidsthecomplexityofde-
+velopingvariantsofeachsystemthatareoptimizedfordifferent 6. Acknowledgments
+evaluations. However,thisdoescauseamismatchbetweenthe
+predominatelyEnglishtrainingdata(usedtooptimizebothsys- This work was partially supported by NSF Grant No CRI-
+tems)andtheTagalogandCantoneseevaluationspeech. Asa 1513128, Nanyang Technological University (NTU) Science
+result, the performance reported here may lag behind that of of Learning Grant, National Institutes of Standards and Tech-
+counterpartsoptimizedspeciﬁcallyforSRE16. nologyGrantNo70NANB16H039. TheauthorsthankPatrick
+Tables3and4reportperformanceinEERandDCF16re- KennyandPaolaGarciafortheirhelpfuldiscussions.7. References
+[19] ——,“Extractingspeaker-speciﬁcinformationwitharegularized
+siamesedeepnetwork,”inAdvancesinNeuralInformationPro-
+[1] N. Dehak, P. Kenny, R. Dehak, P. Dumouchel, and P. Ouellet,
+cessingSystems(NIPS11),2011.
+“Front-endfactoranalysisforspeakerveriﬁcation,”IEEETrans-
+actions on Audio, Speech, and Language Processing, vol. 19, [20] A.Salman,“Learningspeaker-speciﬁccharacteristicswithdeep
+no.4,pp.788–798,2011. neuralarchitecture,”Ph.D.dissertation,UniversityofManchester,
+2012.
+[2] S.PrinceandJ.Elder,“Probabilisticlineardiscriminantanalysis
+forinferencesaboutidentity,”inIEEE11thInternationalConfer- [21] E.Variani, X.Lei, E.McDermott, I.Moreno, andJ.Gonzalez-
+enceonComputerVision,2007.ICCV2007.,Oct2007,pp.1–8. Dominguez, “Deep neural networks for small footprint text-
+dependentspeakerveriﬁcation,”in2014IEEEInternationalCon-
+[3] N.Bru¨mmerandE.DeVilliers,“Thespeakerpartitioningprob-
+ference on Acoustics, Speech and Signal Processing (ICASSP).
+lem.”inOdyssey,2010,p.34.
+IEEE,2014,pp.4052–4056.
+[4] J. Villalba and N. Bru¨mmer, “Towards fully bayesian speaker
+[22] G. Heigold, I. Moreno, S. Bengio, and N. Shazeer, “End-to-
+recognition: Integratingoutthebetween-speakercovariance.”in
+endtext-dependentspeakerveriﬁcation,”in2016IEEEInterna-
+INTERSPEECH,2011,pp.505–508.
+tional Conference on Acoustics, Speech and Signal Processing
+[5] P. Kenny, “Bayesian speaker veriﬁcation with heavy-tailed pri- (ICASSP). IEEE,2016,pp.5115–5119.
+ors.”inOdyssey,2010,p.14.
+[23] D. Snyder, P. Ghahremani, D. Povey, D. Garcia-Romero,
+[6] D. Garcia-Romero and C. Espy-Wilson, “Analysis of i-vector Y. Carmiel, and S. Khudanpur, “Deep neural network-based
+lengthnormalizationinspeakerrecognitionsystems.”inINTER- speakerembeddingsforend-to-endspeakerveriﬁcation,”inSpo-
+SPEECH,2011,pp.249–252. kenLanguageTechnologyWorkshop(SLT),2016IEEE. IEEE,
+2016.
+[7] D.Garcia-Romero,X.Zhou,andC.Espy-Wilson,“Multicondi-
+tiontrainingofGaussianpldamodelsini-vectorspacefornoise [24] S.Cumani,P.D.Batzu,D.Colibro,C.Vair,P.Laface,andV.Vasi-
+andreverberationrobustspeakerrecognition,”in2012IEEEIn- lakakis,“Comparisonofspeakerrecognitionapproachesforreal
+ternationalConferenceonAcoustics,SpeechandSignalProcess- applications,”inINTERSPEECH. ISCA,2011.
+ing(ICASSP). IEEE,2012,pp.4257–4260.
+[25] D. Povey, A. Ghoshal, G. Boulianne, L. Burget, O. Glembek,
+[8] P.Kenny,V.Gupta,T.Stafylakis,P.Ouellet,andJ.Alam,“Deep N.Goel,M.Hannemann,P.Motl´ıcˇek,Y.Qian,P.Schwarzetal.,
+neuralnetworksforextractingBaum-Welchstatisticsforspeaker “TheKaldispeechrecognitiontoolkit,”inProceedingsoftheAu-
+recognition,”inProc.Odyssey,2014. tomaticSpeechRecognition&Understanding(ASRU)Workshop,
+2011.
+[9] Y.Lei,N.Scheffer,L.Ferrer,andM.McLaren,“Anovelscheme
+for speaker recognition using a phonetically-aware deep neural [26] V.Peddinti, D.Povey, andS.Khudanpur, “Atimedelayneural
+network,”in2014IEEEInternationalConferenceonAcoustics, networkarchitectureforefﬁcientmodelingoflongtemporalcon-
+SpeechandSignalProcessing(ICASSP). IEEE,2014,pp.1695– texts.”inINTERSPEECH,2015,pp.3214–3218.
+1699.
+[27] D. Povey, X. Zhang, and S. Khudanpur, “Parallel training
+[10] D. Garcia-Romero, X. Zhang, A. McCree, and D. Povey, “Im- of deep neural networks with natural gradient and parameter
+provingspeakerrecognitionperformanceinthedomainadapta- averaging,”CoRR,vol.abs/1410.7455,2015.[Online].Available:
+tionchallengeusingdeepneuralnetworks,”inSpokenLanguage http://arxiv.org/abs/1410.7455
+TechnologyWorkshop(SLT),2014IEEE. IEEE,2014,pp.378–
+[28] “The NIST year 2010 speaker recognition evaluation plan,”
+383.
+http://www.itl.nist.gov/iad/mig/tests/sre/2010/,2010.
+[11] D.Snyder,D.Garcia-Romero,andD.Povey,“Timedelaydeep
+[29] “NIST speaker recognition evaluation 2016,”
+neural network-based universal background models for speaker
+https://www.nist.gov/itl/iad/mig/speaker-recognition-evaluation-
+recognition,” in 2015 IEEE Workshop on Automatic Speech
+2016/,2016.
+RecognitionandUnderstanding(ASRU). IEEE,2015,pp.92–97.
+[30] D.Garcia-Romero,D.Snyder,G.Sell,D.Povey,andA.McCree,
+[12] F.Richardson,D.Reynolds,andN.Dehak,“Deepneuralnetwork
+“Speakerdiarizationusingdeepneuralnetworkembeddings,”in
+approachestospeakerandlanguagerecognition,”SignalProcess-
+2017 IEEE International Conference on Acoustics, Speech and
+ingLetters,IEEE,vol.22,no.10,pp.1671–1675,2015.
+SignalProcessing(ICASSP). IEEE,2017,pp.4930–4934.
+[13] O.Novotny´,P.Mateˇjka,O.Glembeck,O.Plchot,F.Gre´zl,L.Bur-
+get, and J. Cˇernocky´, “Analysis of the dnn-based sre systems
+in multi-language conditions,” in Spoken Language Technology
+Workshop(SLT),2016IEEE. IEEE,2016.
+[14] O.Glembek,L.Burget,N.Brummer,O.Plchot,andP.Matejka,
+“Discriminativelytrainedi-vectorextractorforspeakerveriﬁca-
+tion,”inINTERSPEECH,2011.
+[15] L.Burget, O.Plchot, S.Cumani, O.Glembek, P.Mateˇjka, and
+N. Bru¨mmer, “Discriminatively trained probabilistic linear dis-
+criminantanalysisforspeakerveriﬁcation,”in2011IEEEinter-
+nationalconferenceonacoustics, speechandsignalprocessing
+(ICASSP). IEEE,2011,pp.4832–4835.
+[16] Y.Konig,L.Heck,M.Weintraub,andK.Sonmez,“Nonlineardis-
+criminantfeatureextractionforrobusttext-independentspeaker
+recognition,”inProc.RLA2C,ESCAworkshoponSpeakerRecog-
+nitionanditsCommercialandForensicApplications,1998.
+[17] L.Heck,Y.Konig,K.Sonmez,andM.Weintraub,“Robustness
+totelephonehandsetdistortioninspeakerrecognitionbydiscrim-
+inativefeaturedesign,”inSpeechCommunication,vol.31,no.2,
+2000,pp.181–192.
+[18] K. Chen and A. Salman, “Learning speaker-speciﬁc character-
+isticswithadeepneuralarchitecture,”inIEEETransactionson
+NeuralNetworks,vol.22,no.11,2011,pp.1744–1756.

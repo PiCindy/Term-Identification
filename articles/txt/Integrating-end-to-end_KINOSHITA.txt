@@ -1,0 +1,406 @@
+INTEGRATINGEND-TO-ENDNEURALANDCLUSTERING-BASEDDIARIZATION:
+GETTINGTHEBESTOFBOTHWORLDS
+KeisukeKinoshita,MarcDelcroix,NaohiroTawara
+NTTCorporation,Japan
+ABSTRACT thattheycannothandleoverlappedspeech,i.e.,timesegmentswhere
+0 morethanonepersonisspeaking,becauseofthewayofextracting
+2 Recent diarization technologies can be categorized into two ap- speaker embeddings. Perhaps surprisingly, even in professional
+0 proaches, i.e., clustering and end-to-end neural approaches, which
+meetings,thepercentageofoverlappedspeechisintheorderof5to
+2 have different pros and cons. The clustering-based approaches
+10%,whileininformalget-togethersitcaneasilyexceed20%[10].
+  assign speaker labels to speech regions by clustering speaker em-
+t End-to-End Neural Diarization (EEND) has been recently de-
+c beddingssuchasx-vectors. Whileitcanbeseenasacurrentstate-
+veloped [11–13] to address the overlapped speech problem. Simi-
+O of-the-art approach that works for various challenging data with
+larlytotheneuralsourceseparationalgorithms[14,15],inEEND,a
+6  rtheaastoitnacbanlenorotbhuasntdnleessovaenrdlapacpceudraspcye,eciht hthaastaiscirniteivciatlabdliesaidnvnaanttuargael NeuralNetwork(NN)receivesstandardframe-levelspectralfeatures
+2 anddirectlyoutputsaframe-levelspeakeractivityforeachspeaker,
+conversational data. In contrast, the end-to-end neural diarization
+  no matter whether the input signal contains overlapped speech or
+  (EEND), which directly predicts diarization labels using a neural
+] not. Whilethesystemissimpleandhasstartedoutperformingthe
+S network, was devised to handle the overlapped speech. While the conventional clustering-based algorithms [12,13], it is difﬁcult to
+EEND,whichcaneasilyincorporateemergingdeep-learningtech-
+A directly apply the EEND systems to long recordings (e.g., record-
+nologies,hasstartedoutperformingthex-vectorclusteringapproach
+s. in some realistic database, it is difﬁcult to make it work for long ingslongerthan10minutes). Thesystemisdesignedtooperatein
+a batch processing mode and thus requires a very large computer
+s recordings(e.g.,recordingslongerthan10minutes)becauseof,e.g.,
+e memorywhenperforminginferencewithlongrecordings. Besides,
+its huge memory consumption. Block-wise independent process-
+e aside from the memory issue, the NNs in EEND has difﬁculty to
+ingisalsodifﬁcultbecauseitposesaninter-blocklabelpermutation
+[ generalize to unseen very long sequential data, which also ham-
+  problem,i.e.,anambiguityofthespeakerlabelassignmentsbetween
+  persitsapplicationtothelongrecordings. Notethat,ifwesegment
+1 blocks. Inthispaper, weproposeasimplebuteffectivehybriddi-
+thelongrecordingsintosmallchunksandapplytheoriginalEEND
+v arizationframeworkthatworkswithoverlappedspeechandforlong
+model to each chunk independently, the model inevitably suffers
+6 recordingscontaininganarbitrarynumberofspeakers. Itmodiﬁes
+from the inter-block label permutation problem, i.e., an ambiguity
+6 theconventionalEENDframeworktooutputglobalspeakerembed-
+of the speaker label assignments between chunks. To address this
+3 dingssothatspeakerclusteringcanbeperformedacrossblocksto
+3 solve the permutation problem. With experiments based on simu- problem(andsimultaneouslyseekforalow-latencysolution),[16]
+1 lated noisy reverberant 2-speaker meeting-like data, we show that proposedanNN-basedextensionoftheEENDtoblock-onlinepro-
+0. theproposedframeworkworkssigniﬁcantlybetterthantheoriginal cessing.Themethodin[16]ﬁrsttriestoﬁndsinglespeakerregions,
+andusethemasaguidetoassignthespeakerlabelstothediariza-
+1 EENDespeciallywhentheinputdataislong.
+tionresultsoffutureblocks. However,theirperformancetypically
+0
+IndexTerms— Speakerdiarization,neuralnetworks, doesnotreachthatoftheoriginalEEND.Also, moreimportantly,
+2
+themethodcannothandleanarbitrarynumberofspeakers.
+:
+v 1. INTRODUCTION Inthispaper,weproposeasimplebuteffectivehybriddiariza-
+i tion approach, called EEND-vector clustering, by combining the
+X
+Automaticmeeting/conversationanalysisisoneoftheessentialtech- best of the clustering-based diarization and the EEND. A central
+r nologiesrequiredforrealizingfuturisticspeechapplicationssuchas componentoftheproposedapproachisamodiﬁedEENDnetwork
+a
+communicationagentsthatcanfollow,respondto,andfacilitateour thatoutputs,ineachchunk,notonlythediarizationresultsbutalso
+conversation. Asanimportantcentraltaskforthemeetinganalysis, global speaker embeddings associated with the diarization results.
+speakerdiarizationhasbeenextensivelystudied[1–3]. The inter-block permutation ambiguity problem can thus be sim-
+Current state-of-the-art diarization systems that achieve reli- plysolvedbyclusteringtheblock-levelspeakerembeddingvectors.
+able performance in many challenges [1,2] is based on clustering Thisextensionthusnaturallyallowsustocombinetheadvantagesof
+of speaker embeddings (i.e., speaker identity features) such as i- bothclusteringandtheEENDbasedmethods,i.e. itcanworkwith
+vectors [4] and x-vectors [5]. Such clustering-based approaches overlappedspeechanddealwithlongrecordingsincludinganarbi-
+ﬁrstsegmentarecordingintoshorthomogeneousblocksandcom- trarynumberofspeakers. Inparticular,weconﬁrmexperimentally
+pute speaker embeddings for each block assuming that only one thattheproposedEEND-vectorclusteringsigniﬁcantlyoutperforms
+speaker is active in each block. Then, speaker embedding vectors theoriginalEENDsystemespeciallywhentherecordingsarelong,
+are clustered to regroup segments belonging to the same speakers e.g.,morethan5minutes,whilemaintainingthesameperformance
+andobtainthediarizationresults. Variousspeakerembeddingsand astheoriginalEENDsystemwhentherecordingisshort.
+clustering techniques have been explored in [6–9]. While these Theremainderofthispaperisorganizedasfollows.Weﬁrstin-
+methodscancopewithverychallengingscenarios[6,7]andwork troducetheproposedframeworkinsection2indetail.Then,insec-
+withanarbitrarynumberofspeakers, thereisacleardisadvantage tion3,weevaluateitsperformanceincomparisonwiththeoriginalLinearD (s = 1,2), wheresisthespeakerindexwithinachunk.
+s
+Sinceitisnotalwaysguaranteedthatthediarizationresultsofacer-
+tainspeakerareestimatedatthesameoutputnode,wemayhavethe
+inter-blocklabelpermutationprobleminthediarizationoutputs.As
+anexample,inFig.1,thenetworkLinearDestimatesthediarization
+1
+resultof‘speakerA’intheﬁrstchunk,andthatof‘speakerB’inthe
+secondchunk.Thismeansthatwecannotobtainanoptimaldiariza-
+tion result simply by stitching the diarization results of a speciﬁc
+outputnodeacrossallthechunks.
+Tosolvethispermutationproblem,wesimultaneouslyestimate
+aspeakerembeddingcorrespondingtoeachdiarizationresultineach
+chunk.Thenetworktoestimatethespeakerembeddingsaredenoted
+asLinearS (s = 1,2)inFig.1. Thespeakerembeddingextraction
+s
+networkisoptimizedthroughtheNNtrainingsuchthatthevectors
+of the same speaker stay close to each other, while the vectors of
+differentspeakersliefarawayfromeachother. Thiscanbeseenin
+the ﬁgure by examining how the embeddings are organized in the
+speakerembeddingspace. Therefore,afterobtainingdiarizationre-
+sultsforallchunks,byclusteringthespeakerembeddingsgiventhe
+totalnumberofspeakersintheinputrecording(3inthiscase),we
+canestimatethecorrectassociationofthediarizationresultsamong
+chunks. Then,ﬁnally,theoveralldiarizationresultsareobtainedby
+stitching them together based on the embedding clustering result.
+Note that while the proposed framework estimates the diarization
+resultsoftheﬁxednumberofspeakersinachunk, itcanhandlea
+Fig.1: Schematicdiagramoftheproposeddiarizationframework.
+meetingwithanarbitrarynumberofspeakers.
+Theinputcontains3speakersintotal(red,green,andbluespeakers
+Fortheclustering,wecanuseanyclusteringalgorithms. How-
+showninthewaveforminthebottom),butonlyatmost2speakers
+ever,itmaybepreferableiftheclusteringalgorithmisawareofthe
+areactivelyspeakingineachchunk.
+characteristicofthisframeworkandworkwithaconstraintthatthe
+speaker embeddings from a chunk should not belong to the same
+speakercluster. Inthispaper,toincorporatetheconstraintintothe
+EENDtoclarifytheadvantagesoftheproposedframework.Finally,
+clusteringstage,weuseaconstrainedk-meansclusteringalgorithm
+weconcludethepaperinsection4.
+called COP-k-means [18], which allows us to set cannot-link con-
+straintsbetweenagivenpairofembeddingstopreventthepairfrom
+2. PROPOSEDDIARIZATIONFRAMEWORK: beingassignedtothesamespeakercluster.
+EEND-VECTORCLUSTERING
+2.2. Neuraldiarizationwithspeakerembeddingestimation
+2.1. Overallframework
+ThissubsectiondetailstheNNmodelinEEND-vectorclusteringto
+Figure1showsaschematicdiagramoftheproposedEEND-vector estimatethediarizationresultsandthespeakerembeddings.
+clusteringframework.
+Let us denote the ground-truth diarization label sequence as
+Itﬁrstsegmentstheinputrecordingintochunksandcalculates Y = (y | t = 1,··· ,T) that corresponds to X . Here, the
+i t,i i
+asequenceoftheinputframefeatureswithineachchunk,asXi = diarizationlabely = [y ∈ {0,1} | s = 1,··· ,S ]rep-
+t,i t,i,s Local
+(xt,i | t = 1,··· ,T) where i,t and T are the chunk index, the resents a joint activity for S speakers. For example, y =
+frameindexinthechunkandthechunksize1. xt,i ∈RK istheK- yt,i,s(cid:48) = 1(s (cid:54)= s(cid:48)) indicateLsocbaloth speakers s and s(cid:48) spoket,ia,tsthe
+dimensionalinputframefeatureatthetimeframet. Intheexample timeframetinthechunki.
+showninFig1,theinputrecordingconsistsof2chunksandcontains
+In the EEND framework, the diarization task is formulated as
+3 speakers in total. In the following, we assume that we can ﬁx
+a multi-label classiﬁcation problem. Speciﬁcally, we estimate the
+the maximum number of active speakers in a chunk, S , to 2,
+Local dirarizationresultofthes-thspeakerateachtimeframe,yˆ ,as,
+t,i,s
+although the method could be generalized to more speakers or an
+unknownnumberofspeakers[13]2. (cid:2)h ,...,h (cid:3) = Encoder(X )∈RD×T,
+Basedonthehyper-parameterS =2,thenetworkestimates 1,i T,i i
+Local
+diarizationresultsfor2speakersineachchunk. InFig.1,thepro- yˆt,i,s = sigmoid(LinearDs(ht,i))∈(0,1)
+cessingforthe1stspeakerisdrawnwithblacklinesandputinthe (s=1,...,S ), (1)
+Local
+foreground, whilethatofthe2ndspeakerisdrawnwithgreylines
+andputinthebackground. Thediarizationresultsareestimatedin- whereEncoder(·)isanencodersuchasamulti-headself-attention
+dependently in each chunk through NNs denoted as Encoder and NN[12],whichutilizesalltheinputfeaturesX forinference. h
+i t,i
+isaD-dimensionalinternalrepresentationintheNN,LinearD(·) :
+1ThechunksizeT forestimatingspeakerembeddingscanbeadvanta- RD → R1 isafully-connectedlayertoestimatethediarizatiosnre-
+geouslymuchlongerthanthehomogeneousblocksusedinx-vectorcluster-
+sult,andsigmoid(·)istheelement-wisesigmoidfunction.
+ingsincewecanhandleheterogeneouschunksincludingmorethan1speaker.
+2Ifweselectthechunksizecarefully,itisnottoodifﬁculttosetanap- Now, after estimating the diarization results, for the purpose
+propriatemaximumnumberofspeakersevenforpracticalusecases[17]. of solving the inter-block permutation problem, we estimate thespeakerembedding, eˆ , correspondingtothediarizationresultof 2.3.2. Speakerembeddingloss
+i,s
+thes-thspeakerasfollows.
+Forthespeakerembeddingtraining,weusealossfunctionthaten-
+zt,i,s = LinearSs(ht,i)∈RC, couragestheembeddingstohavesmallintra-speakerandlargeinter-
+T speakerdistances.Speciﬁcally,weutilizethelossproposedrecently
+z¯ = (cid:88)yˆ z ,∈RC (2) in[19],whichwasshowntobeveryeffectiveforthespeechsepara-
+i,s t,i,s t,i,s
+t=1 tiontask. Forthislossfunction,weassumethatthetrainingdatais
+z¯ annotatedwithspeakeridentitylabels,i.e.,indices,basedonaﬁnite
+eˆ = i,s ∈RC (s=1,...,S ), (3)
+i,s (cid:107)z¯ (cid:107) Local setofM trainingspeakers. Note,however,thatthespeakeridentity
+i,s
+is not required at test time, and that training and test speakers can
+wRhDer→eCRiCsitsheadfuimllyen-csoionnneocftetdhelasypeeratkoeresetmimbaetdedtihneg,sL-thinsepaeraSsk(e·)r’s: dbiefftehre(ia.bes.,oolupteenssppeeaakkeerricdoenndtiittyioinnsd)i.ceLsetthσai(cid:63)tc=or(cid:2)reσsi(cid:63)p,1o,n.d..to,σtih(cid:63),eSLpocealr(cid:3)-
+embeddingei,s,and(cid:107)·(cid:107)isavectornorm.Herewechosetoestimate mutationofthelabelsthatgivesminimumvaluetoEq.(5),i.e.,φ(cid:63).
+thespeakerembeddingsasweightedsumofframe-levelembeddings σ(cid:63) isasubsetoftheM speakeridentityindices. Then,thespeaker
+i
+zt,i,swithweightsdeterminedbythediarizationresultsyˆt,i,s,asin embeddinglossforchunki,Lspeaker,i,isformulatedasfollows.
+Eq.(2). Withtheseoperations, wecanestimatediarizationresults
+aonudttshpeeaspkeearkeemrbeemdbdeindgdsinfgoresatlilmSaLtoocralisspeesaseknetrisa.llyThthisemsaomdeelawsitthhe- L = 1 S(cid:88)Locall (cid:0)σ(cid:63) ,eˆ (cid:1), (6)
+conventionalEEND[11]. speaker,i SLocal speaker i,s i,s
+s=1
+2.3. Trainingobjectives where
+Now,wewillexplainawaytotrainthemodeltorealizethebehav-  (cid:16) (cid:16) (cid:17)(cid:17) 
+idoirareizxaptliaoinnerdesiunltSseacntdiosnpe2a.1k.erSeimncbeedthdeinngestwsiomruklteasntiemouastelys,booutrhntahte- lspeaker(cid:0)σi(cid:63),s,eˆi,s(cid:1) = −ln(cid:80)eMmxp=1e−xdp(−Eσdi(cid:63)(,sE,meˆi,,seˆi,s)),(7)
+uralchoiceistousethefollowingmulti-taskloss.
+d(E ,eˆ ) = α(cid:107)E −eˆ (cid:107)2+β, (8)
+m i,s m i,s
+L = (1−λ)L +λL , (4)
+diarization speaker
+whereEisalearnableglobalspeakerembeddingdictionary,andE
+whereListhetotallossfunctiontobeminimized,L isthe m
+diarization is a learnable global speaker embedding associated with the m-th
+diarizationerrorloss,L isspeakerembeddingloss,andλisa
+speaker trainingspeaker. Eq.(8)isthesquaredEuclideandistancebetween
+hyper-parametertoweightthetwolossfunctions.
+the learnable global speaker embedding and the estimated speaker
+embedding,whichisrescaledwithlearnablescalarparametersα>
+2.3.1. Diarizationloss
+0andβ.Eq.(7)isthelogsoftmaxoverthedistancesbetweenthees-
+Following[11],thediariationlossineachchunkisformulatedas: timatedembeddingandtheglobalembeddings,whichcanbederived
+fromthecategoricalcross-entropyloss. ThelossfunctionL is
+speaker
+L ,φ(cid:63) = 1 min (cid:88)T BCE(cid:16)lφ ,yˆ (cid:17),(5) formedbycollectingBchunks,similarlytoLdiarization.
+diarization,i TSLocal φ∈perm(SLocal)t=1 t,i t,i arizaBtiyonmriensiumltisziancgcuthreasteelyloesvsefnunifcttihoenrse,iwseoveexrplaepctpetodespsteiemcaht,eadnid-
+where perm(S ) is the set of all the possible permutations of simultaneouslyestimatespeakerembeddingsthataresuitableforthe
+Local
+(1,...,SLocal),yˆt,i = [yˆt,i,1,...,yˆt,i,SLocal] ∈ RSLocal,lφt,i istheφ- subsequentclusteringprocess.
+thpermutationofthereferencespeakerlabels,andBCE(·,·)isthe
+binarycross-entropyfunctionbetweenthelabelsandtheestimated
+diarizationoutputs. φ(cid:63) isthepermutationthatminimizestheright 3. EXPERIMENTS
+handsideoftheEq.(5). Thistrainingschemecalledpermutation-
+Inthissection,weevaluatetheeffectivenessoftheproposedmethod
+invarianttraininghasshowntobeeffectivefortheneuraldiarization
+incomparisonwiththeconventionalEEND[12],basedontestdata
+[11],butatthesametime,itincursanotherproblem,i.e.,theinter-
+including long recordings with a signiﬁcant amount of overlapped
+blocklabelpermutationproblemsinceitclearlyallowsthespeaker
+speech. Comparisonwiththex-vectorclusteringisomittedsinceit
+labelstopermutefromchunktochunk. Thediarizationlossfunc-
+wasalreadyshownin[12]thattheconventionalEENDworksbetter
+tion L is formed by collecting B chunks, i.e., L =
+diarization diarization
+(cid:80)B L ,whereBisthesizeofthemini-batch. incasethedatacontainsoverlappedspeech.
+i=1 diarization,i
+Here,asitwasmentionedearlier,S isahyper-parameterthat
+Local
+has to be appropriately chosen to satisfy (1) SLocal ≤ Stotal where 3.1. Data
+S isthetotalnumberofspeakersintherecording,and(2)S
+total Local
+isalwaysgreaterthanorequaltothemaximumnumberofspeakers The training, development, and test data are based on the 16 kHz
+speakinginachunk.WithanassumptionthatS ischoseninsuch Librispeechdatabase[20]. Tosimulateaconversation-likemixture
+Local
+away,thediarizationlabelsinthechunki,Y ,shouldbeformedas of two speakers, we picked up utterances from randomly selected
+i
+asubsetofallS speaker’slabelsYtotal,i.e.,Y ⊆ Ytotal. The two speakers, and generated a noisy reverberant mixture contain-
+total i i i
+subset should be chosen appropriately for each chunk such that it ing many utterances per speaker with reasonable silence intervals
+coversallspeakersspeakinginthechunki. Ifthenumberofspeak- betweenutterances. Forthesimulation,weusedthealgorithmpro-
+ersspeakinginthechunkissmallerthanS ,weﬁllY withdi- posedin[11],andsettheaveragesilenceintervalbetweenutterances
+Local i
+arization label(s) of a virtual (S +1)-th always-silent speaker, at2seconds.NoisedatawasobtainedfromMUSANnoisedata[21].
+total
+i.e.,(y ∈{0}|t=1,...,T). The signal-to-noise ratio was sampled randomly for each mixture
+t,i,Stotal+1Table 1: DERs (%) of the conventional EEND and the proposed
+modelsforeachtestsetthatdiffersintheduration.
+Model Chunking Clustering Testdataduration(minutes)
+3 5 10 20
+1.EEND - N/A 7.9 8.8 9.2 N/A
+2.EEND (cid:88) N/A 9.9 9.9 10.2 9.9
+3.Proposed - - 8.0 8.7 9.1 N/A
+4.Proposed (cid:88) - 10.6 10.5 10.9 10.8
+5.Proposed (cid:88) (cid:88) 9.1 8.2 7.9 7.7
+Table 2: DERs (%) of the conventional EEND and the proposed
+EEND-vectorclusteringforeachoverlapcondition.
+Model Chunking Clustering Overlapratio(%)
+0-30 30-60 60-90
+Fig.2:t-SNEplotofthetestspeaker’sembeddingsvector
+EEND - - 10.5 9.4 7.1
+Proposed (cid:88) (cid:88) 5.4 8.3 6.6
+from5,10,15,and20dBs. Forreverberation,weused20000im- 3.3. Results
+pulse response data in [22], which simulates various rooms. Con-
+sequently,weobtainedasetoftraining,development,andtestdata Table1showstheresultsoftheconventionalEEND(1strow)and
+thatcontainsvariousoverlappingratiosrangingfrom10to90%. theproposedmethod(5throw). Thetablecontainssomevariantsof
+For the training and development data, we randomly selected thesemethodstoclarifytheeffectivenessofeachcomponentinthe
+utterancesfrom460-hourcleanspeechtrainingdatacontaining1172 proposedmodel.
+speakers (M =1172) and generated 40000 and 500 mixtures that
+amount to 2774 and 23 hours, respectively. For the test data, we First,bycomparingthe1strow(conventionalEENDappliedto
+generated4differentsetsofdatathatdifferinduration.Eachtestset the entire sequence without chunking) and 5th row (the proposed
+contains500utterances. Theaveragedurationofmixturesineach model that processes chunks and performs clustering, i.e., EEND-
+setis3,5,10,and20minutes,respectively. Allthetestdatawere vector clustering), we can see that, as the duration of the test data
+generatedbasedontheLibrispeechtestsetcontaining26speakers gets longer, the proposed method becomes increasingly advanta-
+thatwerenotincludedinthetraininganddevelopmentdata. geous. While the conventional EEND cannot well handle 10- and
+20-minutedatabecauseofpoorgeneralizationtothelongdataand
+the CPU memory constraint, EEND-vector clustering can achieve
+3.2. NNtrainingandhyper-parameters
+stablediarizationperformanceforsuchdata. Interestingly,ittends
+Fortheinputframefeature, weextracted23-dimensionallog-Mel- toworkbetter(atleastforthisdata)especiallywhenthedurationof
+ﬁlterbankfeatureswith25msframelengthand10msframeshift. thedataislong. Itisprobablybecausethenumberofembeddings
+ForboththeproposedmethodandtheconventionalEEND,the available for the clustering becomes larger as the data gets longer,
+chunksizeT atthetrainingstagewassetat500(=50seconds)asin whichhelpstheclusteringalgorithmﬁndbetterclustercentroids.
+[12].Therefore,whenthetrainingdataislongerthan50seconds,we
+Now,letuscomparethe1strow(EENDwithoutchunking)and
+splittheinputaudiointonon-overlapping50-secondchunks. Atthe
+3rdrow(theproposedmodelappliedtotheentiresequencewithout
+inferencestage,theconventionalEENDusesanentiresequencefor
+chunking).Theperformanceoftheproposedmodelturnedouttobe
+inferencewithoutchunking.Ontheotherhand,theproposedmethod
+almostequaltothatoftheconventionalmethodinallcases,which
+segmentstheinputdatainto50-secondnon-overlappingchunks,and
+indicatesthattheadditionalspeakerlossdidnotnegativelyaffectthe
+performdiarizationasexplainedinSection2.1.
+diarizationcapabilityofthemodel. Theresultsshowthattheaddi-
+For both methods, we used the same network architecture as
+tionalspeakerlossdidnotnegativelyaffectthediarizationcapability
+[12]. ForEncoder, weusedtwomulti-headattentionblockswith
+ofthemodel.
+256 attention units containing four heads (D = 256).We used the
+Adamoptimizerwiththelearningrateschedulerintroducedin[23].
+Next, let us focus on the comparison between 1st/3rd rows
+Thenumberofwarm-upstepsusedinthelearningrateschedulerwas
+(modelswithoutchunking)and2nd/4throws(modelswithchunk-
+25000. The batch size B was 64. The number of training epochs
+ing but without clustering). The performance degradation when
+was 70. The ﬁnal models were obtained by averaging the model
+using chunking reveals the inter-block label permutation problem.
+parametersofthelast10epochs.
+Weassumethisproblemmaybecomeevenmoreseverewhendeal-
+Fortheproposedmethod,λwassetat0.01.Withanassumption
+ingwithmorespeakers.Withthiscomparison,wecouldconﬁrmthe
+thatthemaximumnumberofspeakersspeakingineachchunkis2,
+effectivenessoftheclustering-baseddiarizationresultstitching.
+wesetS at2.Thedimensionofthespeakerembedding,C,was
+Local
+setat256. Sincetheperformanceoftheproposedmethodslightly Overall,wefoundthat,ifthetestdataisshorterthan5minutes,
+changesduetotheinitializationoftheCOP-k-meansalgorithm,we wecanapplyeithertheconventionalEENDortheproposedmodelto
+ran the test inference 10 times with random initialization and ob- theentiresequence(withoutchunking)toobtainagooddiarization
+tainedtheaveragedresults. Thestandarddeviationoftheobtained performance. Ontheotherhand,ifthedataislongerthanthat,itis
+diarizationerrorrate(DER)waslessthan0.2%. signiﬁcantlybettertousetheproposedframework.3.4. Detailedanalysis DIHARD challenge,” in Proc. Interspeech 2018, 2018, pp.
+2808–2812.
+3.4.1. Evaluationintermsofoverlappingratio
+[7] M.Diez,F.Landini,L.Burget,J.Rohdin,A.Silnova,K.Zmo-
+Table2showstheDERsineachoverlapcondition.Theresultswere
+likova, O. Novotny´, K. Vesely´, O. Glembek, O. Plchot,
+obtainedfromthetestsetof10-minutemixtures.Sinceeachmixture
+L.Mosˇner,andP.Mateˇjka,“BUTsystemforDIHARDspeech
+inthetestsetdiffersintheamountofoverlappedspeech,i.e.,overlap
+diarizationchallenge2018,” inProc.Interspeech2018,2018,
+ratio,wecategorizedthemixturesintoseveraloverlapratioranges
+pp.2798–2802.
+andobtainedDERineachcondition.,tobetterunderstandthemodel
+behavior. Theproposedmethodisshowntolargelyoutperformthe [8] A.Zhang,Q.Wang,Z.Zhu,J.Paisley,andC.Wang, “Fully
+conventionalEENDinallconditions. supervisedspeakerdiarization,” inProc.2019IEEEInterna-
+tionalConferenceonAcoustics,SpeechandSignalProcessing
+(ICASSP),2019,pp.6301–6305.
+3.4.2. Speakerembeddingestimationaccuracy
+[9] X.Li,Y.Zhao,C.Luo,andW.Zeng, “Onlinespeakerdiariza-
+Herewealsoexaminewhetherthespeakerembeddingsofthetest tionwithrelationnetwork,”2020, arXiv:2009.08162.
+dataisestimatedaccuratelysuchthattheyhavelargeinter-speaker
+[10] T. von Neumann and S. Araki T. Nakatani R. Haeb-Umbach
+andsmallintra-speakerdistances. Figure2showsthet-SNEvisual-
+K.Kinoshita,M.Delcroix, “All-neuralonlinesourcesepara-
+izationofthespeakerembeddingsofthe26testspeakers. Itclearly
+tion,counting,anddiarizationformeetinganalysis,” inProc.
+showsdistinguishedclustersforeachspeaker,whichprovesthatwe
+2018IEEEInternationalConferenceonAcoustics,Speechand
+can estimate the global speaker embeddings accurately even if the
+SignalProcessing(ICASSP),May2019,pp.91–95.
+inputdatacontainsasigniﬁcantamountofoverlappedspeech.
+[11] Y. Fujita, N. Kanda, S. Horiguchi, K. Nagamatsu, and
+S. Watanabe, “End-to-end neural speaker diarization with
+4. CONCLUSIONS
+permutation-freeobjectives,” inProc.Interspeech2019,2019,
+Weproposedasimplebuteffectivediarizationframework,EEND- pp.4300–4304.
+vectorclustering,thatestimatesbothdiarizationresultsandspeaker
+[12] Y.Fujita,N.Kanda,S.Horiguchi,Y.Xue,K.Nagamatsu,and
+embeddings. By utilizing the speaker embeddings, we solved the
+S.Watanabe,“End-to-endneuralspeakerdiarizationwithself-
+inter-blocklabelpermutationproblem.Experimentalresultsshowed
+attention,” inProc.IEEEASRU,2019,pp.296–303.
+thatEEND-vectorclusteringworkssigniﬁcantlybetterthantheorig-
+inalEENDespeciallywhentheinputdataislong. Futureworkin- [13] S. Horiguchi, Y. Fujita, S. Watanabe, Y. Xue, and K. Naga-
+cludesapplicationoftheproposedframeworktomorechallenging matsu, “End-to-endspeakerdiarizationforanunknownnum-
+conditions as well as an extension to a scheme that can handle an berofspeakerswithencoder-decoderbasedattractors,”2020,
+arbitrarynumberofspeakerswithinachunk,e.g.,[13]. arXiv:2005.09921.
+[14] M.Kolbæk,D.Yu,Z.Tan,andJ.Jensen, “Multitalkerspeech
+5. REFERENCES separation with utterance-level permutation invariant training
+ofdeeprecurrentneuralnetworks,” IEEE/ACMTransactions
+[1] X.Anguera, S.Bozonnet, N.Evans, C.Fredouille, G.Fried- onAudio,Speech,andLanguageProcessing,vol.25,no.10,
+land,andO.Vinyals, “Speakerdiarization:Areviewofrecent pp.1901–1913,Oct2017.
+research,”IEEETransactionsonAudio,Speech,andLanguage [15] K.Kinoshita, L.Drude, M.Delcroix, andT.Nakatani, “Lis-
+Processing,vol.20,no.2,pp.356–370,Feb2012. teningtoeachspeakeronebyonewithrecurrentselectivehear-
+[2] N.Ryant,K.Church,C.Cieri,A.Cristia,J.Du,S.Ganapathy, ingnetworks,” inProc.2018IEEEInternationalConference
+andM.Liberman, FirstDIHARDChallengeEvaluationPlan, on Acoustics, Speech andSignal Processing(ICASSP), April
+2018, https://zenodo.org/record/1199638. 2018,pp.5064–5068.
+[3] J. Carletta, S. Ashby, S. Bourban, M. Flynn, M. Guillemot, [16] Y. Xue, S. Horiguchi, Y. Fujita, S. Watanabe, and K. Naga-
+T. Hain, J. Kadlec, V. Karaiskos, W. Kraaij, M. Kronenthal, matsu, “Online end-to-end neural diarization with speaker-
+G.Lathoud,M.Lincoln,A.Lisowska,I.McCowan,W.Post, tracingbuffer,”2020, arXiv:2006.02616.
+D. Reidsma, , and P. Wellner, “The AMI meeting corpus: [17] T. Yoshioka, Z. Chen, C. Liu, X. Xiao, H. Erdogan, and
+A pre-announcement,” in The Second International Confer- D.Dimitriadis, “Low-latencyspeaker-independentcontinuous
+ence on Machine Learning for Multimodal Interaction, ser. speechseparation,” inProc.2019IEEEInternationalConfer-
+MLMI’05,2006,pp.28–39. ence on Acoustics, Speech and Signal Processing (ICASSP),
+[4] N.Dehak,P.Kenny, R.Dehak,P.Dumouchel,, andP.Ouel- May2019,pp.6980–6984.
+let, “Front-endfactoranalysisforspeakerveriﬁcation,” IEEE [18] K.Wagstaff,C.Cardie,S.Rogers,andSS.Schroedl, “Con-
+Trans. Audio, Speech, and Language Processing, vol. 19(4), strainedk-meansclusteringwithbackgroundknowledge,” in
+pp.788–798,2011. Proc. 18th International Conference on Machine Learning
+[5] D. Snyder, P. Ghahremani, D. Povey, D. Garcia-Romero, (ICML),2001.
+Y.Carmiel,,andS.Khudanpur, “Deepneuralnetwork-based [19] N.ZeghidourandD.Grangier,“Wavesplit:End-to-endspeech
+speaker embeddings for end-to-end speaker veriﬁcation,” in separationbyspeakerclustering,”2020, arXiv:2002.08933.
+Proc.IEEESpokenLanguageTechnologyWorkshop,2016.
+[20] V. Panayotov, G. Chen, D. Povey, and S. Khudanpur, “Lib-
+[6] G.Sell,D.Snyder,A.McCree,D.Garcia-Romero,J.Villalba, rispeech:Anasrcorpusbasedonpublicdomainaudiobooks,”
+M.Maciejewski,V.Manohar,N.Dehak,D.Povey,S.Watan- in Proc. 2015 IEEE International Conference on Acoustics,
+abe, and S. Khudanpur, “Diarization is hard: Some experi- Speech and Signal Processing (ICASSP), 2015, pp. 5206–
+ences and lessons learned for the JHU team in the inaugural 5210.[21] D. Snyder, G. Chen, and D. Povey, “MUSAN: A music,
+speech,andnoisecorpus,,”2015, arXiv:1510.08484.
+[22] T.Ko,V.Peddinti,D.Povey,M.L.Seltzer,andS.Khudanpur,
+“Astudyondataaugmentationofreverberantspeechforrobust
+speech recognition,” in Proc. 2017 IEEE International Con-
+ferenceonAcoustics,SpeechandSignalProcessing(ICASSP),
+March2017,pp.5220––5224.
+[23] A. Vaswani, N. Shazeer, N. Parmar, J. Uszkoreit, L. Jones,
+A.N.Gomez, L.Kaiser, andI.Polosukhin, “Attentionisall
+youneed,”inProc.TheThirty-ﬁrstAnnualConferenceonNeu-
+ral Information Processing Systems (NIPS), 2017, pp. 5998–
+–6008.

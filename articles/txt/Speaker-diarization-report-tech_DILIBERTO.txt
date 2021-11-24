@@ -1,0 +1,860 @@
+MSC IN NLP SUPERVISED PROJECT
+UNIVERSITÉ DE LORRAINE
+IDMC
+Speaker diarization with overlapped speech
+Realization report
+Authors: Supervisor:
+Justine Diliberto Md Sahidullah, MULTISPEECH
+Cindy Pereira Reviewer:
+Anna Nikiforovskaja Imran Sheikh, MULTISPEECH
+June 21, 2021Abstract
+Our project aims at improving speaker diarization with overlapped speech. This report describes
+thesecondpartofourproject,theexperimentationphase,whereastheﬁrstphasewasfocusedon
+the comprehension of the subject and the bibliographical research. We ﬁrst discuss the speaker
+diarization in general, and speaker diarization with overlapped speech in particular. We also an-
+alyze the acoustic characteristics of overlapped speech and the impact of overlapped speech on
+speaker diarization. Then, we investigate this impact both in terms of performance and inﬂuence
+onacousticfeatures. Finally,severalmodelsbasedonx-vectoranalysisareexploredforidentiﬁca-
+tionofoverlappedspeech. Westatetheproblemthroughclassiﬁcationandregression,andweﬁnd
+outthatinthecaseofourimbalanceddata,classiﬁcationmethodsworkbetterandcanbefurther
+improvedtohavebetterresults.Acknowledgement
+We would like to express our gratitude to our supervisor for his assistance at every stage of the
+project.
+Experiments presented in this paper were partially carried out using the Grid’5000 testbed1,
+supportedbyascientiﬁcinterestgrouphostedbyInriaandincludingCNRS,RENATERandseveral
+Universitiesaswellasotherorganizations.
+1https://www.grid5000.fr
+2Contents
+1 Introduction 6
+1.1 Speechsignalandspeechtechnology . . . . . . . . . . . . . . . . . . . . . . . . . . 6
+1.2 Whatisspeakerdiarization? . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 6
+1.3 Componentsofspeakerdiarizationsystem . . . . . . . . . . . . . . . . . . . . . . . 6
+1.4 Applicationsofspeakerdiarizationtechnology . . . . . . . . . . . . . . . . . . . . . 7
+1.5 IssuesandChallenges . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 7
+1.6 Scopeoftheproject . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 8
+1.7 Contributions . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 8
+1.8 Organizationoftheproject . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 8
+2 Experimentalsetup 9
+2.1 Datasetdescription . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 9
+2.1.1 Sourceofthedataset . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 9
+2.1.2 Typesoftrackconditions . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 9
+2.1.3 Originsofthetracks . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 9
+2.2 Evaluationmetrics . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 10
+2.3 Descriptionofthespeakerdiarizationsystem . . . . . . . . . . . . . . . . . . . . . 10
+2.3.1 State-of-the-artsystems . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 10
+2.3.2 Baselinesystem . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 10
+2.4 Librariesandtools . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 11
+3 Performanceimpact 12
+3.1 Findingandremovingoverlappedspeechsegments . . . . . . . . . . . . . . . . . . 12
+3.2 Resultsonthenewdata . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 12
+3.3 Understandingtheresults . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 13
+3.4 Summary . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 15
+4 Acousticimpact 16
+4.1 Splittingaudioﬁles . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 16
+4.2 Calculatedfeatures . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 16
+4.3 Visualresults . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 18
+4.4 Statisticalresults . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 19
+4.5 Discriminativefeatures . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 19
+4.6 Summary . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 20
+3Contents Contents
+5 Overlapdetectors 22
+5.1 Introduction . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 22
+5.2 Classiﬁcationmethodsidea . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 22
+5.3 Experimentalsetup . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 22
+5.3.1 Dataorganization . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 22
+5.3.2 Architecture . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 23
+5.3.3 Evaluationmethods . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 23
+5.4 Modelstested . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 24
+5.5 Evaluationresults . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 25
+5.6 Summary . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 26
+6 Conclusion 27
+6.1 Summary . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 27
+6.2 Limitations . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 28
+6.3 Futurework . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 28
+4 4List of Abbreviations
+BLSTM Bidirectionallongshort-termmemory
+CNN Convolutionalneuralnetwork
+DER Diarizationerrorrate
+ERROR Speakererror
+FA Falsealarm
+GRU Gatedrecurrentunit
+JER Jaccarderrorrate
+MFCC Mel-frequencycepstralcoefﬁcients
+MISS Missedspeech
+NOV Non-overlappedspeech
+OV Overlappedspeech
+SAD Speechactivitydetection
+SD Speakerdiarization
+SGD Stochasticgradientdescent
+SVC Supportvectormachineclassiﬁer
+TDNN Timedelayneuralnetworks
+UAR Unweightedaveragerecall
+5Chapter 1
+Introduction
+The aim of this report is to experiment with overlapping speech, a recurrent issue in speaker di-
+arization,byexploringtheconsequencesonperformance,onacousticfeatures,andbyevaluating
+overlapdetectormethodswithx-vectors(Snyderetal.,2018).
+This ﬁrst chapter recalls the deﬁnitions of speech signal and speaker diarization (SD). Then
+the components, applications, and issues of SD are exposed. Finally, the contribution, scope, and
+organizationofthisreportarepresented.
+1.1 Speech signal and speech technology
+The sound is a sequence of vibrations (Diliberto, Pereira & Nikiforovskaja, 2021). Sound coming
+from our phonatory system constitutes the speech. The speech signal is stored as a sequence of
+samples,encodedindifferentformats. Thenumberofsamplespersecondisknownasthesampling
+rate.
+Speech technology involves the processing of speech signal by a machine (Rudnicky, Haupt-
+mann & Lee, 1994). Speech sounds are analyzed by computing short-term characteristics which
+representacousticandprosodicinformation. Thesecomponentsarethencomparedtostoredpat-
+ternstorecognizespokenwords,speakers,emotions,andlanguage.
+1.2 What is speaker diarization?
+Speakerdiarizationdesignatesthetaskofﬁndingwhospokewheninanaudiorecordingcontaining
+several speakers’ voices. This is the unsupervised identiﬁcation of each speaker within an audio
+streamandthedurationsduringwhicheachspeakerisspeaking(Angueraetal.,2012).
+Speaker diarization is a relatively new ﬁeld and thus is still in need of research and improve-
+ment. SomecompetitionssuchasDIHARD(Ryantetal.,2019b)andtheRichTranscriptionEvalu-
+ationbytheAmericanNationalInstituteofStandardsandTechnologies(Sadjadietal.,2017)are
+organizedtopromoteresearchinthisﬁeld.
+[Paragraphtakenfromourpreviousreport(Diliberto,Pereira&Nikiforovskaja,2021)]
+1.3 Components of speaker diarization system
+As a reminder, the components of a typical speaker diarization system are shown in Fig. 1.1. The
+mainstepsare: preprocessing,segmentation,embeddingextraction,clusterinitialization,splitting
+or merging tools & cluster distance calculation, and stopping criterion. Each step is explained in
+moredetailsinourpreviousreport(Diliberto,Pereira&Nikiforovskaja,2021).
+61.4. Applicationsofspeakerdiarizationtechnology Chapter1. Introduction
+Figure1.1: Componentsofatypicalspeakerdiarizationsystem.
+[Figuretakenfromourpreviousreport(Diliberto,Pereira&Nikiforovskaja,2021)]
+Theuniformsegmentationforstate-of-the-artspeakerdiarizationsystemsisfollowedbyspeaker
+embedding extractions. Commonly, x-vector embeddings are extracted and they are used with a
+clustering technique called agglomerative hierarchical clustering. In addition, re-segmentation is
+oftenappliedforframe-levelreﬁnementsofresults.
+1.4 Applications of speaker diarization technology
+Speakerdiarizationisausefultoolandhasmanyapplications,suchas(Tranter&Reynolds,2006):
+• enabling automatic speaker-attributed speech-to-text transcription for interviews, meetings,
+conferencesorcourtroomaudiences;
+• amelioratingthetaskofsearchingandindexingaudioarchives;
+• improvingaccuracyandreducingcomputationalcostofautomaticspeechrecognition,when
+usedasapreprocessingstep;
+• speakerspottinginvoiceassistanttechnology.
+[Paragraphtakenfromourpreviousreport(Diliberto,Pereira&Nikiforovskaja,2021)]
+1.5 Issues and Challenges
+Thestate-of-artspeakerdiarizationsystemsshowreasonablygoodresultsincontrolledconditions.
+However,theperformanceisdegradedinrealisticconditionsduetothefollowingreasons:
+• overlappingspeech;
+• backgroundnoise;
+• distancevariationsbetweenspeakersandmicrophones.
+[Paragraphtakenfromourpreviousreport(Diliberto,Pereira&Nikiforovskaja,2021)]
+7 71.6. Scopeoftheproject Chapter1. Introduction
+1.6 Scope of the project
+ThisprojectaimsatstudyingSDwiththeparticularissueofoverlappedspeech. Weprovideperfor-
+mance analyses to determine the effects of speech overlaps, and acoustic analyses to understand
+audiofeaturesandﬁnddiscriminatingones. Wealsodevelopmethodstodetectoverlappingspeech
+throughclassiﬁcationandregression.
+1.7 Contributions
+Theexperimentsinthefollowingchaptersofthisreportarecontributionstothescientiﬁccommu-
+nity,astheyshedanewlightontheoldproblematicofspeechoverlap.
+The performance experiment deals with the impact of overlap on performance based on the
+DIHARD II dataset. After removing audio segments containing overlap, the baseline is run and
+itsperformancesarecalculated. Thisexperimentshowstheimpactofoverlaponnon-overlapping
+segmentsonSDperformance.
+We investigate the impact of overlap on acoustic features that can weaken diarization results.
+90 different acoustic features are computed on the DIHARD II development dataset ﬁles, which
+wedividedbetweenoverlapandnon-overlapsegments. Thestudyconﬁrmsthatsomefeaturesare
+usefultodiscriminateoverlapfromnonoverlapspeech.
+Theperformanceofoverlapdetectionmethodsbasedonx-vectorsisstudied. Webuildasystem
+for training and testing them and implement both classical machine learning and deep learning-
+basedmethods. Weapplyboththesemethodstotheclassiﬁcationandtheregressioninterpretation
+of the problem. We show that classiﬁcation interpretation of the problem works better, and x-
+vectorscandisplaysomeinformationforoverlapdetection.
+1.8 Organization of the project
+Thesecondchapter, Chapter2, focusesonthemethod, aimingatdescribingthedataset, themet-
+rics, the system, and the tools used for our study. Then, the performance analysis, consisting in
+theremovalofoverlappingsegments,isdescribedinChapter3. Theacousticimpactexperiments
+follow,aimingatidentifyingacousticfeatures,inChapter4. Chapter5dealswiththedevelopment
+ofoverlapdetectorsbasedonx-vectors. Lastly,aconclusionisgiveninChapter6withasummary
+andlimitationsofthisreport,aswellasfutureworksuggestions.
+8 8Chapter 2
+Experimental setup
+[Part of this chapter has been taken from our previous report (Diliberto, Pereira & Nikiforovskaja,
+2021)]
+2.1 Dataset description
+2.1.1 Source of the dataset
+The dataset used for our experimentations is the Second DIHARD Diarization Challenge dataset
+(Ryant et al., 2019a; Sahidullah et al., 2019). The DIHARD Speech Diarization Challenge is a
+seriesofyearlychallengesonspeakerdiarization. Tobemoreprecise,thetaskistoautomatically
+determinewhospokewheninamulti-speakerenvironmentandusingonlyaudiorecordings.
+2.1.2 Types of track conditions
+Thetracksusedasinputcanbesinglechannelsormulti-channels. Moreinformationonhowthese
+channeltypesarerecordedcanbefoundinourpreviousreport(Diliberto,Pereira&Nikiforovskaja,
+2021).
+Two different speech activity detection (SAD) are included in the dataset: reference SAD and
+systemSAD.ThereferenceSADconditionmeansthataspeechsegmentationissupplied,whereas
+systemSADstandsforunprocessedaudio.
+Thesefourconditionsresultinfourdifferentevaluationtracks: singlechannelusingreference
+SAD; single-channel using system SAD; multichannel using reference SAD; multichannel using
+systemSAD.
+2.1.3 Origins of the tracks
+Both the training and evaluation data for single-channel tracks are taken from eleven different
+domainssuchasaudiobooks,broadcastinterviews, childlanguage,clinical, courtroom,maptask,
+meeting, restaurant, socio-linguistic ﬁeld and lab, and web videos. The combination of the tracks
+belongingtoeachdomainisapproximatelytwohourslong.
+ThemultichanneldatacomesfromtheCHiME-5dinnerpartycorpus. Thiscorpusiscomposed
+of real conversational speech, recorded in the homes of the participants during dinner parties.
+Twenty parties were organized, each lasting 2 to 3 hours and to which attended 2 hosts and 2
+guests. The recordings were performed by Microsoft Kinect devices (producing 4 channel linear
+arrays). The locations were divided into three areas, and each had two of these devices, which
+produces24channelsintotal.
+92.2. Evaluationmetrics Chapter2. Experimentalsetup
+Everysegmentcontainingpersonalidentifyinginformationwasremovedbeforethepublishing
+of the dataset. The ﬁles are 16 bit FLAC type for single-channel and WAV type for multichannel,
+sampledat16kHz. ConcerningthereferenceSADﬁlesforthedevelopmentset,theyaregivenas
+richtranscriptiontimemarkedﬁles.
+2.2 Evaluation metrics
+The results of the diarization are compared to those of a human segmentation, which is called
+ground truth. When the results are different from the ground truth, an error is identiﬁed. Three
+kindsoferrorcanoccur: speakererror,falsealarm,andmissedspeech.
+Speaker error (ERROR) refers to the assignment of a segment to the wrong speaker. A false
+alarm(FA)occurswhenasegmenthasbeenassignedtoaspeakerbutactuallycontainsnospeech.
+Missed speech (MISS) is the term for a segment of speech that has not been assigned to any
+speaker.
+Two kinds of error rates are usually computed to consider the results of a diarization task.
+Diarization error rate (DER) is the most famous one and is used to determine the proportion of
+reference speaker time that is not correctly attributed to a speaker. It is obtained by adding the
+segments having one of the three kinds of errors (false alarm, missed speech, and speaker error)
+anddividingtheirresultbythetotalspeakertime.
+FA+MISS+ERROR
+DER=
+TOTAL
+Jaccard error rate (JER) is based on the Jaccard index, which aims at computing the optimal
+mappingbetweenareferenceandasystemspeakerpair. Foreachreferencespeaker,aspeciﬁcJER
+can be drawn by dividing the sum of false alarms and missed speeches by the union of reference
+andsystemspeakersegments. TheJERissimplytheaverageofeveryspeciﬁcJERs.
+FA+MISS 1 (cid:88)
+JER = JER= JER
+ref TOTAL N ref
+ref
+2.3 Description of the speaker diarization system
+2.3.1 State-of-the-art systems
+The current state-of-the-art for speaker diarization systems is turning away from previously used
+i-vectorstoobtainspeakercharacteristicsfortheembeddingextractionstep(Snyderetal.,2017).
+This new kind of system is focusing on the use of deep neural network embeddings to distin-
+guishspeakerdifferences,bymappingvariable-lengthutterancestoﬁxed-dimensionalembeddings
+calledx-vectors;however,thechallengeistogatherenoughtrainingdata.
+2.3.2 Baseline system
+The system we use is the baseline system supplied by the Second DIHARD Diarization Challenge
+(Ryant et al., 2019b). Four different tasks are performed, that is to say speech enhancement,
+beamforming,speechactivitydetection,anddiarization.
+Firstly, a model is trained to forecast the ideal ratio masks from log-power spectra features
+usingadenselyconnectedlongshort-termmemoryarchitecture,whichisamodelofDeepNeural
+Networkparticularlyusefultomakepredictions.
+10 102.4. Librariesandtools Chapter2. Experimentalsetup
+Then, weighted delay-and-sum beamforming — a mathematical technique to identify the dis-
+tanceandorientationofsoundwavescaughtbyamicrophone—iscarriedout.
+After that, speech activity detection for tracks 2 and 4 is completed thanks to WebRTC’s SAD,
+asfoundinthePy-webrtcPythonpackage(see2.1.2).
+Finally,thediarizationisachievedbyisolatingeachrecordingintosmalloverlappingsegments,
+extracting x-vectors, scoring using probabilistic linear discriminant analysis, and clustering with
+agglomerativehierarchicalclustering(see1.3).
+2.4 Libraries and tools
+Thissectionpresentsthelibrariesandtoolsusedinthedevelopmentofthisproject.
+WeuseAudioSegmentfromthePydublibrary(Robert,Webbie,etal.,2018)toarrangetheﬁles
+fortheacousticanalysis.
+Audioﬁlelibrary(Wierstorf,2019)enablesustoreadaudioﬁlesinPython.
+ThefeaturesweanalyzearecomputedwiththelibrariesParselmouth(Jadoul,Thompson&de
+Boer,2018)andOpensmile(Eyben,Wöllmer&Schuller,2010).
+TheplotsarebuiltusingthelibraryMatplotlib(Hunter,2007)withdatainPandas(McKinney,
+2010)format.
+BasicstatisticsarecalculatedbytheNumpylibrary(Harrisetal.,2020).
+Sklearnisusedtoworkwithdataformachinelearning,toimplementclassicalmachinelearning
+methods,andtotrainthemtopredictspeechoverlap(Pedregosaetal.,2011).
+Finally,PyTorchenablesustoimplementandtraindeeplearningmethods(Paszkeetal.,2019).
+11 11Chapter 3
+Performance impact
+Differentexperimentsareperformedtounderstandhowoverlappedspeechimpactstheresultsof
+diarization. This chapter focuses on the overlapped speech removal experiment. More precisely,
+the segments containing overlap are removed to measure the performance of the baseline on the
+"cleaned" dataset. This is done using the development dataset from DIHARD II, presented in 2.1
+(Ryantetal.,2019b).
+3.1 Finding and removing overlapped speech segments
+Theﬁrststepoftheexperimentwastoidentifythesegmentscontainingoverlappedspeech. There
+is a .rttm ﬁle for each audio track, which contains the precise time of beginning and the length
+of speech for each of the speakers. These .rttm ﬁles are provided as a part of the corpus, because
+the ﬁrst track condition is a reference SAD (see 2.1.2). By comparing these ﬁles, the overlapping
+segmentscanbecomputed.
+Then,theobjectivewastodiscardthesegmentscontainingoverlap. The.uemﬁles,containing
+the beginning and end of each audio track, were modiﬁed to keep only segments without any
+overlappingspeech.
+After that, .rttm and .sad ﬁles, which are ﬁles containing beginning and end of speech segments
+foreachspeaker,wereadaptedaccordingtothenew.uemﬁles. Ifa.rttmsegmentdidnotbelong
+tothenew.uemsegments,evenpartially,itwasremoved. Thesamelogicwasappliedto.sadﬁles.
+Thenew.uemsegmentswereusedtocutthe.ﬂacﬁlesandremoveanyspeechoverlap.
+Using these newly created .rttm, .uem, .sad and .ﬂac ﬁles, we were ﬁnally able to run the
+baseline.
+3.2 Results on the new data
+The results we obtained thanks to the baseline were quite surprising, as the median DER did
+not decrease in most cases. The dataset contains 12 audio categories, as said in 2.1.3 which are
+"audiobooks", "broadcast interview", "child", "clinical", "court", "maptask", "meeting", "restaurant",
+"socioﬁeld","sociolab"and"webvideo".
+Among these categories, only two have an unchanged or reduced error rate. The ﬁrst one,
+"audiobooks", contains no overlap so it is logical that the DER did not change after removing
+overlapsegments. Thesecondone, "webvideo",hasaslightlybettererrorratewhencomparedto
+thecategoryresultswithoverlapsegments.
+The performances interms of overall DERby category, onoriginal data and datawith overlap
+removed,aswellastheaveragepercentageofoverlaparepresentedinthefollowingTable3.1.
+123.3. Understandingtheresults Chapter3. Performanceimpact
+Category DERonoriginaldata DERonoverlapremoved Percentofoverlap
+Audiobooks 4 1.3 0
+Broadcastinterview 9 14.1 0.9
+Child 31.7 37.5 7.5
+Clinical 18.5 40.5 2.4
+Court 16.3 29.3 1.6
+Maptask 6.7 28.2 2
+Meeting 34.1 49 21.3
+Restaurant 50.5 59 21.4
+Socioﬁeld 14.7 35.4 5.7
+Sociolab 10.4 29.7 3.7
+Webvideo 38.1 35.3 17.7
+Table3.1: AverageDERscorebycategoryonoriginaldataanddatasetwithoverlapremoved
+(DIHARDIIdevelopmentdataset)andaveragepercentageofoverlapbycategory. DERworsening
+doesnotseemtodependonthepercentageofoverlap.
+Figure3.1: MedianDERforeachaudiocategory. MostDERdidnotimproveafterhaving
+removedoverlappedsegments.
+This table shows no correlation between the average percentage of overlap and the evolution
+of average DER for a category. For example, the category "maptask" with 2% of average overlap
+obtained an average of 28.2 DER after removing overlap, whereas it scored only an average of
+6.7 DER with the original data. Another example, with a high percentage of overlap such as the
+category"meeting"whichhasmorethan20%ofoverlap,theaverageDERworsenedby15points.
+To visualize how each average error rate evolves, Fig. 3.1 shows the median of each category
+beforeandafterremovingoverlap.
+3.3 Understanding the results
+Withsuchsurprisingresults,thecodesandprocesswerereviewedtolookforanymistake.
+Wemadeagraphtoﬁndanycorrelationbetweenthelengthofasegmentanditsperformance
+(seeFig.3.2). Foreachﬁle,wecomputedthelengthoftheaudiosegmentsthathavebeenremoved
+andcomparedittothedifferenceofDERfromoriginaldatatonon-overlap. Thereseemstobeno
+realcorrelationinthegraph,soashorteraudiocannotexplainwhythenewperformancemeasures
+aresolow.
+13 133.3. Understandingtheresults Chapter3. Performanceimpact
+Figure3.2: MappingoftheDERimprovementandthelengthdifferenceforeachﬁle(fromthe
+unchangeddatasettothesegmentswithoutoverlap). Itisnotpossibletoidentifyaclear
+correlationbetweentheamountofspeechremovedandtheworseningoftheperformance.
+Figure3.3: MappingoftheaverageDERdifferenceandtheaveragepercentageofoverlapby
+category. WecannotobserveaclearcorrelationbetweenthepercentageofoverlapandtheDER
+worsening.
+14 143.4. Summary Chapter3. Performanceimpact
+In addition to this, we created Fig. 3.3 to compare the average percentage of overlap on the
+original data to the average DER difference between original data and data without overlap for
+each category. First, we computed the average DER per category, then we subtracted the scores
+from non-overlap DER to the scores from original DER. Finally, this difference is compared to the
+average percentage of overlap. Once more, we do not observe a clear correlation which could
+explaintheDERworsening.
+3.4 Summary
+Thisperformanceexperimentresulteddifferentlyfromwhatweexpected,aswethoughtremoving
+overlapregionsshouldreducediarizationerrors. Differentstudieshavebeenmadetounderstand
+whytheperformancewassolow,butnocorrelationwasfoundtoexplainit.
+The cause for poor diarization results can be a combination of different elements, such as the
+lengthofaudioremovedandthepercentageofoverlap,oritcanbeamorecomplexone.
+As said in our previous report, "when an amount of overlap is big, it makes it harder for the
+model even to perform diarization on the non-overlap regions, even though those regions are
+usually easier for the model", which means the overlap has an inﬂuence on the whole dataset
+(Diliberto,Pereira&Nikiforovskaja,2021).
+In addition to this, it needs to be recalled that overlap regions have been removed but noises,
+suchasbackgroundnoise,arestillpresentandcanmakethetaskmoredifﬁcult.
+Fromtheseresults,wecaninferthatremovingoverlapregionsandretrainingthemodelonthe
+datasetwithoutoverlapisnotaviableapproach.
+Thisexperimentdiffersfromtheresultsshowninthetablesfromourlastreport,astheseresults
+were obtained without running the baseline again; in other words, without retraining the model
+on the newly obtained data without overlapping segments (Diliberto, Pereira & Nikiforovskaja,
+2021).
+To further explain the results from this chapter, the acoustic features are explored in the next
+part. Weidentifyfeaturesimpactedbyoverlapandhavingadirectlinkwithdiarizationerrors.
+15 15Chapter 4
+Acoustic impact
+Acousticfeaturescanbeimpactedbyoverlappingsegmentsandreducetheperformanceofdiariza-
+tion(Diliberto,Pereira&Nikiforovskaja,2021).
+Thuswehavedecidedtoidentifywhichacousticfeaturesareimpactedbyoverlappingspeech.
+It will help to understand why it is so difﬁcult to apply a speech diarization method on overlap
+speech samples. Experiments are run on the DIHARD II development dataset to compare many
+featurescomputedontheoverlapandnon-overlapsamples.
+Inthissection,featureswillbecalleddiscriminativewhentheyareimpactedbyoverlap.
+4.1 Splitting audio ﬁles
+The ﬁrst step was to split the audio ﬁles. We needed to have separated ﬁles with or without
+overlapping speech. Using .rttm ﬁles, we found the overlap or non-overlap segments in single
+audio channels by calculating the periods in which more than one speaker was active. Then, we
+joined all non-overlapped segments together and exported them using AudioSegment from the
+Pydub library, and we did the same thing for overlapped segments. From one audio, we obtained
+threeﬁles: thecompleteaudio,withbothoverlapandnon-overlapsegments,thenon-overlapping
+audio,andtheoverlappingone.
+With these ﬁles, we could then compute a few acoustic features and compare the results be-
+tween the overlap or non-overlap versions of the same ﬁle. This would allow us to understand
+if, with thesame parameters(speakers, environment, etc.), there isa differencebetween theseg-
+mentswhenonlyonespeakeristalking,andtheoneswhenatleasttwospeakersaretalkingatthe
+sametime.
+At ﬁrst, we used every single channel audio ﬁle from the development part of the dataset to
+get a large amount of data (192 audio ﬁles in total). However, we observed that the "audiobook"
+ﬁles were composed of only one speaker and that we wouldn’t ﬁnd any overlap segment in this
+category. Wedecidedtoremovetheseﬁlesbecauseitwasnotpossibletocomparetheoverlapand
+non-overlapversionsofthesameaudio.
+4.2 Calculated features
+We used two different libraries to compute the features. With Parselmouth library we computed
+thepitch, whichwasidentiﬁedinourpreviousreportasbeingoneofthemainfeaturesimpacted
+byoverlappingspeech(Diliberto,Pereira&Nikiforovskaja,2021). OpenSmilelibraryenabledusto
+compute89differentfeaturesonouraudioﬁles(seethelistoffeaturesinFig.4.1).
+164.2. Calculatedfeatures Chapter4. Acousticimpact
+Category Detailedfeature
+amean
+stddevNorm
+percentile20.0
+percentile50.0
+percentile80.0
+F0semitonefrom27.5Hz
+pctlrange0-2
+meanRisingSlope
+stddevRisingSlope
+meanFallingSlope
+stddevFallingSlope
+amean
+stddevNorm
+percentile20.0
+percentile50.0
+percentile80.0
+Loudness
+pctlrange0-2
+meanRisingSlope
+stddevRisingSlope
+meanFallingSlope
+stddevFallingSlope
+peakspersec
+amean
+stddevNorm
+SpectralFlux
+Vamean
+VstddevNorm
+UVamean
+MFCC1amean
+MFCC1stddevNorm
+MFCC2amean
+MFCC2stddevNorm
+MFCC3amean
+MFCC3stddevNorm
+MFCC4amean
+MFCC4stddevNorm
+MFCC
+MFCC1Vamean
+MFCC1VstddevNorm
+MFCC2Vamean
+MFCC2VstddevNorm
+MFCC3Vamean
+MFCC3VstddevNorm
+MFCC4Vamean
+MFCC4VstddevNorm
+amean
+JitterLocal
+stddevNorm
+amean
+ShimmerLocal
+stddevNorm
+amean
+HNRdBACF
+stddevNorm
+H2amean
+H2stddevNorm
+logRel-F0-H1
+A3amean
+A3stddevNorm
+17 174.3. Visualresults Chapter4. Acousticimpact
+Frequencyamean
+FrequencystddevNorm
+Bandwidthamean
+F1
+BandwidthstddevNorm
+AmplitudelogRelF0amean
+AmplitudelogRelF0stddevNorm
+Frequencyamean
+FrequencystddevNorm
+Bandwidthamean
+F2
+BandwidthstddevNorm
+AmplitudelogRelF0amean
+AmplitudelogRelF0stddevNorm
+Frequencyamean
+FrequencystddevNorm
+Bandwidthamean
+F3
+BandwidthstddevNorm
+AmplitudelogRelF0amean
+AmplitudelogRelF0stddevNorm
+Vamean
+AlphaRatio
+VstddevNorm
+UVamean
+Vamean
+HammarbergIndex
+VstddevNorm
+UVamean
+V0-500amean
+V0-500stddevNorm
+Slope
+V500-1500amean
+V500-1500stddevNorm
+UV0-500amean
+UV500-1500amean
+Voicedsegmentspersec
+meanvoicedsegmentlengthpersec
+Voicing stddevvoicedsegmentlengthpersec
+meanunvoicedsegmentlengthpersec
+stddevunvoicedsegmentlenghtpersec
+Equivalentsoundlevel
+Pitch
+Table4.1: Acousticfeaturescomputed.
+4.3 Visual results
+These 90 features were computed on each audio (complete, overlap, and non-overlap) of each
+category,andvisualizedwithhistogramstogetaﬁrstopiniononwhatarethemostdiscriminative
+features. Forthisanalysis,wealsoremovedthe"broadcastinterview"audioﬁles,becausethemean
+ofoverlappedpercentageinthiscategoryis0.86%.
+AscanbeseeninFig.4.1,thevaluesofpitchlookverydifferentwhendealingwithoverlapped
+speechandwithnon-overlapped. Pitchresultsfromthetensionofthevibrationofthevocalfolds
+andiscloselyrelatedtothefundamentalfrequencyF0(Aung&Puts,2020). Foreachﬁle,thepitch
+valueofoverlappedsegmentsisatleast100Hzhigherthantheonefornon-overlappedsegments.
+We can assume this disparity is one of the reasons why it is so difﬁcult to apply diarization on
+overlappedspeech.
+18 184.4. Statisticalresults Chapter4. Acousticimpact
+As for the pitch, we can see in Fig. 4.2 a large variation in loudness peaks per second for
+overlapped and non-overlapped. When multiple speakers are talking at the same time, it seems
+therearemoreloudnesspeaksinthespeech.
+Similarly,Fig.4.3representsthecomparisonbetweenthevoicedsegmentspersecondinover-
+lappedandnon-overlappedspeechsamples. Thenumberofvoicedsegmentslookshigherforeach
+overlappedaudioﬁlethanthenumberforthecorrespondingnon-overlappedﬁle.
+Figure4.1: Pitchvaluesforoverlappedandnon-overlappedspeechsamplesinthecategory
+"restaurant".
+4.4 Statistical results
+For the statistical analysis of features, we decided to keep only the ﬁles with a percentage of
+overlap higher than 20% to be sure our results were consistent. According to this condition, the
+analysiswasperformedon26ﬁlesfromthefollowingcategories: 3from"child",6from"meeting",
+7 from "restaurant", 10 from "webvideo". Table 4.2 shows the statistical values of some features
+weselectedusingthese26ﬁles.
+Inourtable,theratiocorrespondstothequotientofthenon-overlapmean(ormedian)overthe
+overlapmean(ormedian). Whenthisratioishigherthan1,itmeansthatthevaluesincreasewhen
+there is overlap, in comparison to non-overlap. The higher the ratio is, the more discriminative
+the feature is (i.e. values differ a lot from "normal values" when there is overlapping speech).
+Oppositely, if it is lower than 1, it means that the values decrease, and the lower the ratio is,
+the more discriminative the feature is. NOV refers to non-overlapped speech while OV refers to
+overlappedspeech. Welistedherethemostdiscriminativefeatures.
+4.5 Discriminative features
+One can see in Table 4.2 that the pitch value differs a lot between overlap and non-overlap seg-
+ments. There is an increase of 46% in the mean of overlap in comparison to the non-overlap one
+19 194.6. Summary Chapter4. Acousticimpact
+Figure4.2: Loudnesspeakspersecondforoverlappedandnon-overlappedspeechsamplesinthe
+category"webvideo".
+and 71% for the median. However, the standard deviation remains similar which means that the
+variationofthevaluesdoesn’tincrease.
+The Spectral Flux measures the degree of variation in the spectrum across time (Sadjadi &
+Hansen,2013). Itisverydiscriminativeforoverlapaswecansee: themeanincreasesby47%and
+themedianby60%.
+Similarly,theoverlapvaluesoftheSpectralSlope—thelogarithmicpoweroftheMelband—
+arereallydistinctfromthenon-overlapones(increaseof39%formeanand65%formedian), as
+wellasforthefundamentalfrequencyF0(increaseof35%formeanand44%formedian)(Zheng,
+Wang&Jia,2020).
+As could be supposed, the loudness, the length of unvoiced segments, and the rate of voiced
+segments are also impacted by overlap. When many people talk at the same time, the ambient
+is noisier. The voicing (voiced and unvoiced segments) corresponds to the vibration (or not) of
+the vocal folds. The more people are talking, the more voiced speech is detected, which explains
+why the mean length of unvoiced segments decreases with overlap while the number of voiced
+segmentspersecondincreases.
+4.6 Summary
+At this stage, we identiﬁed six features that are impacted a lot by overlap: pitch, spectral ﬂux,
+fundamentalfrequency,loudness,spectralslope,andunvoicedorvoicedsegments.
+These features compute values that are dissimilar to non-overlap ones, as they are greatly
+higher or lower. From this analysis, we can conclude they certainly impact the performance of
+speaker diarization methods applied on overlapped speech. To improve state-of-the-art, a new
+perspectivecouldbetobaseamodelonnondiscriminativefeatures.
+20 204.6. Summary Chapter4. Acousticimpact
+Figure4.3: Voicedsegmentspersecondforoverlappedandnon-overlappedspeechsamplesin
+thecategory"webvideo".
+Mean Median StdDev
+Feature
+NOV OV Ratio NOV OV Ratio NOV OV
+Pitch 439 641 1.46 367 628 1.71 218 233
+SpectralFlux: amean 0.32 0.47 1.46 0.23 0.36 1.60 0.22 0.30
+F0: meanFallingSlope 98 132 1.35 88 127 1.44 43 56
+Loudness: amean 0.73 0.99 1.34 0.59 0.82 1.39 0.46 0.56
+SlopeV0-500: amean 0.015 0.02 1.39 0.008 0.01 1.65 0.03 0.03
+Unvoicedseglen: mean 0.41 0.24 0.59 0.31 0.19 0.61 0.25 0.13
+Voicedseg/sec 1.93 2.78 1.44 2.01 2.62 1.32 0.56 0.76
+Table4.2: Statisticalresultsofsomefeaturesbasedonthestudyof26ﬁles.
+21 21Chapter 5
+Overlap detectors
+5.1 Introduction
+Overlappingsegmentscandrasticallyreducethequalityofperformance(Diliberto,Pereira&Niki-
+forovskaja, 2021). Thus we have decided to experiment on overlap detection to improve the
+performance.
+The main idea is to develop a classiﬁer which would detect if a segment of the recording
+containsoverlapornot.
+Overlapdetectionisusuallyperformedinoneofthesethreeways: withsignalprocessing,sta-
+tistical methods or deep learning. The most popular and effective classiﬁers currently are deep
+learning based (Diliberto, Pereira & Nikiforovskaja, 2021). The LSTM-based (Bullock, Bredin &
+Garcia-Perera, 2020; Yoshioka et al., 2018) and CNN-based methods (Kunešová et al., 2019; An-
+drei,Cucu&Burileanu,2019;Málek&Žd’ánsky,2020)areespeciallypopular.
+X-vectors are embeddings for recording segments which were trained by CNN. It was shown
+thatusageofx-vectorscanimprovetheperformance,astheymightcontainmoreinformationthan
+only about single speakers (Málek & Žd’ánsky, 2020). We want to further explore their usage for
+overlapdetectionwithdifferentmodels.
+In this chapter we describe the prepared data, the models used around x-vectors, the testing
+systemarchitecture,andﬁnallytheevaluationofthechosenmethods.
+5.2 Classiﬁcation methods idea
+Themainideawastousex-vectorsastheembeddingvectorsoftheaudiosegmentstoclassifythose
+segments into overlap and non overlap. However, as shown in Fig. 5.1 the percentage of overlap
+in the segment is quite often not 100%. That is why we have decided to divide the segments not
+intotwogroupsforclassiﬁcation, butintoseveral, sothatwecouldhavemoreinformationabout
+thesegmentsautomatically.
+5.3 Experimental setup
+5.3.1 Data organization
+Weexploitedalreadycomputedx-vectorsondevelopmentdataasasourcematerial. Weusedthe
+followingcategoriesofrecordingsfromthedatasettotrainandevaluateourmethods: "webvideo",
+"meeting",and"restaurant". Thesecategoriescontainquitealotofoverlapsegmentswhichareof
+adecentquality,thisexplainswhyweusedthem.
+Foreachsegmentforwhichwehadanx-vector, wecalculatedtheratiooftheoverlapparton
+225.3. Experimentalsetup Chapter5. Overlapdetectors
+Figure5.1: Distributionofratioofoverlap. Colorsshowthewaywehavedividedtheratiosinto
+classes.
+thissegment. Andthereforeweproducedtheratiowhichcanbepredicted.
+Also,foreachratiowedecidedtowhichclassitbelongs,sothatwehadaclassiﬁcationproblem,
+asourﬁnalgoalistopredictifthereisorisnotanoverlap.
+Afterwards,webuiltadatasetwiththefollowingparameters: numberofsegmentsinformation
+to take before the goal segment, number of segments information to take after the goal segment,
+and the identiﬁcation numbers of the ﬁle where the segments are taken from. Then we had two
+variants: either to have classes to predict or the ratio itself. The ratio intervals of the classes
+are calculated using the following formula. If the ratio is smaller than 0.1 then the class is 0.
+Otherwise the classes are equally distributed on the segment [0.1, 1] and are calculated with the
+formula 1+min(3,(cid:98)(r −0.1)·4(cid:99)), where r is the overlap ratio. Therefore we have 5 classes of
+overlap.
+Thedevelopmentdataisdividedintotrainandtestpartsintheproportionof7:3. Wedivided
+thesegmentsintothesetwogroupssuchthatallthesegmentsofoneﬁlebelongtothesamegroup.
+5.3.2 Architecture
+WeusedObjectOrientedProgrammingtoorganizeourcodesothatitwaseasytomodify. Thereare
+base classes for regression and classiﬁcation methods, which contain several evaluation methods
+inside.
+From each base class, classes from Sklearn (Pedregosa et al., 2011) and Pytorch (Paszke et
+al., 2019) algorithms are inherited. The class for Sklearn algorithm allows to run all the needed
+functionalities,bypassingthenameoftheSklearnmethodanditsparameters. TheclassforPytorch
+algorithms allows to run Pytorch models by passing the base model itself, optimizer, epochs and
+thedevicetorunon.
+ThedescribedaboveschemeoftheclassescanbeseenonFig.5.2.
+All the introduced algorithms take x-vectors as an input as can be seen in Fig. 5.3. However,
+classiﬁcationalgorithmsreturntheclassofoverlap,whileregressiononesreturntheratioofover-
+lap.
+5.3.3 Evaluation methods
+As we had quite imbalanced classes, we have decided to use UAR for evaluation of classiﬁcation
+results. UARstandsforUnweightedAverageRecallandisanunweightedmeanvalueofrecallfor
+23 235.4. Modelstested Chapter5. Overlapdetectors
+Figure5.2: Classesstructurediagramoftheproject.
+Figure5.3: Blockschemeofusageofthex-vectors.
+each class. This evaluation methods helps to check that each class is predicted well enough, not
+onlythemajoringone.
+For evaluation of regression results we used R2 score, which is commonly used for regression
+tasks and is a coefﬁcient of determination. R2 score is a score based on the proportion of the
+variance.
+5.4 Models tested
+Firstweusedsomesimplemethodsasabaselineforclassiﬁcationonx-vectors. Theyaremachine
+learning methods from Sklearn library such as RidgeClassiﬁer, SVC, SGDClassiﬁer and Decision-
+TreeClassiﬁer.
+AsforPytorchbasedmodels,wecreatedasimplelinearnetworkforanotherbaselinesolution.
+BesidesweusedtheTDNNmodelintroducedinapreviousresearchasitwasalreadydesignedfor
+x-vectors (Málek & Žd’ánsky, 2020). We call this model TDNNBasedModel, as it mainly consists
+of TDNN layers which are CNN-based layers applied to plain vectors (Krizhevsky, Sutskever &
+Hinton, 2012). The main idea is to gather a context of the value in the vector with some weights
+foreachvalueandcreatethenextvectorthisway. Ifthecontextissymmetricalitcanbedonewith
+aone-dimensionalconvolutionlayer.
+24 245.5. Evaluationresults Chapter5. Overlapdetectors
+As we have also seen, BLSTM usually work well; however, they have never been applied to
+x-vectors. So we tried to apply the model from a previous research, which consists of BLSTM
+layers (Bullock, Bredin & Garcia-Perera, 2020). LSTM layers are recurrent neural network layers
+whichiteratethroughthesequenceandoneachiterationtakethepreviousoutputanduseitasa
+newinput. BidirectionalLSTMorBLSTMrepeatsthisprocessintheotherdirection. Wealsotried
+a similar model with GRU units instead of BLSTM units. GRU stands for Gated Recurrent Unit,
+andisasimplerversionofLSTMs. WecallthesemodelsBLSTMBasedModelandGRUBasedModel
+respectively.
+Figure5.4: Usedmodelsparametersandlayerstructure.
+ThePytorchmodelsusedaredescribedbythelayerstructureinFig.5.4. Thelastlayerineach
+modeloutputsatensor,whichlengthiseitherthenumberofclassesifweperformclassiﬁcation,or
+1ifweperformregression. BLSTMandGRUbasedmodelsiterateoverdifferentx-vectors, which
+aretakenasacontext.
+When used for classiﬁcation, Pytorch models are trained with cross-entropy loss, while when
+used for regression they are trained with mean squared error loss. The parameters of optimizers
+weretunedforeachmodelseparately.
+As classes were not balanced well (60% of the data corresponds to class 0, when there are 5
+classes), during training we extracted segments from the classes, so that the probability to take a
+segment from one class was equal to the probability to take a segment from another class. This
+wayweimprovedtheperformanceforclassiﬁcationmethods.
+5.5 Evaluation results
+Current results for classiﬁcation experiments are shown in the Table 5.1. Table 5.2 shows the
+results for regression experiments. We ran those algorithms on bigger contexts consisting of 3
+vectors of information for previous segments, 1 vector of information for the following segment,
+and smaller contexts which consist of 2 vectors of information for previous segments of a current
+one.
+Classiﬁcation results show that the deep learning based model performs much better with the
+increase of the context, while there might not be such a big difference for the simple machine
+learning methods. The top performers are RidgeClassiﬁer and TDNNBasedModel; they do not
+haveabigdifference.
+RegressionresultsshowthatTDNNBasedModelimproveswiththeincreaseofthecontext;how-
+ever, the overall performance for all methods is low. The leaders here are Lasso and SVR. We
+believe the results here might be that low because of the imbalance of data, which was ﬁxed for
+classiﬁcationpartbutwasnotﬁxedforregression.
+25 255.6. Summary Chapter5. Overlapdetectors
+Method UARscoreonbiggercontext UARscoreonsmallercontext
+RidgeClassiﬁer 0.26 0.23
+SVC 0.20 0.20
+SGDClassiﬁer 0.24 0.23
+DecisionTreeClassiﬁer 0.22 0.22
+LinearNet 0.24 0.24
+TDNNBasedModel 0.25 0.23
+BLSTMBasedModel 0.23 0.20
+GRUBasedModel 0.22 0.19
+Table5.1: Evaluationresultsforclassiﬁcationmethods.
+Method R2scoreonbiggercontext R2scoreonsmallercontext
+Lasso 0.006 -0.051
+SVR 0.070 0.052
+SGDRegressor -2e27 -1.5e27
+DecisionTreeRegressor -0.79 -0.808
+LinearNet -0.34 -0.333
+TDNNBasedModel -0.065 -0.124
+BLSTMBasedModel -0.498 -0.252
+GRUBasedModel -1.207 -0.551
+Table5.2: Evaluationresultsforregressionmethods.
+5.6 Summary
+We built a convenient system for training and testing models for overlap detection based on x-
+vectors. To that end, we implemented several methods; both classical machine learning methods
+anddeeplearningmethods.
+Theresultsoftheevaluationshowusthatclassiﬁcation-basedmethodsworkbetterforoverlap
+prediction. Wecanalsoseethatamongdeeplearningmethods,theTDNN-basedisthebestoneand
+shows an improvement with the increase of the context. We acknowledge that x-vectors contain
+someinformationwhichcanbeusedforoverlapdetection.
+Wehavesomemoreideasonhowtoincreasetheperformanceoftheintroducedmethods. The
+deep learning models can be increased in size. It also makes sense to take more data for training
+andtopossiblyperformsomekindofdataaugmentationbefore. Itwouldalsobegoodtobalance
+data via adding new overlapped segments, which could be achieved by data augmentation or an
+artiﬁcialaudiorecordingscombination.
+26 26Chapter 6
+Conclusion
+6.1 Summary
+Theintentofthisprojectwastocomeupwithandtestsuggestionstoimprovespeakerdiarization
+withoverlappedspeech.
+The ﬁrst stage of this project was a bibliographic research, as described in our previous ar-
+ticle (Diliberto, Pereira & Nikiforovskaja, 2021). This study of the state-of-the-art of diarization
+methods enabled us to comprehend the three main kinds of approaches: using signal processing,
+statistics, or more recently deep neural networks. Even if the new methods have good efﬁciency,
+theperformanceisreducedwithoverlappedspeech,andthereisstillspaceforimprovement.
+This part of the project aimed at running experiments to further analyze and understand how
+speakerdiarizationisimpactedbyoverlap,andﬁndingsuitableapproachestodealwithoverlapped
+speech.
+To determine the impact on performance of an overlapped speech, we tried to remove over-
+lapping segments and to run the system baseline. Unfortunately, the experiment did not perform
+as well as we expected. This can be explained by the fact that overlap has an inﬂuence even on
+non-overlap regions. Other causes for diarization errors can be found such as the presence of
+backgroundnoise.
+We investigated the impact of overlapped speech on 90 acoustic features to determine if they
+can be a cause for the loss of performance in speaker diarization. We identiﬁed six features that
+haveunexpectedvalueswhencomputedonoverlapsegments. Thiscanexplainthelowefﬁciency
+resultsforspeakerdiarization. Astheyaretrainedwithnon-overlapvalues,modelswon’tperform
+wellonspeechwithfeatureshavingthesedisparatevalues.
+We introduced the possibility of using x-vectors to train overlap detectors and implemented
+severalmodelstodothat. Wefoundoutthatclassiﬁcationinterpretationoftheproblemofspeech
+overlapdetectionallowstohavebetterresultsthanregressioninterpretation. Wealsoshowedthat
+with the increase of segments in context we obtain higher results with deep learning methods.
+Finally, we introduced several possible improvements, as we consider the usage of x-vectors as
+promising.
+In this report, we provided some suggestions about the improvement of speaker diarization
+with overlapped speech. We identiﬁed the reasons of the low performance of actual systems by
+exploring the results of overlap removal, and by computing and examining acoustic features. We
+ﬁnallybuiltaconvenientsystemofoverlapdetectionbycomparingdifferentdeepneuralnetwork
+models.
+276.2. Limitations Chapter6. Conclusion
+6.2 Limitations
+TheexperimentswereconductedontheDIHARDIIdataset,whichwasdesignedforthepurposes
+of the challenge on speaker diarization. Thus, the corpus is not representative of a real world
+situation,astheoverlapamounthasbeenchosenandthespeakernumberhasbeencontrolled.
+Theresultsofourexperimentsareimpactedbybackgroundnoise. Theoutcomecouldbebetter
+without any background noise; however, it is a normal phenomenon, which happens regularly in
+realworldsituations.
+Theperformanceofouroverlapdetectorisreducedbythesmallsizeofourdataset. Moreover,
+this dataset contains a relatively low percentage of overlap (see Table 3.1), which can prejudice
+thetrainingofthemodel.
+6.3 Future work
+Thesameexperimentsusingarealworldcorpusneedtobeexploredasanextensionofthiswork.
+Inaddition,usingtoolstoremovebackgroundnoiseasapreprocessingtaskmightbeuseful.
+For further development of overlap detectors, it is desirable to test our experiments on larger
+corporawithahigherpercentageofoverlap.
+Finally,theﬁndingsfromouracousticexperimentscanguidefutureworksonspeakerdiariza-
+tionwithoverlappedspeech.
+28 28Bibliography
+Andrei,V.,Cucu,H.&Burileanu,C.(2019)OverlappedSpeechDetectionandCompetingSpeaker
+Counting–HumansVersusDeepLearning.IEEEJournalofSelectedTopicsinSignalProcessing.13,
+850–862.
+Anguera, X., Bozonnet, S., Evans, N., Fredouille, C., Friedland, G. & Vinyals, O. (2012) Speaker
+Diarization: A Review of Recent Research. IEEE Transactions on Audio, Speech, and Language Pro-
+cessing.20(2),356–370.
+Aung,T.&Puts,D.(2020)Voicepitch:awindowintothecommunicationofsocialpower.Current
+OpinioninPsychology.33,154–161.
+Bullock, L., Bredin, H. & Garcia-Perera, L. P. (2020) Overlap-aware diarization: Resegmentation
+usingneuralend-to-endoverlappedspeechdetection.2020IEEEInternationalConferenceonAcous-
+tics,SpeechandSignalProcessing.Barcelona,Spain,7114–7118.
+Diliberto, J., Pereira, C. & Nikiforovskaja, A. (2021) Speaker diarization with overlapped speech;
+Bibliographicalreport.
+Eyben, F., Wöllmer, M. & Schuller, B. (2010) Opensmile: The Munich Versatile and Fast Open-
+SourceAudioFeatureExtractor.Proceedingsofthe18thACMInternationalConferenceonMultime-
+dia,1459–1462.
+Harris,C.R.,Millman,K.J.,Walt,S.J.vander,Gommers,R.,Virtanen,P.,Cournapeau,D.,Wieser,
+E., Taylor, J., Berg, S., Smith, N. J., Kern, R., Picus, M., Hoyer, S., Kerkwijk, M. H. van, Brett, M.,
+Haldane, A., Río, J. F. del, Wiebe, M., Peterson, P., Gérard-Marchant, P., Sheppard, K., Reddy, T.,
+Weckesser, W., Abbasi, H., Gohlke, C. & Oliphant, T. E. (2020) Array programming with NumPy.
+Nature.585(7825),357–362.
+Hunter, J. D. (2007) Matplotlib: A 2D graphics environment. Computing in Science & Engineering.
+9(3),90–95.
+Jadoul, Y., Thompson, B. & de Boer, B. (2018) Introducing Parselmouth: A Python interface to
+Praat.JournalofPhonetics.71,1–15.
+Krizhevsky,A.,Sutskever,I.&Hinton,G.E.(2012)Imagenetclassiﬁcationwithdeepconvolutional
+neuralnetworks.Advancesinneuralinformationprocessingsystems.25,1097–1105.
+Kunešová, M., Hrúz, M., Zajíc, Z. & Radová, V. (2019) Detection of overlapping speech for the
+purposesofspeakerdiarization.InternationalConferenceonSpeechandComputer,247–257.
+Málek, J. & Žd’ánsky, J. (2020) Voice-Activity and Overlapped Speech Detection Using x-Vectors.
+InternationalConferenceonText,Speech,andDialogue,366–376.
+McKinney, W. (2010) Data Structures for Statistical Computing in Python. Proceedings of the 9th
+PythoninScienceConference.Ed.byS.vanderWalt&J.Millman,56–61.
+Paszke,A.,Gross,S.,Massa,F.,Lerer,A.,Bradbury,J.,Chanan,G.,Killeen,T.,Lin,Z.,Gimelshein,
+N.,Antiga,L.,Desmaison,A.,Kopf,A.,Yang,E.,DeVito,Z.,Raison,M.,Tejani,A.,Chilamkurthy,S.,
+Steiner,B.,Fang,L.,Bai,J.&Chintala,S.(2019)PyTorch:AnImperativeStyle,High-Performance
+Deep Learning Library. Advances in Neural Information Processing Systems 32. Ed. by H. Wallach,
+H. Larochelle, A. Beygelzimer, F.d’Alché-Buc, E. Fox & R. Garnett. CurranAssociates, Inc., 8024–
+8035.
+29Bibliography Bibliography
+Pedregosa,F.,Varoquaux,G.,Gramfort,A.,Michel,V.,Thirion,B.,Grisel,O.,Blondel,M.,Pretten-
+hofer, P., Weiss, R., Dubourg, V., Vanderplas, J., Passos, A., Cournapeau, D., Brucher, M., Perrot,
+M.&Duchesnay,E.(2011)Scikit-learn:MachineLearninginPython.JournalofMachineLearning
+Research.12,2825–2830.
+Robert,J.,Webbie,M.,etal.(2018)Pydub.
+Rudnicky, A. I., Hauptmann, A. G. & Lee, K.-F. (1994) Survey of current speech technology. Com-
+municationsoftheACM.37(3),52–57.
+Ryant, N., Church, K., Cieri, C., Cristia, A., Du, J., Ganapathy, S. & Liberman, M. (2019a) Second
+dihardchallengeevaluationplan.LinguisticDataConsortium,Tech.Rep.
+—(2019b)TheSecondDIHARDDiarizationChallenge:Dataset,Task,andBaselines.20thAnnual
+ConferenceoftheInternationalSpeechCommunicationAssociation,978–982.
+Sadjadi, S. O. & Hansen, J. H. L. (2013) Unsupervised Speech Activity Detection Using Voicing
+MeasuresandPerceptualSpectralFlux.IEEESignalProcessingLetters.20(3),197–200.
+Sadjadi, S. O., Kheyrkhah, T., Tong, A., Greenberg, C. S., Reynolds, D. A., Singer, E., Mason, L. P.
+& Hernandez-Cordero, J. (2017) The 2016 NIST Speaker Recognition Evaluation. 18th Annual
+ConferenceoftheInternationalSpeechCommunicationAssociation,1353–1357.
+Sahidullah,M.etal.(2019)TheSpeedSubmissiontoDIHARDII:Contributions&LessonsLearned.
+arXivpreprintarXiv:1911.02388.
+Snyder, D., Garcia-Romero, D., Povey, D. & Khudanpur, S. (2017) Deep Neural Network Embed-
+dingsforText-IndependentSpeakerVeriﬁcation.18thAnnualConferenceoftheInternationalSpeech
+CommunicationAssociation,999–1003.
+Snyder, D., Garcia-Romero, D., Sell, G., Povey, D. & Khudanpur, S. (2018) X-vectors: Robust dnn
+embeddings for speaker recognition. 2018 IEEE International Conference on Acoustics, Speech and
+SignalProcessing,5329–5333.
+Tranter,S.E.&Reynolds,D.A.(2006)Anoverviewofautomaticspeakerdiarizationsystems.IEEE
+Transactionsonaudio,speech,andlanguageprocessing.14(5),1557–1565.
+Wierstorf,H.(2019)Audioﬁle.
+Yoshioka, T., Erdogan, H., Chen, Z., Xiao, X. & Alleva, F. (2018) Recognizing Overlapped Speech
+inMeetings:AMultichannelSeparationApproachUsingNeuralNetworks.19thAnnualConference
+oftheInternationalSpeechCommunicationAssociation,3038–3042.
+Zheng, C., Wang, C. & Jia, N. (2020) An Ensemble Model for Multi-Level Speech Emotion Recog-
+nition.AppliedSciences.10(1).
+30 30
