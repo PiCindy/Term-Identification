@@ -41,6 +41,6 @@ for file in glob.glob('articles/txt/*'):
     print(file)
     tokens_pos = []
     with open(file, 'r') as f:
-        text = f.read()
+        text = f.read().lower()
         text = text.replace('\n', ' ')
         candidates_extraction(text)
