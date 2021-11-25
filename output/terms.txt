@@ -1,1 +1,314 @@
-"speaker", "speech", "diarization", "system", "data", "speakers", "evaluation", "speaker diarization", "systems", "detection", "segments", "processing", "performance", "results", "error", "model", "features", "segment", "recognition", "signal", "audio", "reference", "overlap", "segmentation", "overlapped speech", "training", "information", "number", "time", "recordings", "clustering", "approach", "method", "der", "process", "development", "analysis", "methods", "models", "meeting", "output", "embeddings", "test", "rate", "set", "nist", "transcription", "task", "network", "feature", "research", "work", "challenge", "clusters", "overlapping speech", "recording", "signal processing", "diarization system", "input", "approaches", "asr", "regions", "length", "technology", "domain", "dataset", "acoustics", "error rate", "channel", "frame", "conditions", "change", "duration", "participants", "ratio", "level", "activity", "baseline", "cluster", "threshold", "metrics", "speech recognition", "source", "microphone", "distance", "noise", "neural network", "condition", "dihard", "language processing", "stage", "diarization systems", "labels", "seconds", "problem", "amount", "speech detection", "tasks", "layer", "dnn", "components", "target", "ground", "separation", "false alarm", "statistics", "truth", "reference speaker", "speaker recognition", "techniques", "networks", "likelihood", "parameters", "criterion", "speech segments", "improvement", "terms", "experiments", "order", "context", "x-vectors", "rich transcription", "transition", "probability", "track", "annual conference", "tracks", "x-vector", "hours", "domains", "errors", "speech activity", "microphones", "training data", "values", "text", "score", "evaluation metrics", "conversation", "words", "applications", "neural networks", "sequence", "algorithms", "word", "matrix", "hypothesis", "energy", "speaker labels", "speaker error", "plda", "result", "datasets", "frames", "speaker diarization system", "overlap detection", "architecture", "framework", "application", "loss", "communication", "impact", "augmentation", "map", "similarity", "voice", "activity detection", "cost", "system speaker", "missed speech", "factor", "identity", "single channel", "corpus", "scores", "metric", "variability", "speaker change", "automatic speech", "speaker embeddings", "silence", "region", "extraction", "distribution", "utterances", "measure", "transcripts", "speech separation", "delay", "rates", "layers", "channels", "music", "deep learning", "computer", "total", "resegmentation", "speech activity detection", "ground truth", "icsi", "speaker segmentation", "quality", "detector", "diarization error", "percentage", "development set", "decision", "log", "modeling", "steps", "labeling", "size", "type", "videos", "enhancement", "challenges", "representation", "speech signal", "characteristics", "normalization", "norm", "indexing", "prosodic features", "technique", "technologies", "peaks", "spoken language", "environment", "speaker diarization systems", "boundaries", "diarization error rate", "label", "frequency", "evaluation plan", "diarization results", "transcriptions", "precision", "acoustic features", "estimation", "jer", "point detection", "system output", "corpora", "speech communication", "component", "tag", "recall", "eer", "algorithm", "overlaps", "factor analysis", "category", "development data", "improvements", "decisions", "pitch", "attention", "setup", "outputs", "vector system", "distant microphone", "robust speaker", "references", "samples", "spectrum", "gender", "hypotheses", "data augmentation", "mapping", "telephone speech", "weight", "same speaker", "sd system", "presence", "test data", "minutes", "likelihood ratio", "recognition evaluation", "stddev", "accuracy", "inference", "jaccard error", "embedding", "speaker segments", "speech enhancement", "overlapping", "speech segment", "covariance", "dihard challenge", "miss", "annotation", "regression", "module", "baseline system", "multichannel", "error rates", "experiment", "change detection", "signals", "single speaker", "transition point", "extractor", "speaker time", "stopping criterion", "bic", "problems", "knowledge", "background noise", "utterance", "discriminant analysis", "average", "evaluation set", "diarization challenge", "based speaker"
+speaker diarization
+speaker
+speech
+diarization
+system
+data
+speakers
+evaluation
+systems
+detection
+segments
+processing
+performance
+results
+error
+model
+features
+segment
+recognition
+signal
+audio
+reference
+overlap
+segmentation
+overlapped speech
+training
+information
+number
+time
+recordings
+clustering
+approach
+method
+der
+process
+development
+analysis
+methods
+models
+meeting
+output
+embeddings
+test
+rate
+set
+nist
+transcription
+task
+network
+feature
+research
+work
+challenge
+clusters
+overlapping speech
+recording
+signal processing
+diarization system
+input
+approaches
+asr
+regions
+length
+technology
+domain
+dataset
+acoustics
+error rate
+channel
+frame
+conditions
+change
+duration
+participants
+ratio
+level
+activity
+baseline
+cluster
+threshold
+metrics
+speech recognition
+source
+microphone
+distance
+noise
+neural network
+condition
+dihard
+language processing
+stage
+diarization systems
+labels
+seconds
+problem
+amount
+speech detection
+tasks
+layer
+dnn
+components
+target
+ground
+separation
+false alarm
+statistics
+truth
+reference speaker
+speaker recognition
+techniques
+networks
+likelihood
+parameters
+criterion
+speech segments
+improvement
+terms
+experiments
+order
+context
+x-vectors
+rich transcription
+transition
+probability
+track
+annual conference
+tracks
+x-vector
+hours
+domains
+errors
+speech activity
+microphones
+training data
+values
+text
+score
+evaluation metrics
+conversation
+words
+applications
+neural networks
+sequence
+algorithms
+word
+matrix
+hypothesis
+energy
+speaker labels
+speaker error
+plda
+result
+datasets
+frames
+speaker diarization system
+overlap detection
+architecture
+framework
+application
+loss
+communication
+impact
+augmentation
+map
+similarity
+voice
+activity detection
+cost
+system speaker
+missed speech
+factor
+identity
+single channel
+corpus
+scores
+metric
+variability
+speaker change
+automatic speech
+speaker embeddings
+silence
+region
+extraction
+distribution
+utterances
+measure
+transcripts
+speech separation
+delay
+rates
+layers
+channels
+music
+deep learning
+computer
+total
+resegmentation
+speech activity detection
+ground truth
+icsi
+speaker segmentation
+quality
+detector
+diarization error
+percentage
+development set
+decision
+log
+modeling
+steps
+labeling
+size
+type
+videos
+enhancement
+challenges
+representation
+speech signal
+characteristics
+normalization
+norm
+indexing
+prosodic features
+technique
+technologies
+peaks
+spoken language
+environment
+speaker diarization systems
+boundaries
+diarization error rate
+label
+frequency
+evaluation plan
+diarization results
+transcriptions
+precision
+acoustic features
+estimation
+jer
+point detection
+system output
+corpora
+speech communication
+component
+tag
+recall
+eer
+algorithm
+overlaps
+factor analysis
+category
+development data
+improvements
+decisions
+pitch
+attention
+setup
+outputs
+vector system
+distant microphone
+robust speaker
+references
+samples
+spectrum
+gender
+hypotheses
+data augmentation
+mapping
+telephone speech
+weight
+same speaker
+sd system
+presence
+test data
+minutes
+likelihood ratio
+recognition evaluation
+stddev
+accuracy
+inference
+jaccard error
+embedding
+speaker segments
+speech enhancement
+overlapping
+speech segment
+covariance
+dihard challenge
+miss
+annotation
+regression
+module
+baseline system
+multichannel
+error rates
+experiment
+change detection
+signals
+single speaker
+transition point
+extractor
+speaker time
+stopping criterion
+bic
+problems
+knowledge
+background noise
+utterance
+discriminant analysis
+average
+evaluation set
+diarization challenge
+based speaker

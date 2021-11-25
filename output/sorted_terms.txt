@@ -1,0 +1,186 @@
+speaker diarization system
+speech activity detection
+speaker diarization systems
+diarization error rate
+speaker diarization
+overlapped speech
+overlapping speech
+signal processing
+error rate
+speech recognition
+neural network
+language processing
+diarization systems
+speech detection
+false alarm
+reference speaker
+speech segments
+rich transcription
+annual conference
+speech activity
+training data
+evaluation metrics
+neural networks
+speaker labels
+overlap detection
+activity detection
+system speaker
+single channel
+speaker change
+speaker embeddings
+speech separation
+deep learning
+ground truth
+speaker segmentation
+diarization error
+development set
+speech signal
+prosodic features
+spoken language
+evaluation plan
+acoustic features
+point detection
+speech communication
+factor analysis
+development data
+vector system
+robust speaker
+data augmentation
+telephone speech
+same speaker
+test data
+likelihood ratio
+jaccard error
+speaker segments
+speech segment
+dihard challenge
+baseline system
+error rates
+change detection
+single speaker
+speaker time
+background noise
+discriminant analysis
+evaluation set
+based speaker
+speaker
+diarization
+data
+evaluation
+detection
+processing
+results
+model
+segment
+signal
+reference
+segmentation
+information
+time
+clustering
+method
+process
+analysis
+models
+output
+test
+set
+transcription
+network
+research
+challenge
+recording
+input
+asr
+length
+domain
+acoustics
+frame
+change
+participants
+level
+baseline
+threshold
+source
+distance
+condition
+stage
+seconds
+amount
+layer
+components
+ground
+statistics
+techniques
+likelihood
+criterion
+terms
+order
+x-vectors
+probability
+tracks
+hours
+errors
+values
+score
+words
+sequence
+word
+hypothesis
+plda
+datasets
+architecture
+application
+communication
+augmentation
+similarity
+cost
+factor
+corpus
+metric
+silence
+extraction
+utterances
+transcripts
+rates
+channels
+computer
+resegmentation
+quality
+percentage
+log
+steps
+size
+videos
+challenges
+characteristics
+norm
+technique
+peaks
+boundaries
+frequency
+transcriptions
+estimation
+corpora
+tag
+eer
+overlaps
+improvements
+pitch
+setup
+references
+spectrum
+hypotheses
+weight
+presence
+stddev
+inference
+overlapping
+miss
+regression
+multichannel
+signals
+extractor
+bic
+knowledge
+average
