@@ -1,5 +1,9 @@
 import spacy
 import glob
+from spacy.matcher import Matcher
+
+
+nlp = spacy.load("en_core_web_sm")
 
 def pos_tagger(text: str):
     ''' Preprocess a text using spaCy part-of-speech tagger
@@ -16,11 +20,27 @@ def pos_tagger(text: str):
             tokens_pos.append((token.text, token.lemma_, token.pos))
     return tokens_pos
 
-open("output/tokens_pos.txt", 'w').close()
+def candidates_extraction(text: str):
+    doc = nlp(text)
+    matcher = Matcher(nlp.vocab)
+    patterns = [[{'POS':'NOUN'}],
+               [{'POS':'VERB'}, {'POS':'NOUN'}],
+               [{'POS':'ADJ'}, {'POS':'NOUN'}],
+               [{"POS": "NOUN"}, {"POS": "NOUN"}],
+               [{'POS':'NOUN'}, {'POS':'NOUN'}, {'POS':'NOUN'}]]
+    matcher.add("Found", patterns)
+    matches = matcher(doc)
+    with open("output/candidates.txt", 'a') as f:
+        for element in matches:
+            _, beg, end = element
+            line = str(doc[beg:end])+'\n'
+            f.write(line)
+
+open("output/candidates.txt", 'w').close()
 for file in glob.glob('articles/txt/*'):
     print(file)
     tokens_pos = []
     with open(file, 'r') as f:
         text = f.read()
         text = text.replace('\n', ' ')
-        tokens_pos.append(pos_tagger(text))
+        candidates_extraction(text)
