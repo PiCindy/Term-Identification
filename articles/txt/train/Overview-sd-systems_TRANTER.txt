@@ -6528,4 +6528,1310 @@ Speech, Signal Process., vol. II, Hong Kong, China, Apr. 2003, pp. cation and ve
 49–52. eral problems in signal classiﬁcation and clustering.
 [46] L. Canseco-Rodriguez, L. Lamel, and J.-L. Gauvain, “Speaker Diariza- Douglas is a Senior Member of IEEE Signal Processing Society and a co-
 tion from Speech Transcripts,” in Proc. Int. Conf. Spoken Language founder and member of the steering committee of the Odyssey Speaker Recog-
+Process., Jeju Island, Korea, Oct. 2004, pp. 1272–1275. nition workshop.IEEE TRANSACTIONS ON AUDIO, SPEECH, AND LANGUAGE PROCESSING, VOL. 14, NO. 5, SEPTEMBER 2006 1557
+An Overview of Automatic Speaker
+Diarization Systems
+Sue E. Tranter, Member, IEEE and Douglas A. Reynolds, Senior Member, IEEE
+Abstract—Audio diarization is the process of annotating an
+input audio channel with information that attributes (possibly
+overlapping) temporal regions of signal energy to their speciﬁc
+sources. These sources can include particular speakers, music,
+background noise sources, and other signal source/channel char-
+acteristics. Diarization can be used for helping speech recognition,
+facilitating the searching and indexing of audio archives, and
+increasing the richness of automatic transcriptions, making them
+more readable. In this paper, we provide an overview of the
+approaches currently used in a key area of audio diarization,
+Fig. 1. Example of audio diarization on broadcast news. Annotated
+namely speaker diarization, and discuss their relative merits phenomena may include different structural regions such as commercials,
+and limitations. Performances using the different techniques are different acoustic events such as music or noise, and different speakers. (Color
+compared within the framework of the speaker diarization task in version available online at http://ieeexplore.ieee.org.)
+the DARPA EARS Rich Transcription evaluations. We also look at
+how the techniques are being introduced into real broadcast news
+systems and their portability to other domains and tasks such as In general, a spoken document is a single-channel recording
+meetings and speaker veriﬁcation. that consists of multiple audio sources. Audio sources may be
+Index Terms—Speaker diarization, speaker segmentation and different speakers, music segments, types of noise, etc. For
+clustering. example, a broadcast news program consists of speech from
+different speakers as well as music segments, commercials, and
+sounds used to segue into reports (see Fig. 1). Audio diarization
+I. INTRODUCTION
+is deﬁned as the task of marking and categorising the audio
+T HE continually decreasing cost of and increasing ac- sources within a spoken document. The types and details of
+cess to processing power, storage capacity, and network the audio sources are application speciﬁc. At the simplest,
+bandwidth is facilitating the amassing of large volumes of diarization is speech versus nonspeech, where nonspeech is
+audio, including broadcasts, voice mails, meetings and other a general class consisting of music, silence, noise, etc., that
+“spoken documents.” There is a growing need to apply au- need not be broken out by type. A more complicated diariza-
+tomatic human language technologies to allow efﬁcient and tion would further mark where speaker changes occur in the
+effective searching, indexing, and accessing of these informa- detected speech and associate segments of speech (a segment is
+tion sources. Extracting the words being spoken in the audio a section of speech bounded by nonspeech or speaker change
+using speech recognition technology provides a sound base points) coming from the same speaker. This is usually referred
+for these tasks, but the transcripts are often hard to read and to as speaker diarization (a.k.a. “who spoke when”) or speaker
+do not capture all the information contained within the audio. segmentation and clustering and is the focus of most current
+Other technologies are needed to extract meta-data which can research efforts in audio diarization. This paper discusses the
+make the transcripts more readable and provide context and techniques commonly used for speaker diarization, which
+information beyond a simple word sequence. Speaker turns and allows searching audio by speaker, makes transcripts easier
+sentence boundaries are examples of such meta-data, both of to read, and provides information which could be used within
+which help provide a richer transcription of the audio, making speaker adaptation in speech recognition systems. Other audio
+transcripts more readable and potentially helping with other diarization tasks, such as explicitly detecting the presence of
+tasks such as summarization, parsing, or machine translation. music (e.g., [2]), helping ﬁnd the structure of a broadcast pro-
+gram (e.g., [3]), or locating commercials to eliminate unwanted
+Manuscript received October 11, 2005; revised April 25, 2006. This work audio (e.g., [4]), also have many potential beneﬁts but fall
+was supported by the Defense Advanced Research Projects Agency under Grant outside the scope of this paper.
+MDA972-02-1-0013 and in part by Air Force Contract FA8721-05-C-0002.
+There are three primary domains which have been used for
+Opinions, interpretations, conclusions, and recommendations are those of the
+authors and are not necessarily endorsed by the U.S. Government. This paper speaker diarization research and development: broadcast news
+is based on the ICASSP 2005 HLT special session paper (Philadelphia, PA). audio, recorded meetings, and telephone conversations. The
+The associate editor coordinating the review of this manuscript and approving
+data from these domains differs in the quality of the recordings
+it for publication was Dr. John Makhoul.
+S. Tranter is with the Engineering Department, Cambridge University, Cam- (bandwidth, microphones, noise), the amount and types of
+bridge CB2 1PZ, U.K. (e-mail: sej28@eng.cam.ac.uk). nonspeech sources, the number of speakers, the durations and
+D. Reynolds is with the Lincoln Laboratory, Massachusetts Institute of Tech-
+sequencing of speaker turns, and the style/spontaneity of the
+nology, Lexington, MA 02420-9185 USA (e-mail: dar@ll.mit.edu).
+Digital Object Identiﬁer 10.1109/TASL.2006.878256 speech. Each domain presents unique diarization challenges,
+1558-7916/$20.00 © 2006 IEEE1558 IEEE TRANSACTIONS ON AUDIO, SPEECH, AND LANGUAGE PROCESSING, VOL. 14, NO. 5, SEPTEMBER 2006
+although often high-level system techniques tend to generalize
+well over several domains [5], [6]. The NIST Rich Transcrip-
+tion speaker evaluations [7] have primarily used both broadcast
+news and meeting data, whereas the NIST speaker recognition
+evaluations [8] have primarily used conversational telephone
+speech with summed sides (a.k.a two-wire).
+The diarization task is also deﬁned by the amount of speciﬁc
+prior knowledge allowed. There may be speciﬁc prior knowl-
+edge via example speech from the speakers in the audio, such
+as in a recording of a regular staff meeting. The task then be-
+comes more like speaker detection or tracking tasks [9]. Spe-
+ciﬁc prior knowledge could also be example speech from just a
+few of the speakers such as common anchors on particular news
+stations, or knowledge of the number of speakers in the audio,
+perhaps for a teleconference over a known number of lines, or
+maybe the structure of the audio recording (e.g., music followed
+Fig. 2. Prototypical diarization system. Most diarization systems have
+by story). Most of this prior knowledge has been used to improve
+components to perform speech detection, gender and/or bandwidth
+diarization performance although not all of it has proved beneﬁ- segmentation, speaker segmentation, speaker clustering, and ﬁnal
+cial within current systems. [10]. However, for a more portable resegmentation or boundary reﬁnement.
+speaker diarization system, it is desired to operate without any
+speciﬁc prior knowledge of the audio. This is the general task speech/nonspeech models such as in [11], while [12] is similar
+deﬁnition used in the Rich Transcription diarization evaluations, but four speech models are used for the possible gender/band-
+where only the broadcaster and date of broadcast are known in width combinations. Noise and music are explicitly modeled in
+addition to having the audio data and we adopt this scenario [13]–[15] which have classes for speech, music, noise, speech
+when discussing speaker diarization systems. music, and speech noise, while [16] and [17] use wideband
+The aim of this paper is to provide an overview of current speech, narrowband speech, music and speech music. The
+speaker diarization approaches and to discuss performance and extra speech xx models are used to help minimize the false
+potential applications. In Section II, we outline the general rejection of speech occurring in the presence of music or noise,
+framework of diarization systems and discuss different im- and this data is subsequently reclassiﬁed as speech.The classes
+plementations of the key components within current systems. can also be broken down further, as in [18], which has eight
+Performance is measured in terms of the diarization error rate models in total, ﬁve for nonspeech (music, laughter, breath,
+(DER) using the DARPA EARS Rich Transcription Fall 2004 lip-smack, and silence) and three for speech (vowels and nasals,
+(RT-04F) speaker diarization evaluation data. Section IV looks fricatives, and obstruents).
+at the use of these methods in real applications and the future When operating on unsegmented audio, Viterbi segmenta-
+directions for diarization research. tion, (single pass or iterative with optional adaptation) using the
+models is employed to identify speech regions. If an initial seg-
+II. DIARIZATION SYSTEM FRAMEWORK mentation is already available (for example, the ordering of the
+key components may allow change point detection before non-
+In this section, we review the key subtasks used to build cur-
+speech removal), each segment is individually classiﬁed. Min-
+rent speaker diarization systems. Most diarization systems per-
+imum length constraints [11], [18] and heuristic smoothing rules
+form these tasks separately, although it is possible to perform
+[12], [15] may also be applied. An alternative approach which
+some of the stages jointly (for example speaker segmentation
+does not use Viterbi decoding, but instead a best model search
+and clustering) and the ordering of the stages often varies from
+with morphological rules is described in [19].
+system to system. A prototypical combination of the key com-
+Silence can be removed in this early stage, using a phone rec-
+ponents of a diarization system is shown in Fig. 2. For each task,
+ognizer (as in [17]) or energy constraint, or in a ﬁnal stage pro-
+we provide a brief description of the common approaches em-
+cessing using a word recognizer (as in [14]) or energy constraint
+ployed and some of the issues in applying them.
+(as in the MIT system for RT-03 [20]). Regions which contain
+commercials and thus are of no interest for the ﬁnal output can
+A. Speech Detection
+also be automatically detected and removed at this early stage
+The aim of this step is to ﬁnd the regions of speech in the [4], [20]
+audio stream. Depending on the domain data being used, non- For broadcast news audio, speech detection performance is
+speech regions to be discarded can consist of many acoustic phe- typically less than 1% miss (speech in reference but not in the
+nomena such as silence, music, room noise, background noise, hypothesis) and 1%–2% false alarm (speech in the hypothesis
+or cross-talk. but not in the reference), whereas for meeting audio, the ﬁgures
+The general approach used is maximum-likelihood classi- are typically around 1% higher for both. When the speech detec-
+ﬁcation with Gaussian mixture models (GMMs) trained on tion phase is run early in a system, or the output is required for
+labeled training data, although different class models can be further processing such as for transcription, it is more impor-
+used, such as multistate HMMs. The simplest system uses just tant to minimize speech miss than false alarm rates, since theTRANTER AND REYNOLDS: OVERVIEW OF AUTOMATIC SPEAKER DIARISATION SYSTEMS 1559
+former are unrecoverable errors in most systems. However, the distance metric. The peaks in the distance function are then
+DER, used to evaluate speaker diarization performance, treats found and deﬁne the change points if their absolute value ex-
+both forms of error equally. ceeds a predetermined threshold chosen on development data.
+For telephone audio, typically some form of standard en- Smoothing the distance distribution or eliminating the smaller
+ergy/spectrum-based speech activity detection is used since of neighboring peaks within a certain minimum duration pre-
+nonspeech tends to be silence or noise sources, although the vents the system overgenerating change points at true bound-
+GMM approach has also been successful in this domain with aries. Single Gaussians are generally preferred to GMMs due to
+single-channel [21] or cross-channel [22] classes. For meeting the simpliﬁed distance calculations. Typical window sizes are
+audio, the nonspeech can be from a variety of noise sources, 1–2 or 2–5 s when using a diagonal or full covariance Gaussian,
+like paper shufﬂing, coughing, laughing, etc. and energy-based respectively. As with BIC, the window length constrains the de-
+methods do not currently work well for distant microphones tection of short turns.
+[23], [24], so using a simple pretrained speech/nonspeech GMM Since the change point detection often only provides an initial
+is generally preferred [6], [25], [23]. An interesting alternative base segmentation for diarization systems, which will be clus-
+uses a GMM, built on the normalized energy coefﬁcients of tered and often resegmented later, being able to run the change
+the test data, to determine how much nonspeech to reject [24], point detection very fast (typically less than 0.01 for a di-
+while preliminary work in [6] shows potential for the future for agonal covariance system) is often more important than any per-
+a new energy-based method. When supported, multiple channel formance degradation. In fact, [11] and [19] found no signiﬁcant
+meeting audio can be used to help speech activity detection performance degradation when using a simple initial uniform
+[26]. This problem is felt to be so important in the meetings segmentation within their systems.
+domain that a separate evaluation for speech activity detection Both change detection techniques require a detection
+was introduced in the spring 2005 Rich Transcription meeting threshold to be empirically tuned for changes in audio type and
+evaluation [27]. features. Tuning the change detector is a tradeoff between the
+desires to have long, pure segments to aid in initializing the
+B. Change Detection clustering stage, and minimizing missed change points which
+The aim of this step is to ﬁnd points in the audio stream produce contaminations in the clustering.
+likely to be change points between audio sources. If the input Alternatively, or in addition, a word or phone decoding step
+to this stage is the unsegmented audio stream, then the change with heuristic rules may be used to help ﬁnd putative speaker
+detection looks for both speaker and speech/nonspeech change change points such as in [18] and the Cambridge 1998–2003
+points. If a speech detector or gender/bandwidth classiﬁer has systems [16], [20]. However, this approach can over-segment
+been run ﬁrst, then the change detector looks for speaker change the speech data and requires some additional merging or clus-
+points within each speech segment. tering to form viable speech segments, and can miss boundaries
+Two main approaches have been used for change detection. in fast speaker interchanges if relying on the presence of silence
+They both involve looking at adjacent windows of data and or gender changes between speakers.
+calculating a distance metric between the two, then deciding
+C. Gender/Bandwidth Classiﬁcation
+whether the windows originate from the same or a different
+source. The differences between them lie in the choice of dis- The aim of this stage is to partition the segments into
+tance metric and thresholding decisions. common groupings of gender (male or female) and bandwidth
+The ﬁrst general approach used for change detection, used (low-bandwidth: narrow-band/telephone or high-bandwidth:
+in [15], is a variation on the Bayesian information criterion studio). This is done to reduce the load on subsequent clus-
+(BIC) technique introduced in [28]. This technique searches for tering, provide more ﬂexibility in clustering settings (for
+change points within a window using a penalized likelihood example female speakers may have different optimal parameter
+ratio test of whether the data in the window is better modeled settings to male speakers), and supply more side information
+by a single distribution (no change point) or two different dis- about the speakers in the ﬁnal output. If the partitioning can
+tributions (change point). If a change is found, the window is be done very accurately and assuming no speaker appears in
+reset to the change point and the search restarted. If no change the same broadcast in different classes (for example both in
+point is found, the window is increased and the search is redone. the studio and via a prerecorded ﬁeld report) then performing
+Some of the issues in applying the BIC change detector are as this partitioning early on in the system can also help improve
+follows. 1) It has high miss rates on detecting short turns ( 2–5 performance while reducing the computational load [33]. The
+s), so can be problematic to use on fast interchange speech like potential drawback in this partitioning stage, however, is if
+conversations. 2) The full search implementation is computa- a subset of a speaker’s segments is misclassiﬁed the errors
+tionally expensive (order ), so most systems employ some can be unrecoverable, although it is possible to allow these
+form of computation reductions (e.g., [29]). classiﬁcations to change in a subsequent resegmentation stage,
+A second technique used ﬁrst in [30] and later in [13], [17], such as in [19].
+and [31] uses ﬁxed-length windows and represents each window Classiﬁcation for both gender and bandwidth is typically
+by a Gaussian and the distance between them by the Gaussian done using maximum-likelihood classiﬁcation with GMMs
+Divergence (symmetric KL-2 distance). The step-by-step im- trained on labeled training data. Either two classiﬁers are run
+plementation in [19] and system for telephone audio in [32] (one for gender and one for bandwidth) or joint models for
+are similar but use the generalized log likelihood ratio as the gender and bandwidth are used. This can be done either in1560 IEEE TRANSACTIONS ON AUDIO, SPEECH, AND LANGUAGE PROCESSING, VOL. 14, NO. 5, SEPTEMBER 2006
+conjunction with the speech/nonspeech detection process or parent cluster in the penalty factor represents a “local”
+after the initial segmentation. Bandwidth classiﬁcation can also BIC decision, i.e., just considering the clusters being combined.
+be done using a test on the ratio of spectral energy above and This has been shown to perform better than the corresponding
+below 4 kHz. An alternative method of gender classiﬁcation, “global” BIC implementation which uses the number of frames
+used in [17], aligns the word recognition output of a fast ASR in the whole show instead [20], [31], [36].
+system with gender dependent models and assigns the most Slight variations of this technique have also been used. For
+likely gender to each segment. This has a high accuracy but is example, the system described in [18] uses essentially the local
+unnecessarily computationally expensive if a speech recogni- BIC score (with the number of parameters term incorporated
+tion output is not already available and segments ideally should within the penalty weight), but sets different thresholds for po-
+be of a reasonable size (typically between 1 and 30 s). Gender tential boundaries occurring during speech or nonspeech, moti-
+classiﬁcation error rates are around 1%–2% and bandwidth vated by an observation that most true speaker change points
+classiﬁcation error rates are around 3%–5% for broadcast news occurred during nonspeech regions. A further example, used
+audio. in the system described in [11] and [37] removes the need for
+tuning the penalty weight on development data, by ensuring
+D. Clustering that the number of parameters in the merged and separate
+distributions are equal, although the base number of Gaussians
+The purpose of this stage is to associate or cluster segments
+and, hence, number of free parameters needs to be chosen care-
+from the same speaker together. The clustering ideally produces
+fully for optimal effect. Alternatives to the penalty term, such as
+one cluster for each speaker in the audio with all segments from
+using a constant [38], the weighted sum of the number of clus-
+a given speaker in a single cluster. The predominant approach
+ters and number of segments [13], or a penalized determinant
+used in diarization systems is hierarchical, agglomerative clus-
+of the within-cluster dispersion matrix [34], [39] have also had
+tering with a BIC based stopping criterion [28] consisting of the
+moderate success, but the BIC method has generally superseded
+following steps:
+these. Adding a Viterbi resegmentation between multiple itera-
+0) initialize leaf clusters of tree with speech segments;
+tions of clustering [31] or within a single iteration [11] has also
+1) compute pair-wise distances between each cluster;
+been used to increase performance at the penalty of increased
+2) merge closest clusters;
+computational cost.
+3) update distances of remaining clusters to new cluster;
+An alternative approach described in [40] uses a Euclidean
+4) iterate steps 1)–3) until stopping criterion is met.
+distance between MAP-adapted GMMs and notes this is highly
+The clusters are generally represented by a single full covari-
+correlated with a Monte Carlo estimation of the Gaussian Di-
+ance Gaussian [5], [12], [15], [17], [31], [34], but GMMs have
+vergence (symmetric KL-2) distance while also being an upper
+also been used [11], [19], [35], sometimes being built using
+bound to it. The stopping criterion uses a ﬁxed threshold, chosen
+mean-only MAP adaptation of a GMM of the entire test ﬁle
+on the development data, on the distance metric. The perfor-
+to each cluster for increased robustness. The standard distance
+mance is comparable to the more conventional BIC method.
+metric between clusters is the generalized likelihood ratio
+A further method described in [15] uses “proxy” speakers.
+(GLR). It is possible to use other representations or distance
+A set of proxy models is applied to map segments into a vector
+metrics, but these have been found the most successful within
+space, then a Euclidean distance metric and an ad hoc occu-
+the BIC clustering framework. The stopping criterion compares
+pancy stopping criterion are used, but the overall clustering
+the BIC statistic from the two clusters being considered, and
+framework remains the same. The proxy models can be built
+, with that of the parent cluster, , should they be merged, the
+by adapting a universal background model (UBM) such as a
+formulation being for the full covariance Gaussian case
+128 mixture GMM to the test data segments themselves, thus
+making the system portable to different shows and domains
+while still giving consistent performance gain over the BIC
+method.
+Regardless of the clustering employed, the stopping crite-
+rion is critical to good performance and depends on how the
+output is to be used. Under-clustering fragments speaker data
+over several clusters, while over-clustering produces contam-
+inated clusters containing speech from several speakers. For
+where is the number of free parameters, the number of indexing information by speaker, both are suboptimal. How-
+frames, the covariance matrix, and the dimension of the ever, when using cluster output to assist in speaker adaptation
+feature vector. (see, e.g., [20] for a more complete derivation.) of speech recognition models, under-clustering may be suit-
+If the pair of clusters are best described by a single full covari- able when a speaker occurs in multiple acoustic environments
+ance Gaussian, the will be low, whereas if there are two and over-clustering may be advantageous in aggregating speech
+separate distributions, implying two speakers, the will be from similar speakers or acoustic environments.
+high. For each step, the pair of clusters with the lowest is
+E. Joint Segmentation and Clustering
+merged and the statistics are recalculated. The process is gener-
+ally stopped when the lowest is greater than a speciﬁed An alternative approach to running segmentation and clus-
+threshold, usually 0. The use of the number of frames in the tering stages separately is to use an integrated scheme. This wasTRANTER AND REYNOLDS: OVERVIEW OF AUTOMATIC SPEAKER DIARISATION SYSTEMS 1561
+ﬁrst done in [13] by employing a Viterbi decode between iter- mean and variance normalization [15] and feature warping [44]
+ations of agglomerative clustering, but an initial segmentation using a sliding window of 3 s [14], [17]. The latter method had
+stage was still required. A more recent completely integrated previously been found by one study to be more effective than
+scheme, based on an evolutive-HMM (E-HMM) where detected other standard normalization techniques on a speaker veriﬁca-
+speakers help inﬂuence both the detection of other speakers and tion task on cellular data [45]. In [17], it was found the fea-
+the speaker boundaries, was introduced in [41] and developed ture normalization was necessary to get signiﬁcant gain from
+in [19] and [42]. The recording is represented by an ergodic the cluster recombination technique.
+HMM in which each state represents a speaker and the tran- When the clusters are merged, a new speaker model can be
+sitions model the changes between speakers. The initial HMM trained with the combined data and distances updated (as in [14]
+contains only one state and represents all of the data. In each it- and [17]) or standard clustering rules can be used with a static
+eration, a short speech segment assumed to come from a nonde- distance matrix (as in [15]). This recombination can be viewed
+tected speaker is selected and used to build a new speaker model as fusing intra- and inter- [43] audio ﬁle speaker clustering tech-
+by Bayesian adaptation of a UBM. A state is then added to the niques. On the RT-04F evaluation it was found that this stage
+HMM to reﬂect this new speaker, and the transitions probabili- signiﬁcantly improves performance, with further improvements
+ties are modiﬁed accordingly. A new segmentation is then gen- being obtained subsequently by using a variable prior iterative
+erated from a Viterbi decode of the data with the new HMM, and MAP approach for adapting the UBMs, and building new UBMs
+each model is adapted using the new segmentation. This reseg- including all of the test data [17].
+mentation phase is repeated until the speaker labels no longer
+change. The process of adding new speakers is repeated until G. Resegmentation
+there is no gain in terms of comparable likelihood or there is no
+The last stage found in many diarization systems is a reseg-
+data left to form a new speaker. The main advantages of this in-
+mentation of the audio via Viterbi decoding (with or without it-
+tegrated approach are to use all the information at each step and
+erations) using the ﬁnal cluster models and nonspeech models.
+to allow the use of speaker recognition-based techniques, like
+The purpose of this stage is to reﬁne the original segment bound-
+Bayesian adaptation of the speaker models from a UBM.
+aries and/or to ﬁll in short segments that may have been removed
+for more robust processing in the clustering stage. Filtering the
+F. Cluster Recombination
+segment boundaries using a word or phone recognizer output
+In this relatively recent approach [31], state-of-the-art can also help reduce the false alarm component of the error rate
+speaker recognition modeling and matching techniques are [31].
+used as a secondary stage for combining clusters. The signal
+processing and modeling used in the clustering stage of Sec-
+H. Finding Identities
+tion II-D are usually simple: no channel compensation, such as
+RASTA, since we wish to take advantage of common channel Although current diarization systems are only evaluated using
+characteristics among a speaker’s segments, and limited param- “relative” speaker labels (such as “spkr1”), it is often possible to
+eter distribution models, since the model needs to work with ﬁnd the true identities of the speakers (such as “Ted Koppel”).
+small amounts of data in the clusters at the start. This can be achieved by a variety of methods, such as building
+With cluster recombination, clustering is run to under-cluster speaker models for people who are likely to be in the news
+the audio but still produce clusters with a reasonable amount of broadcasts (such as prominent politicians or main news anchors
+speech s . A UBM is built on training data to represent and reporters) and including these models in the speaker clus-
+general speakers. Both static and delta coefﬁcients are used and tering stage or running speaker-tracking systems.
+feature normalization is applied to help reduce the effect of the An alternative approach, introduced in [46], uses linguistic in-
+acoustic environment. Maximum a posteriori (MAP) adaptation formation contained within the transcriptions to predict the pre-
+(usually mean-only) is then applied on each cluster from the vious, current, or next speaker. Rules are deﬁned based on cat-
+UBM to form a single model per cluster. The cross likelihood egory and word N-grams chosen from the training data, and are
+ratio (CLR) between any two given clusters is deﬁned [31], [43] then applied sequentially on the test data until the speaker names
+have been found. Blocking rules are used to stop rules ﬁring in
+certain contexts, for example, the sequence “[name] reports ”
+assigns the next speaker to be [name] unless is the word “that.”
+An extension of this system described in [47], learns many rules
+where is the average likelihood per frame of data and their associated probability of being correct automatically
+given the model . The pair of clusters with the highest CLR from the training data and then applies these simultaneously on
+is merged and a new model is created. The process is repeated the test data using probabilistic combination. Using automatic
+until the highest CLR is below a predeﬁned threshold chosen transcriptions and automatically found speaker turns naturally
+from development data. Because of the computational load at degrades performance but potentially 85% of the time can be
+this stage, each gender/bandwidth combination is usually pro- correctly assigned to the true speaker identity using this method.
+cessed separately, which also allows more appropriate UBMs to Although primarily used for identifying the speaker names
+be used for each case. given a set of speaker clusters, this technique can associate the
+Different types of feature normalization have been used with same name for more than one input cluster and, therefore, could
+this process, namely RASTA-ﬁltered cepstra with 10-s feature be thought of as a high-level cluster-combination stage.1562 IEEE TRANSACTIONS ON AUDIO, SPEECH, AND LANGUAGE PROCESSING, VOL. 14, NO. 5, SEPTEMBER 2006
+I. Combining Different Diarization Methods then scored against reference “ground-truth” speaker segmenta-
+tion which is generated using the rules given in [52]. Since the
+Combining methods used in different diarization systems
+hypothesis speaker labels are relative, they must be matched ap-
+could potentially improve performance over the best single
+propriately to the true speaker names in the reference. To accom-
+diarization system. It has been shown that the word error rate
+plish this, a one-to-one mapping of the reference speaker IDs to
+(WER) of an automatic speech recognizer can be consistently
+the hypothesis speaker IDs is performed so as to maximize the
+reduced when combining multiple segmentations even if the in-
+total overlap of the reference and (corresponding) mapped hy-
+dividual segmentations themselves do not offer state-of-the-art
+pothesis speakers. Speaker diarization performance is then ex-
+performance in either DER or resulting WER [48]. Indeed, it
+pressed in terms of the miss (speaker in reference but not in
+seems that diversity between the segmentation methods is just
+hypothesis), false alarm (speaker in hypothesis but not in refer-
+as important as the segmentation quality when being combined.
+ence), and speaker-error (mapped reference speaker is not the
+It is expected that gains in DER are also possible by combining
+same as the hypothesized speaker) rates. The overall DER is the
+different diarization modules or systems.
+sum of these three components. A complete description of the
+Several methods of combining aspects of different diariza-
+evaluation measure and scoring software implementing it can be
+tion systems have been tried, for example the “hybridization”
+found at http://nist.gov/speech/tests/rt/rt2004/fall.
+or “piped” CLIPS/LIA systems of [35] and [49] and the “plug
+It should be noted that this measure is time-weighted, so the
+and play” CUED/MIT-LL system of [20] which both combine
+DER is primarily driven by (relatively few) loquacious speakers
+components of different systems together. A more integrated
+and it is, therefore, more important to get the main speakers
+merging method is described in [49], while [35] describes a way
+complete and correct than to accurately ﬁnd speakers who do not
+of using the 2002 NIST speaker segmentation error metric to
+speak much. This scenario models some tasks, such as tracking
+ﬁnd regions in two inputs which agree and then uses these to
+anchor speakers in broadcast news for text summarization, but
+train potentially more accurate speaker models. These systems
+there may be other tasks (such as for speaker adaptation within
+generally produce performance gains, but tend to place some re-
+automatic transcription, or ascertaining the opinions of several
+striction on the systems being combined, such as the required ar-
+speakers in a quick debate) for which it is less appropriate. The
+chitecture or equalizing the number of speakers. An alternative
+same formulation can be modiﬁed to be speaker weighted in-
+approach introduced in [50] uses a “cluster voting” technique to
+stead of time weighted if necessary, but this is not discussed
+compare the output of arbitrary diarization systems, maintaining
+here. The utility of either weighting depends on the application
+areas of agreement and voting using conﬁdences or an external
+of the diarization output.
+judging scheme in areas of conﬂict.
+J. Sequential Speaker Clustering B. Data
+For some applications, it can be important to produce speaker The RT-04F speaker diarization data consists of one 30-min
+labels immediately without collecting all of the potential data extract from 12 different U.S. broadcast news shows. These were
+from a particular scenario, for example real-time captioning of derived from TV shows: three from ABC, three from CNN, two
+a broadcast news show. This constraint prevents the standard hi- from CNBC, two from PBS, one from CSPAN, and one from
+erarchical clustering techniques being used, and instead requires WBN. The style of show varied from a set of lectures from a few
+the clustering to be performed sequentially or online. An elegant speakers (CSPAN) to rapid headline news reporting (CNN Head-
+solution to this, described in [34], takes the segments in turn and line News). Details of the exact composition of the data sets can
+decides if they match any of the existing speaker clusters using be found in [52].
+thresholds on distance metrics based on the generalized likeli-
+hood ratio and a penalized within-cluster dispersion. If a match C. Results
+is found, the statistics of the matched cluster are updated using
+The results from the main diarization techniques are shown
+the new segment information, whereas if no match is found, the
+in Fig. 3. Using a top-down clustering approach with full
+segment starts a new speaker cluster. This process is much faster
+covariance models, arithmetic harmonic sphericity (AHS)
+than the conventional hierarchical approach, particularly when
+distance metric and BIC stopping criterion gave a DER of be-
+there are a large number of initial segments, and has been used
+tween 20.5% and 22.5% [38]. The corresponding performance
+for both ﬁnding speaker turns [34] and for speaker adaptation
+on the six-show RT diarization development data sets ranged
+within a real-time speech recognition framework [51].
+from 15.9% to 26.9%, showing that the top-down method
+seems more unpredictable than the agglomerative method.
+III. EVALUATION OF PERFORMANCE
+This is thought to be because the initial clusters contain many
+In this section we brieﬂy describe the NIST RT-04F speaker speakers and segments may thus be assigned incorrectly early
+diarization evaluation and present the results when using the key on, leading to an unrecoverable error. In contrast, the agglom-
+techniques discussed in this paper on the RT-04F diarization erative scheme grows clusters from the original segments and
+evaluation data. should not contain impure multispeaker clusters until very
+late in the clustering process. The agglomerative clustering
+A. Speaker Diarization Error Measure
+BIC-based scheme got around 17%–18% DER [11], [15],
+A system hypothesizes a set of speaker segments each of [17], [31], with Viterbi resegmentation between each step
+which consists of a (relative) speaker-id label such as “Mspkr1” providing a slight beneﬁt to 16.4% [11]. Further improvements
+or “Fspkr2” and the corresponding start and end times. This is to around 13% were made using CLR cluster recombinationTRANTER AND REYNOLDS: OVERVIEW OF AUTOMATIC SPEAKER DIARISATION SYSTEMS 1563
+Fig. 5. Accessing broadcast news audio from automatically derived
+speaker names via a wavesurfer plug-in. (Color version available online at
+Fig. 3. DERs for different methods on the RT-04F evaluation data. Each http://ieeexplore.ieee.org.)
+dot represents a different version of a system built using the indicated core
+technique. E-HMM not tuned on the U.S. broadcast news development sets.
+(Color version available online at http://ieeexplore.ieee.org.) Reducing this variability is a source of ongoing work. Certain
+techniques or parameter settings can perform better for different
+styles of show. Systems may potentially be improved by ei-
+ther automatically detecting the type of show and modifying
+the choice of techniques or parameters accordingly, or by com-
+bining different systems directly as discussed in Section II-A.
+IV. CONCLUSION AND FUTURE DIRECTIONS
+There has been tremendous progress in task deﬁnition, data
+availability, scoring measures, and technical approaches for
+speaker diarization over recent years. The methods used in
+broadcast news diarization are now being deployed across other
+domains, for example, improving speaker recognition perfor-
+mance using multispeaker train and test data in conversational
+telephone speech [15] and ﬁnding speakers within meeting data
+[6], [23]–[25], [53]. The latter sometimes contains an additional
+stage when multiple microphones are present to either select
+the most prominent microphone [53] or to weight the audio
+signal from multiple microphones to form a single “superior”
+signal before further processing [6], [24]. Different methods
+Fig. 4. DER per show for the system with lowest DER. There is a large for obtaining these channel weights have been tried including
+variability between the different styles of show. (Color version available online equal weighting [6], [24], using signal-to-noise ratio estimates
+at http://ieeexplore.ieee.org.)
+[6], [24], using the correlation between different channels [6],
+and “delay-and-sum” beamforming [6]. However, the other
+and resegmentation [15]. The CLR cluster recombination stage
+components of the systems generally match those used in
+which included feature warping produced a further reduction
+broadcast news with only the pretrained models and in some
+to around 8.5%–9.5% [14], [17], and using the whole of the
+cases parameters being changed to reﬂect the new domain.
+RT-04F evaluation data in the UBM build of the CLR cluster
+Indeed, [6] is working toward the goal of complete portability
+recombination stage gave a ﬁnal performance of 6.9% [17].
+between domains by trying to remove domain-speciﬁc models
+The proxy model technique performed better than the equiva-
+and parameters completely.
+lent BIC stages, giving 14.1% initially and 11.0% after CLR
+Other tasks, such as ﬁnding true speaker identities (see Sec-
+cluster recombination and resegmentation [15]. The E-HMM
+tion II-H) or speaker tracking (e.g., in [54]) are increasingly
+system, despite not being tuned on the U.S. broadcast news
+using diarization output as a starting point and performance is
+development sets, gave 16.1% DER.
+approaching a level where it can be considered “useful” for real
+For the system with the lowest DER, the per-show results are
+human interaction.
+given in Fig. 4. Typical of most systems, there is a large vari-
+Additions to applications which display audio and optionally
+ability in performance over the shows, reﬂecting the variability
+transcriptions, such as wavesurfer1 (see Fig. 5) or transcriber2
+in the number of speakers, the dominance of speakers, and the
+style and structure of the speech. Most of the variability is from 1Wavesurfer is available from www.speech.kth.se/wavesurfer
+the speaker error component due to over or under clustering. 2Transcriber is available from http://trans.sourceforge.net/1564 IEEE TRANSACTIONS ON AUDIO, SPEECH, AND LANGUAGE PROCESSING, VOL. 14, NO. 5, SEPTEMBER 2006
+[6] X. Anguera, C. Wooters, B. Peskin, and M. Aguiló, “Robust speaker
+segmentation for meetings: The ICSI-SRI Spring 2005 Diarization
+System,” in Proc. Machine Learning for Multimodal Interaction Work-
+shop (MLMI), Edinburgh, U.K., Jul. 2005, pp. 402–414.
+[7] Benchmark Tests: Rich Transcription (RT). NIST. [Online]. Available:
+http://www.nist.gov/speech/tests/rt/
+[8] Benchmark Tests: Speaker Recognition. NIST. [Online]. Available:
+http://www.nist.gov/speech/tests/spk/
+[9] A. Martin and M. Przybocki, “Speaker recognition in a multi-speaker
+environment,” in Proc. Eur. Conf. Speech Commun. Technol., vol. 2, Aal-
+borg, Denmark, Sep. 2001, pp. 787–790.
+[10] D. Moraru, L. Besacier, and E. Castelli, “Using a-priori information for
+speaker diarization,” in Proc. Odyssey Speaker and Language Recogni-
+tion Workshop, Toledo, Spain, May 2004, pp. 355–362.
+[11] C. Wooters, J. Fung, B. Peskin, and X. Anguera, “Toward Robust
+speaker segmentation: The ICSI-SRI Fall 2004 Diarization System,”
+in Proc. Fall 2004 Rich Transcription Workshop (RT-04), Palisades,
+NY, Nov. 2004, [Online]. Available: http://www.icsi.berkeley.edu/cgi-
+Fig. 6. Diarization information, including automatically found speaker bin/pubs/publication.pl?ID=000100.
+identities, being used in the “Transcriber” tool to improve readability [12] P. Nguyen, L. Rigazio, Y. Moh, and J. C. Junqua. Rich transcription
+and facilitate searching by speaker. (Color version available online at 2002 site report. Panasonic speech technology laboratory (PSTL). pre-
+http://ieeexplore.ieee.org.) sented at Proc. Rich Transcription Workshop (RT-02). [Online]. Avail-
+able: http://www.nist.gov/speech/tests/rt/rt2002/presentations/rt02.pdf
+(see Fig. 6), and the inclusion in complete retrieval systems such [13] J.-L. Gauvain, L. Lamel, and G. Adda, “Partitioning and transcription of
+as Rough ’n’ Ready [55] and SpeechFind [56] allow users to broadcast news data,” in Proc. Int. Conf. Spoken Lang. Process., vol. 4,
+Sydney, Australia, Dec. 1998, pp. 1335–1338.
+see the current speaker information, understand the general ﬂow
+[14] X. Zhu, C. Barras, S. Meignier, and J.-L. Gauvain, “Combining
+of speakers throughout the broadcast, or search for a particular speaker identiﬁcation and BIC for speaker diarization,” in Proc. Eur.
+speaker within the audio. Experiments are also underway to as- Conf. Speech Commun. Technol., Lisbon, Portugal, Sep. 2005, pp.
+2441–2444.
+certain if additional tasks, such as the process of annotating data,
+[15] D. A. Reynolds and P. Torres-Carrasquillo, “The MIT Lincoln Labora-
+can be facilitated using diarization output. tory RT-04F diarization systems: Applications to broadcast audio and
+The diarization tasks of the future will cover a wider scope telephone conversations,” in Proc. Fall 2004 Rich Transcription Work-
+shop (RT-04), Palisades, NY, Nov. 2004.
+than currently, both in terms of the amount of data (hundreds of
+[16] T. Hain, S. E. Johnson, A. Tuerk, P. C. Woodland, and S. J. Young.
+hours) and information required (speaker identity, speaker char- Segment generation and clustering in the HTK broadcast news tran-
+acteristics, or potentially even emotion). Current techniques and scription system. presented at Proc. 1998 DARPA Broadcast News
+Transcription and Understanding Workshop. [Online]. Available:
+toolkits (for example, ALIZE [57]) will provide a ﬁrm base to
+http://mi.eng.cam.ac.uk/reports/abstracts/hain_darpa98.html
+start from, but new methods, particularly combining informa- [17] R. Sinha, S. E. Tranter, M. J. F. Gales, and P. C. Woodland, “The
+tion from many different approaches (as is currently done in Cambridge University March 2005 speaker diarization system,” in
+Proc. Eur. Conf. Speech Commun. Technol., Lisbon, Portugal, Sep.
+the speaker recognition ﬁeld [58]) will need to be developed to
+2005, pp. 2437–2440.
+allow diarization to be maximally beneﬁcial to real users and po- [18] D. Liu and F. Kubala, “Fast speaker change detection for broadcast
+tential downstream processing such as machine translation and news transcription and indexing,” in Proc. Eur. Conf. Speech
+Commun. Technol., vol. III, Budapest, Hungary, Sep. 1999, pp.
+parsing. Additionally, further development of tools to allow user
+1031–1034.
+interactions with diarization output for speciﬁc jobs will help [19] S. Meignier, D. Moraru, C. Fredouille, J.-F. Bonastre, and L. Besacier,
+focus the research to contribute to high-utility human language “Step-by-Step and integrated approaches in broadcast news speaker di-
+arization,” Comput. Speech Lang., no. 20, pp. 303–330, Sep. 2005, to
+technology.
+be published.
+[20] S. E. Tranter and D. A. Reynolds, “Speaker diarization for broadcast
+ACKNOWLEDGMENT news,” in Proc. Odyssey Speaker and Language Recognition Workshop,
+Toledo, Spain, Jun. 2004, pp. 337–344.
+The authors would like to thank C. Barras, J.-F. Bonastre, C. [21] S. E. Tranter, K. Yu, G. Evermann, and P. C. Woodland, “Generating
+Fredouille, P. Nguyen, P. Torres-Carrasquillo, and C. Wooters and evaluating segmentations for automatic speech recognition of con-
+versational telephone speech,” in Proc. ICASSP, vol. I, Montreal, QC,
+for their help in the construction of this paper.
+Canada, May 2004, pp. 753–756.
+[22] D. Liu and F. Kubala, “A cross-channel modeling approach for au-
+REFERENCES tomatic segmentation of conversational telephone speech,” in Proc.
+IEEE ASRU Workshop, St. Thomas, U.S. Virgin Islands, Dec. 2003, pp.
+[1] D. A. Reynolds and P. Torres-Carrasquillo, “Approaches and applica- 333–338.
+tions of audio diarization,” in Proc. IEEE Int. Conf. Acoust., Speech, [23] D. A. van Leeuwan, “The TNO speaker diarization system for NIST
+Signal Process., vol. V, Philadelphia, PA, Mar. 2005, pp. 953–956. RT05s meeting data,” in Proc. Machine Learning for Multimodal
+[2] J. Saunders, “Real-time discrimination of broadcast speech/music,” in Interaction Workshop (MLMI), Edinburgh, UK, Jul. 2005, pp.
+Proc. IEEE Int. Conf. Acoust., Speech, Signal Process., vol. II, Atlanta, 440–449.
+GA, May 1996, pp. 993–996. [24] D. Istrate, C. Fredouille, S. Meignier, L. Besacier, and J.-F. Bonastre,
+[3] Z. Liu, Y. Wang, and T. Chen, “Audio feature extraction and analysis “NIST RT’05 evaluation: Preprocessing techniques and speaker diariza-
+for scene segmentation and classiﬁcation,” J. VLSI Signal Process. Syst., tion on multiple microphone meetings,” in Proc. Machine Learning for
+vol. 20, no. 1–2, pp. 61–79, Oct. 1998. Multimodal Interaction Workshop (MLMI), Edinburgh, U.K., Jul. 2005,
+[4] S. E. Johnson and P. C. Woodland, “A method for direct audio search pp. 428–439.
+with applications to indexing and retrieval,” in Proc. IEEE Int. Conf. [25] S. Cassidy, “The macquarie speaker diarization system for RT05s,” in
+Acoust., Speech, Signal Process., vol. 3, Istanbul, Turkey, Jun. 2000, pp. Proc. NIST Spring Rich Transcription Evaluation Workshop (RT-05s),
+1427–1430. Edinburgh, UK, Jul. 2005.
+[5] Y. Moh, P. Nguyen, and J.-C. Junqua, “Toward domain independent clus- [26] T. Pfau, D. Ellis, and A. Stolcke, “Multispeaker speech activity detection
+tering,” in Proc. IEEE Int. Conf. Acoust., Speech, Signal Process., vol. for the ICSI meeting recorder,” in Proc. IEEE ASRU Workshop, Trento,
+II, China, Apr. 2003, pp. 85–88. Italy, Dec. 2001, pp. 107–110.TRANTER AND REYNOLDS: OVERVIEW OF AUTOMATIC SPEAKER DIARISATION SYSTEMS 1565
+[27] J. G. Fiscus, N. Radde, J. S. Garofolo, A. Le, J. Ajot, and C. Laprun, [47] S. E. Tranter, “Who really spoke when?—Finding speaker turns and
+“The rich transcription 2005 spring meeting recogntion evaluation,” in identities in audio,” in Proc. IEEE Int. Conf. Acoust., Speech, Signal
+Proc. Machine Learning for Multimodal Interaction Workshop (MLMI), Process., vol. I, Toulouse, France, May 2006, pp. 1013–1016.
+Edinburgh, UK, Jul. 2005, pp. 369–389. [48] M. J. F. Gales, D. Y. Kim, P. C. Woodland, H. Y. Chan, D. Mrva, R. Sinha,
+[28] S. S. Chen and P. S. Gopalakrishnam, “Speaker, environment and S. E. Tranter, “Progress in the CU-HTK transcription system,” IEEE
+and channel change detection and clustering via the bayesian Trans. Audio, Speech, Lang, Process., vol. 14, no. 5, pp. 1511–1523, Sep.
+information criterion,” in Proc. 1998 DARPA Broadcast News 2006.
+Transcription and Understanding Workshop, Lansdowne, VA, 1998, [49] D. Moraru, S. Meignier, C. Fredouille, L. Besacier, and J.-F. Bonastre,
+pp. 127–132. “The ELISA consortium approaches in speaker segmentation during the
+[29] B. Zhou and J. Hansen, “Unsupervised audio stream segmentation NIST 2003 Rich Transcription evaluation,” in Proc. IEEE Int. Conf.
+and clustering via the Bayesian information criterion,” in Proc. Int. Acoust., Speech, Signal Process., vol. 1, Montreal, QC, Canada, May
+Conf. Spoken Language Process., vol. 3, Beijing, China, Oct. 2000, pp. 2004, pp. 373–376.
+714–717. [50] S. E. Tranter, “Two-way cluster voting to improve speaker diarization
+[30] M. A. Siegler, U. Jain, B. Raj, and R. M. Stern, “Automatic segmenta- performance,” in Proc. IEEE Int. Conf. Acoust., Speech, Signal Process.,
+tion, classiﬁcation and clustering of broadcast news,” in Proc. DARPA vol. I, Philadelphia, PA, Mar. 2005, pp. 753–756.
+Speech Recognition Workshop, Chantilly, VA, Feb. 1997, pp. 97–99. [51] D. Liu, D. Kiecza, A. Srivastava, and F. Kubala, “Online speaker adap-
+[31] C. Barras, X. Zhu, S. Meignier, and J.-L. Gauvain, “Improving speaker tation and tracking for real-time speech recognition,” in Proc. Eur. Conf.
+diarization,” in Proc. Fall Rich Transcription Workshop (RT-04), Speech Commun. Technol., Lisbon, Portugal, Sep. 2005, pp. 281–284.
+Palisades, NY, Nov. 2004, [Online]. Available: http://www.limsi.fr/In- [52] J. G. Fiscus, J. S. Garofolo, A. Le, A. F. Martin, D. S. Pallett, M. A.
+dividu/barras/publis/rt04f_diarization.pdf. Przybocki, and G. Sanders, “Results of the fall 2004 STT and MDE
+[32] A. E. Rosenberg, A. Gorin, Z. Liu, and S. Parthasarathy, “Unsupervised evaluation,” in Proc. Fall 2004 Rich Transcription Workshop (RT-04),
+speaker segmentation of telephone conversations,” in Proc. Int. Conf. Palisades, NY, Nov. 2004.
+Spoken Language Process., Denver, CO, Sep. 2002, pp. 565–568. [53] Q. Jin, K. Laskowski, T. Schultz, and A. Waibel, “Speaker segmenta-
+[33] S. Meignier, D. Moraru, C. Fredouille, L. Besacier, and J.-F. Bonastre, tion and clustering in meetings,” in Proc. ICASSP Meeting Recogni-
+“Beneﬁts of prior acoustic segmentation for automatic speaker segmen- tion Workshop, Montreal, QC, Canada, May 2004, [Online]. Available:
+tation,” in Proc. IEEE Int. Conf. Acoust., Speech, Signal Process., vol. I, http://isl.ira.uka.de/publications/SchultzJin_NIST04.pdf.
+Montreal, QC, Canada, May 2004, pp. 397–400. [54] D. Istrate, N. Schefﬂer, C. Fredouille, and J.-F. Bonastre, “Broadcast
+[34] D. Liu and F. Kubala, “Online speaker clustering,” in Proc. IEEE Int. news speaker tracking for ESTER 2005 campaign,” in Proc. Eur. Conf.
+Conf. Acoust., Speech, Signal Process., vol. I, Hong Kong, China, Apr. Speech Commun. Technol., Lisbon, Portugal, Sep. 2005, pp. 2445–2448.
+2003, pp. 572–575. [55] F. Kubala, S. Colbath, D. Liu, A. Srivastava, and J. Makhoul, “Integrated
+[35] D. Moraru, S. Meignier, L. Besacier, J.-F. Bonastre, and I. technologies for indexing spoken language,” Commun. ACM, vol. 43, no.
+Magrin-Chagnolleau. The ELISA consortium approaches in speaker 2, pp. 48–56, Feb. 2000.
+segmentation during the NIST 2002 speaker recognition evaluation. [56] J. H. L. Hansen, R. Huang, B. Z. M. Seadle, J. J. R. Deller, A. R. Gurijala,
+presented at Proc. IEEE Int. Conf. Acoust., Speech, Signal Process.. M. Kurimo, and P. Angkititrakul, “Speechﬁnd: Advances in spoken doc-
+[Online]. Available: http://www.lia.univ-avignon.fr/ﬁch_art/339-mor- ument retrieval for a national gallery of the spoken word,” IEEE Trans.
+icassp2003.pdf Speech Audio Process., vol. 13, no. 5, pp. 712–730, Sep. 2005.
+[36] M. Cettolo, “Segmentation, classiﬁcation and clustering of an [57] J. F. Bonastre, F. Wils, and S. Meignier, “Alize: A free toolkit for speaker
+Italian corpus,” in Proc. Recherche d’Information Assisté par Or- recogntion,” in Proc. IEEE Int. Conf. Acoust., Speech, Signal Process.,
+dinateur (RIAO), Paris, France, Apr. 2000, [Online]. Available: vol. I, Philadelphia, PA, Mar. 2005, pp. 737–740.
+http://munst.itc.it/people/cettolo/papers/riao00a.ps.gz. [58] D. Reynolds, W. Andrews, J. Campbell, J. Navratil, B. Peskin, A. Adami,
+[37] J. Ajmera and C. Wooters, “A Robust Speaker Clustering Algorithm,” Q. Jin, D. Klusacek, J. Abramson, R. Mihaescu, J. Godfrey, D. Jones,
+in Proc. IEEE ASRU Workshop, St Thomas, U.S. Virgin Islands, Nov. and B. Xiang, “The superSID project: Exploiting high-level informa-
+2003, pp. 411–416. tion for high-accuracy speaker recognition,” in Proc. IEEE Int. Conf.
+[38] S. E. Tranter, M. J. F. Gales, R. Sinha, S. Umesh, and P. C. Wood- Acoust., Speech, Signal Process., vol. IV, Hong Kong, China, Apr. 2003,
+land, “The development of the Cambridge University RT-04 diarization pp. 784–787.
+system,” in Proc. Fall 2004 Rich Transcription Workshop (RT-04), Pal-
+isades, NY, Nov. 2004, [Online]. Available: http://mi.eng.cam.ac.uk/re-
+ports/abstracts/tranter_rt04.html. Sue E. Tranter (M’04) received the M.Eng. degree
+[39] H. Jin, F. Kubala, and R. Schwartz, “Automatic speaker clustering,” in in engineering science, specializing in information
+Proc. DARPA Speech Recognition Workshop, Chantilly, VA, Feb. 1997, engineering, from the University of Oxford, Oxford,
+pp. 108–111. U.K., in 1996 and the M.Phil. degree in computer
+[40] M. Ben, M. Betser, F. Bimbot, and G. Gravier, “Speaker diarization using speech and language processing from the University
+bottom-up clustering based on a parameter-derived distance between of Cambridge, Cambridge, U.K., in 1997.
+adapted GMMs,” in Proc. Int. Conf. Spoken Language Processing, Jeju Following this, she worked as a Research Assistant
+Island, Korea, Oct. 2004, pp. 2329–2332. on MultiMedia Document Retrieval at the University
+[41] S. Meignier, J.-F. Bonastre, C. Fredouille, and T. Merlin, “Evolutive of Cambridge until 2000, and then on nonlinear con-
+HMM for multispeaker tracking system,” in Proc. IEEE Int. Conf. trol theory at the University of Oxford. Since 2002
+Acoust., Speech, Signal Process., vol. II, Istanbul, Turkey, Jun. 2000, she has been a Research Associate on the Effective
+pp. 1201–1204. Affordable Reusable Speech-To-Text (EARS) project at the University of Cam-
+[42] S. Meignier, J.-F. Bonastre, and S. Igounet, “E-HMM approach for bridge, specializing in speaker segmentation and clustering.
+learning and adapting sound models for speaker indexing,” in Proc.
+Odyssey Speaker and Language Recognition Workshop, Crete, Greece,
+Jun. 2001, pp. 175–180. Douglas Reynolds (SM’98) received the B.E.E. de-
+[43] D. Reynolds, E. Singer, B. Carlson, J. O’Leary, J. McLaughlin, and M. gree (with highest honors) and the Ph.D. degree in
+Zissman, “Blind clustering of speech utterances based on speaker and electrical engineering, both from the Georgia Insti-
+language characteristics,” in Proc. Int. Conf. Spoken Language Process., tute of Technology, Atlanta.
+vol. 7, Sydney, Australia, Dec. 1998, pp. 3193–3196. He joined the Speech Systems Technology Group
+[44] J. Pelecanos and S. Sridharan, “Feature warping for Robust speaker ver- (now the Information Systems Technology Group),
+iﬁcation,” in Proc. Odyssey Speaker and Language Recognition Work- Lincoln Laboratory, Massachusetts Institute of Tech-
+shop, Crete, Greece, Jun. 2001, pp. 213–218. nology, Cambridge, in 1992. Currently, he is a Se-
+[45] C. Barras and J.-L. Gauvain, “Feature and score normalization for nior Member of Technical Staff and his research in-
+speaker veriﬁcation of cellular data,” in Proc. IEEE Int. Conf. Acoust., terests include robust speaker and language identiﬁ-
+Speech, Signal Process., vol. II, Hong Kong, China, Apr. 2003, pp. cation and veriﬁcation, speech recognition, and gen-
+49–52. eral problems in signal classiﬁcation and clustering.
+[46] L. Canseco-Rodriguez, L. Lamel, and J.-L. Gauvain, “Speaker Diariza- Douglas is a Senior Member of IEEE Signal Processing Society and a co-
+tion from Speech Transcripts,” in Proc. Int. Conf. Spoken Language founder and member of the steering committee of the Odyssey Speaker Recog-
+Process., Jeju Island, Korea, Oct. 2004, pp. 1272–1275. nition workshop.IEEE TRANSACTIONS ON AUDIO, SPEECH, AND LANGUAGE PROCESSING, VOL. 14, NO. 5, SEPTEMBER 2006 1557
+An Overview of Automatic Speaker
+Diarization Systems
+Sue E. Tranter, Member, IEEE and Douglas A. Reynolds, Senior Member, IEEE
+Abstract—Audio diarization is the process of annotating an
+input audio channel with information that attributes (possibly
+overlapping) temporal regions of signal energy to their speciﬁc
+sources. These sources can include particular speakers, music,
+background noise sources, and other signal source/channel char-
+acteristics. Diarization can be used for helping speech recognition,
+facilitating the searching and indexing of audio archives, and
+increasing the richness of automatic transcriptions, making them
+more readable. In this paper, we provide an overview of the
+approaches currently used in a key area of audio diarization,
+Fig. 1. Example of audio diarization on broadcast news. Annotated
+namely speaker diarization, and discuss their relative merits phenomena may include different structural regions such as commercials,
+and limitations. Performances using the different techniques are different acoustic events such as music or noise, and different speakers. (Color
+compared within the framework of the speaker diarization task in version available online at http://ieeexplore.ieee.org.)
+the DARPA EARS Rich Transcription evaluations. We also look at
+how the techniques are being introduced into real broadcast news
+systems and their portability to other domains and tasks such as In general, a spoken document is a single-channel recording
+meetings and speaker veriﬁcation. that consists of multiple audio sources. Audio sources may be
+Index Terms—Speaker diarization, speaker segmentation and different speakers, music segments, types of noise, etc. For
+clustering. example, a broadcast news program consists of speech from
+different speakers as well as music segments, commercials, and
+sounds used to segue into reports (see Fig. 1). Audio diarization
+I. INTRODUCTION
+is deﬁned as the task of marking and categorising the audio
+T HE continually decreasing cost of and increasing ac- sources within a spoken document. The types and details of
+cess to processing power, storage capacity, and network the audio sources are application speciﬁc. At the simplest,
+bandwidth is facilitating the amassing of large volumes of diarization is speech versus nonspeech, where nonspeech is
+audio, including broadcasts, voice mails, meetings and other a general class consisting of music, silence, noise, etc., that
+“spoken documents.” There is a growing need to apply au- need not be broken out by type. A more complicated diariza-
+tomatic human language technologies to allow efﬁcient and tion would further mark where speaker changes occur in the
+effective searching, indexing, and accessing of these informa- detected speech and associate segments of speech (a segment is
+tion sources. Extracting the words being spoken in the audio a section of speech bounded by nonspeech or speaker change
+using speech recognition technology provides a sound base points) coming from the same speaker. This is usually referred
+for these tasks, but the transcripts are often hard to read and to as speaker diarization (a.k.a. “who spoke when”) or speaker
+do not capture all the information contained within the audio. segmentation and clustering and is the focus of most current
+Other technologies are needed to extract meta-data which can research efforts in audio diarization. This paper discusses the
+make the transcripts more readable and provide context and techniques commonly used for speaker diarization, which
+information beyond a simple word sequence. Speaker turns and allows searching audio by speaker, makes transcripts easier
+sentence boundaries are examples of such meta-data, both of to read, and provides information which could be used within
+which help provide a richer transcription of the audio, making speaker adaptation in speech recognition systems. Other audio
+transcripts more readable and potentially helping with other diarization tasks, such as explicitly detecting the presence of
+tasks such as summarization, parsing, or machine translation. music (e.g., [2]), helping ﬁnd the structure of a broadcast pro-
+gram (e.g., [3]), or locating commercials to eliminate unwanted
+Manuscript received October 11, 2005; revised April 25, 2006. This work audio (e.g., [4]), also have many potential beneﬁts but fall
+was supported by the Defense Advanced Research Projects Agency under Grant outside the scope of this paper.
+MDA972-02-1-0013 and in part by Air Force Contract FA8721-05-C-0002.
+There are three primary domains which have been used for
+Opinions, interpretations, conclusions, and recommendations are those of the
+authors and are not necessarily endorsed by the U.S. Government. This paper speaker diarization research and development: broadcast news
+is based on the ICASSP 2005 HLT special session paper (Philadelphia, PA). audio, recorded meetings, and telephone conversations. The
+The associate editor coordinating the review of this manuscript and approving
+data from these domains differs in the quality of the recordings
+it for publication was Dr. John Makhoul.
+S. Tranter is with the Engineering Department, Cambridge University, Cam- (bandwidth, microphones, noise), the amount and types of
+bridge CB2 1PZ, U.K. (e-mail: sej28@eng.cam.ac.uk). nonspeech sources, the number of speakers, the durations and
+D. Reynolds is with the Lincoln Laboratory, Massachusetts Institute of Tech-
+sequencing of speaker turns, and the style/spontaneity of the
+nology, Lexington, MA 02420-9185 USA (e-mail: dar@ll.mit.edu).
+Digital Object Identiﬁer 10.1109/TASL.2006.878256 speech. Each domain presents unique diarization challenges,
+1558-7916/$20.00 © 2006 IEEE1558 IEEE TRANSACTIONS ON AUDIO, SPEECH, AND LANGUAGE PROCESSING, VOL. 14, NO. 5, SEPTEMBER 2006
+although often high-level system techniques tend to generalize
+well over several domains [5], [6]. The NIST Rich Transcrip-
+tion speaker evaluations [7] have primarily used both broadcast
+news and meeting data, whereas the NIST speaker recognition
+evaluations [8] have primarily used conversational telephone
+speech with summed sides (a.k.a two-wire).
+The diarization task is also deﬁned by the amount of speciﬁc
+prior knowledge allowed. There may be speciﬁc prior knowl-
+edge via example speech from the speakers in the audio, such
+as in a recording of a regular staff meeting. The task then be-
+comes more like speaker detection or tracking tasks [9]. Spe-
+ciﬁc prior knowledge could also be example speech from just a
+few of the speakers such as common anchors on particular news
+stations, or knowledge of the number of speakers in the audio,
+perhaps for a teleconference over a known number of lines, or
+maybe the structure of the audio recording (e.g., music followed
+Fig. 2. Prototypical diarization system. Most diarization systems have
+by story). Most of this prior knowledge has been used to improve
+components to perform speech detection, gender and/or bandwidth
+diarization performance although not all of it has proved beneﬁ- segmentation, speaker segmentation, speaker clustering, and ﬁnal
+cial within current systems. [10]. However, for a more portable resegmentation or boundary reﬁnement.
+speaker diarization system, it is desired to operate without any
+speciﬁc prior knowledge of the audio. This is the general task speech/nonspeech models such as in [11], while [12] is similar
+deﬁnition used in the Rich Transcription diarization evaluations, but four speech models are used for the possible gender/band-
+where only the broadcaster and date of broadcast are known in width combinations. Noise and music are explicitly modeled in
+addition to having the audio data and we adopt this scenario [13]–[15] which have classes for speech, music, noise, speech
+when discussing speaker diarization systems. music, and speech noise, while [16] and [17] use wideband
+The aim of this paper is to provide an overview of current speech, narrowband speech, music and speech music. The
+speaker diarization approaches and to discuss performance and extra speech xx models are used to help minimize the false
+potential applications. In Section II, we outline the general rejection of speech occurring in the presence of music or noise,
+framework of diarization systems and discuss different im- and this data is subsequently reclassiﬁed as speech.The classes
+plementations of the key components within current systems. can also be broken down further, as in [18], which has eight
+Performance is measured in terms of the diarization error rate models in total, ﬁve for nonspeech (music, laughter, breath,
+(DER) using the DARPA EARS Rich Transcription Fall 2004 lip-smack, and silence) and three for speech (vowels and nasals,
+(RT-04F) speaker diarization evaluation data. Section IV looks fricatives, and obstruents).
+at the use of these methods in real applications and the future When operating on unsegmented audio, Viterbi segmenta-
+directions for diarization research. tion, (single pass or iterative with optional adaptation) using the
+models is employed to identify speech regions. If an initial seg-
+II. DIARIZATION SYSTEM FRAMEWORK mentation is already available (for example, the ordering of the
+key components may allow change point detection before non-
+In this section, we review the key subtasks used to build cur-
+speech removal), each segment is individually classiﬁed. Min-
+rent speaker diarization systems. Most diarization systems per-
+imum length constraints [11], [18] and heuristic smoothing rules
+form these tasks separately, although it is possible to perform
+[12], [15] may also be applied. An alternative approach which
+some of the stages jointly (for example speaker segmentation
+does not use Viterbi decoding, but instead a best model search
+and clustering) and the ordering of the stages often varies from
+with morphological rules is described in [19].
+system to system. A prototypical combination of the key com-
+Silence can be removed in this early stage, using a phone rec-
+ponents of a diarization system is shown in Fig. 2. For each task,
+ognizer (as in [17]) or energy constraint, or in a ﬁnal stage pro-
+we provide a brief description of the common approaches em-
+cessing using a word recognizer (as in [14]) or energy constraint
+ployed and some of the issues in applying them.
+(as in the MIT system for RT-03 [20]). Regions which contain
+commercials and thus are of no interest for the ﬁnal output can
+A. Speech Detection
+also be automatically detected and removed at this early stage
+The aim of this step is to ﬁnd the regions of speech in the [4], [20]
+audio stream. Depending on the domain data being used, non- For broadcast news audio, speech detection performance is
+speech regions to be discarded can consist of many acoustic phe- typically less than 1% miss (speech in reference but not in the
+nomena such as silence, music, room noise, background noise, hypothesis) and 1%–2% false alarm (speech in the hypothesis
+or cross-talk. but not in the reference), whereas for meeting audio, the ﬁgures
+The general approach used is maximum-likelihood classi- are typically around 1% higher for both. When the speech detec-
+ﬁcation with Gaussian mixture models (GMMs) trained on tion phase is run early in a system, or the output is required for
+labeled training data, although different class models can be further processing such as for transcription, it is more impor-
+used, such as multistate HMMs. The simplest system uses just tant to minimize speech miss than false alarm rates, since theTRANTER AND REYNOLDS: OVERVIEW OF AUTOMATIC SPEAKER DIARISATION SYSTEMS 1559
+former are unrecoverable errors in most systems. However, the distance metric. The peaks in the distance function are then
+DER, used to evaluate speaker diarization performance, treats found and deﬁne the change points if their absolute value ex-
+both forms of error equally. ceeds a predetermined threshold chosen on development data.
+For telephone audio, typically some form of standard en- Smoothing the distance distribution or eliminating the smaller
+ergy/spectrum-based speech activity detection is used since of neighboring peaks within a certain minimum duration pre-
+nonspeech tends to be silence or noise sources, although the vents the system overgenerating change points at true bound-
+GMM approach has also been successful in this domain with aries. Single Gaussians are generally preferred to GMMs due to
+single-channel [21] or cross-channel [22] classes. For meeting the simpliﬁed distance calculations. Typical window sizes are
+audio, the nonspeech can be from a variety of noise sources, 1–2 or 2–5 s when using a diagonal or full covariance Gaussian,
+like paper shufﬂing, coughing, laughing, etc. and energy-based respectively. As with BIC, the window length constrains the de-
+methods do not currently work well for distant microphones tection of short turns.
+[23], [24], so using a simple pretrained speech/nonspeech GMM Since the change point detection often only provides an initial
+is generally preferred [6], [25], [23]. An interesting alternative base segmentation for diarization systems, which will be clus-
+uses a GMM, built on the normalized energy coefﬁcients of tered and often resegmented later, being able to run the change
+the test data, to determine how much nonspeech to reject [24], point detection very fast (typically less than 0.01 for a di-
+while preliminary work in [6] shows potential for the future for agonal covariance system) is often more important than any per-
+a new energy-based method. When supported, multiple channel formance degradation. In fact, [11] and [19] found no signiﬁcant
+meeting audio can be used to help speech activity detection performance degradation when using a simple initial uniform
+[26]. This problem is felt to be so important in the meetings segmentation within their systems.
+domain that a separate evaluation for speech activity detection Both change detection techniques require a detection
+was introduced in the spring 2005 Rich Transcription meeting threshold to be empirically tuned for changes in audio type and
+evaluation [27]. features. Tuning the change detector is a tradeoff between the
+desires to have long, pure segments to aid in initializing the
+B. Change Detection clustering stage, and minimizing missed change points which
+The aim of this step is to ﬁnd points in the audio stream produce contaminations in the clustering.
+likely to be change points between audio sources. If the input Alternatively, or in addition, a word or phone decoding step
+to this stage is the unsegmented audio stream, then the change with heuristic rules may be used to help ﬁnd putative speaker
+detection looks for both speaker and speech/nonspeech change change points such as in [18] and the Cambridge 1998–2003
+points. If a speech detector or gender/bandwidth classiﬁer has systems [16], [20]. However, this approach can over-segment
+been run ﬁrst, then the change detector looks for speaker change the speech data and requires some additional merging or clus-
+points within each speech segment. tering to form viable speech segments, and can miss boundaries
+Two main approaches have been used for change detection. in fast speaker interchanges if relying on the presence of silence
+They both involve looking at adjacent windows of data and or gender changes between speakers.
+calculating a distance metric between the two, then deciding
+C. Gender/Bandwidth Classiﬁcation
+whether the windows originate from the same or a different
+source. The differences between them lie in the choice of dis- The aim of this stage is to partition the segments into
+tance metric and thresholding decisions. common groupings of gender (male or female) and bandwidth
+The ﬁrst general approach used for change detection, used (low-bandwidth: narrow-band/telephone or high-bandwidth:
+in [15], is a variation on the Bayesian information criterion studio). This is done to reduce the load on subsequent clus-
+(BIC) technique introduced in [28]. This technique searches for tering, provide more ﬂexibility in clustering settings (for
+change points within a window using a penalized likelihood example female speakers may have different optimal parameter
+ratio test of whether the data in the window is better modeled settings to male speakers), and supply more side information
+by a single distribution (no change point) or two different dis- about the speakers in the ﬁnal output. If the partitioning can
+tributions (change point). If a change is found, the window is be done very accurately and assuming no speaker appears in
+reset to the change point and the search restarted. If no change the same broadcast in different classes (for example both in
+point is found, the window is increased and the search is redone. the studio and via a prerecorded ﬁeld report) then performing
+Some of the issues in applying the BIC change detector are as this partitioning early on in the system can also help improve
+follows. 1) It has high miss rates on detecting short turns ( 2–5 performance while reducing the computational load [33]. The
+s), so can be problematic to use on fast interchange speech like potential drawback in this partitioning stage, however, is if
+conversations. 2) The full search implementation is computa- a subset of a speaker’s segments is misclassiﬁed the errors
+tionally expensive (order ), so most systems employ some can be unrecoverable, although it is possible to allow these
+form of computation reductions (e.g., [29]). classiﬁcations to change in a subsequent resegmentation stage,
+A second technique used ﬁrst in [30] and later in [13], [17], such as in [19].
+and [31] uses ﬁxed-length windows and represents each window Classiﬁcation for both gender and bandwidth is typically
+by a Gaussian and the distance between them by the Gaussian done using maximum-likelihood classiﬁcation with GMMs
+Divergence (symmetric KL-2 distance). The step-by-step im- trained on labeled training data. Either two classiﬁers are run
+plementation in [19] and system for telephone audio in [32] (one for gender and one for bandwidth) or joint models for
+are similar but use the generalized log likelihood ratio as the gender and bandwidth are used. This can be done either in1560 IEEE TRANSACTIONS ON AUDIO, SPEECH, AND LANGUAGE PROCESSING, VOL. 14, NO. 5, SEPTEMBER 2006
+conjunction with the speech/nonspeech detection process or parent cluster in the penalty factor represents a “local”
+after the initial segmentation. Bandwidth classiﬁcation can also BIC decision, i.e., just considering the clusters being combined.
+be done using a test on the ratio of spectral energy above and This has been shown to perform better than the corresponding
+below 4 kHz. An alternative method of gender classiﬁcation, “global” BIC implementation which uses the number of frames
+used in [17], aligns the word recognition output of a fast ASR in the whole show instead [20], [31], [36].
+system with gender dependent models and assigns the most Slight variations of this technique have also been used. For
+likely gender to each segment. This has a high accuracy but is example, the system described in [18] uses essentially the local
+unnecessarily computationally expensive if a speech recogni- BIC score (with the number of parameters term incorporated
+tion output is not already available and segments ideally should within the penalty weight), but sets different thresholds for po-
+be of a reasonable size (typically between 1 and 30 s). Gender tential boundaries occurring during speech or nonspeech, moti-
+classiﬁcation error rates are around 1%–2% and bandwidth vated by an observation that most true speaker change points
+classiﬁcation error rates are around 3%–5% for broadcast news occurred during nonspeech regions. A further example, used
+audio. in the system described in [11] and [37] removes the need for
+tuning the penalty weight on development data, by ensuring
+D. Clustering that the number of parameters in the merged and separate
+distributions are equal, although the base number of Gaussians
+The purpose of this stage is to associate or cluster segments
+and, hence, number of free parameters needs to be chosen care-
+from the same speaker together. The clustering ideally produces
+fully for optimal effect. Alternatives to the penalty term, such as
+one cluster for each speaker in the audio with all segments from
+using a constant [38], the weighted sum of the number of clus-
+a given speaker in a single cluster. The predominant approach
+ters and number of segments [13], or a penalized determinant
+used in diarization systems is hierarchical, agglomerative clus-
+of the within-cluster dispersion matrix [34], [39] have also had
+tering with a BIC based stopping criterion [28] consisting of the
+moderate success, but the BIC method has generally superseded
+following steps:
+these. Adding a Viterbi resegmentation between multiple itera-
+0) initialize leaf clusters of tree with speech segments;
+tions of clustering [31] or within a single iteration [11] has also
+1) compute pair-wise distances between each cluster;
+been used to increase performance at the penalty of increased
+2) merge closest clusters;
+computational cost.
+3) update distances of remaining clusters to new cluster;
+An alternative approach described in [40] uses a Euclidean
+4) iterate steps 1)–3) until stopping criterion is met.
+distance between MAP-adapted GMMs and notes this is highly
+The clusters are generally represented by a single full covari-
+correlated with a Monte Carlo estimation of the Gaussian Di-
+ance Gaussian [5], [12], [15], [17], [31], [34], but GMMs have
+vergence (symmetric KL-2) distance while also being an upper
+also been used [11], [19], [35], sometimes being built using
+bound to it. The stopping criterion uses a ﬁxed threshold, chosen
+mean-only MAP adaptation of a GMM of the entire test ﬁle
+on the development data, on the distance metric. The perfor-
+to each cluster for increased robustness. The standard distance
+mance is comparable to the more conventional BIC method.
+metric between clusters is the generalized likelihood ratio
+A further method described in [15] uses “proxy” speakers.
+(GLR). It is possible to use other representations or distance
+A set of proxy models is applied to map segments into a vector
+metrics, but these have been found the most successful within
+space, then a Euclidean distance metric and an ad hoc occu-
+the BIC clustering framework. The stopping criterion compares
+pancy stopping criterion are used, but the overall clustering
+the BIC statistic from the two clusters being considered, and
+framework remains the same. The proxy models can be built
+, with that of the parent cluster, , should they be merged, the
+by adapting a universal background model (UBM) such as a
+formulation being for the full covariance Gaussian case
+128 mixture GMM to the test data segments themselves, thus
+making the system portable to different shows and domains
+while still giving consistent performance gain over the BIC
+method.
+Regardless of the clustering employed, the stopping crite-
+rion is critical to good performance and depends on how the
+output is to be used. Under-clustering fragments speaker data
+over several clusters, while over-clustering produces contam-
+inated clusters containing speech from several speakers. For
+where is the number of free parameters, the number of indexing information by speaker, both are suboptimal. How-
+frames, the covariance matrix, and the dimension of the ever, when using cluster output to assist in speaker adaptation
+feature vector. (see, e.g., [20] for a more complete derivation.) of speech recognition models, under-clustering may be suit-
+If the pair of clusters are best described by a single full covari- able when a speaker occurs in multiple acoustic environments
+ance Gaussian, the will be low, whereas if there are two and over-clustering may be advantageous in aggregating speech
+separate distributions, implying two speakers, the will be from similar speakers or acoustic environments.
+high. For each step, the pair of clusters with the lowest is
+E. Joint Segmentation and Clustering
+merged and the statistics are recalculated. The process is gener-
+ally stopped when the lowest is greater than a speciﬁed An alternative approach to running segmentation and clus-
+threshold, usually 0. The use of the number of frames in the tering stages separately is to use an integrated scheme. This wasTRANTER AND REYNOLDS: OVERVIEW OF AUTOMATIC SPEAKER DIARISATION SYSTEMS 1561
+ﬁrst done in [13] by employing a Viterbi decode between iter- mean and variance normalization [15] and feature warping [44]
+ations of agglomerative clustering, but an initial segmentation using a sliding window of 3 s [14], [17]. The latter method had
+stage was still required. A more recent completely integrated previously been found by one study to be more effective than
+scheme, based on an evolutive-HMM (E-HMM) where detected other standard normalization techniques on a speaker veriﬁca-
+speakers help inﬂuence both the detection of other speakers and tion task on cellular data [45]. In [17], it was found the fea-
+the speaker boundaries, was introduced in [41] and developed ture normalization was necessary to get signiﬁcant gain from
+in [19] and [42]. The recording is represented by an ergodic the cluster recombination technique.
+HMM in which each state represents a speaker and the tran- When the clusters are merged, a new speaker model can be
+sitions model the changes between speakers. The initial HMM trained with the combined data and distances updated (as in [14]
+contains only one state and represents all of the data. In each it- and [17]) or standard clustering rules can be used with a static
+eration, a short speech segment assumed to come from a nonde- distance matrix (as in [15]). This recombination can be viewed
+tected speaker is selected and used to build a new speaker model as fusing intra- and inter- [43] audio ﬁle speaker clustering tech-
+by Bayesian adaptation of a UBM. A state is then added to the niques. On the RT-04F evaluation it was found that this stage
+HMM to reﬂect this new speaker, and the transitions probabili- signiﬁcantly improves performance, with further improvements
+ties are modiﬁed accordingly. A new segmentation is then gen- being obtained subsequently by using a variable prior iterative
+erated from a Viterbi decode of the data with the new HMM, and MAP approach for adapting the UBMs, and building new UBMs
+each model is adapted using the new segmentation. This reseg- including all of the test data [17].
+mentation phase is repeated until the speaker labels no longer
+change. The process of adding new speakers is repeated until G. Resegmentation
+there is no gain in terms of comparable likelihood or there is no
+The last stage found in many diarization systems is a reseg-
+data left to form a new speaker. The main advantages of this in-
+mentation of the audio via Viterbi decoding (with or without it-
+tegrated approach are to use all the information at each step and
+erations) using the ﬁnal cluster models and nonspeech models.
+to allow the use of speaker recognition-based techniques, like
+The purpose of this stage is to reﬁne the original segment bound-
+Bayesian adaptation of the speaker models from a UBM.
+aries and/or to ﬁll in short segments that may have been removed
+for more robust processing in the clustering stage. Filtering the
+F. Cluster Recombination
+segment boundaries using a word or phone recognizer output
+In this relatively recent approach [31], state-of-the-art can also help reduce the false alarm component of the error rate
+speaker recognition modeling and matching techniques are [31].
+used as a secondary stage for combining clusters. The signal
+processing and modeling used in the clustering stage of Sec-
+H. Finding Identities
+tion II-D are usually simple: no channel compensation, such as
+RASTA, since we wish to take advantage of common channel Although current diarization systems are only evaluated using
+characteristics among a speaker’s segments, and limited param- “relative” speaker labels (such as “spkr1”), it is often possible to
+eter distribution models, since the model needs to work with ﬁnd the true identities of the speakers (such as “Ted Koppel”).
+small amounts of data in the clusters at the start. This can be achieved by a variety of methods, such as building
+With cluster recombination, clustering is run to under-cluster speaker models for people who are likely to be in the news
+the audio but still produce clusters with a reasonable amount of broadcasts (such as prominent politicians or main news anchors
+speech s . A UBM is built on training data to represent and reporters) and including these models in the speaker clus-
+general speakers. Both static and delta coefﬁcients are used and tering stage or running speaker-tracking systems.
+feature normalization is applied to help reduce the effect of the An alternative approach, introduced in [46], uses linguistic in-
+acoustic environment. Maximum a posteriori (MAP) adaptation formation contained within the transcriptions to predict the pre-
+(usually mean-only) is then applied on each cluster from the vious, current, or next speaker. Rules are deﬁned based on cat-
+UBM to form a single model per cluster. The cross likelihood egory and word N-grams chosen from the training data, and are
+ratio (CLR) between any two given clusters is deﬁned [31], [43] then applied sequentially on the test data until the speaker names
+have been found. Blocking rules are used to stop rules ﬁring in
+certain contexts, for example, the sequence “[name] reports ”
+assigns the next speaker to be [name] unless is the word “that.”
+An extension of this system described in [47], learns many rules
+where is the average likelihood per frame of data and their associated probability of being correct automatically
+given the model . The pair of clusters with the highest CLR from the training data and then applies these simultaneously on
+is merged and a new model is created. The process is repeated the test data using probabilistic combination. Using automatic
+until the highest CLR is below a predeﬁned threshold chosen transcriptions and automatically found speaker turns naturally
+from development data. Because of the computational load at degrades performance but potentially 85% of the time can be
+this stage, each gender/bandwidth combination is usually pro- correctly assigned to the true speaker identity using this method.
+cessed separately, which also allows more appropriate UBMs to Although primarily used for identifying the speaker names
+be used for each case. given a set of speaker clusters, this technique can associate the
+Different types of feature normalization have been used with same name for more than one input cluster and, therefore, could
+this process, namely RASTA-ﬁltered cepstra with 10-s feature be thought of as a high-level cluster-combination stage.1562 IEEE TRANSACTIONS ON AUDIO, SPEECH, AND LANGUAGE PROCESSING, VOL. 14, NO. 5, SEPTEMBER 2006
+I. Combining Different Diarization Methods then scored against reference “ground-truth” speaker segmenta-
+tion which is generated using the rules given in [52]. Since the
+Combining methods used in different diarization systems
+hypothesis speaker labels are relative, they must be matched ap-
+could potentially improve performance over the best single
+propriately to the true speaker names in the reference. To accom-
+diarization system. It has been shown that the word error rate
+plish this, a one-to-one mapping of the reference speaker IDs to
+(WER) of an automatic speech recognizer can be consistently
+the hypothesis speaker IDs is performed so as to maximize the
+reduced when combining multiple segmentations even if the in-
+total overlap of the reference and (corresponding) mapped hy-
+dividual segmentations themselves do not offer state-of-the-art
+pothesis speakers. Speaker diarization performance is then ex-
+performance in either DER or resulting WER [48]. Indeed, it
+pressed in terms of the miss (speaker in reference but not in
+seems that diversity between the segmentation methods is just
+hypothesis), false alarm (speaker in hypothesis but not in refer-
+as important as the segmentation quality when being combined.
+ence), and speaker-error (mapped reference speaker is not the
+It is expected that gains in DER are also possible by combining
+same as the hypothesized speaker) rates. The overall DER is the
+different diarization modules or systems.
+sum of these three components. A complete description of the
+Several methods of combining aspects of different diariza-
+evaluation measure and scoring software implementing it can be
+tion systems have been tried, for example the “hybridization”
+found at http://nist.gov/speech/tests/rt/rt2004/fall.
+or “piped” CLIPS/LIA systems of [35] and [49] and the “plug
+It should be noted that this measure is time-weighted, so the
+and play” CUED/MIT-LL system of [20] which both combine
+DER is primarily driven by (relatively few) loquacious speakers
+components of different systems together. A more integrated
+and it is, therefore, more important to get the main speakers
+merging method is described in [49], while [35] describes a way
+complete and correct than to accurately ﬁnd speakers who do not
+of using the 2002 NIST speaker segmentation error metric to
+speak much. This scenario models some tasks, such as tracking
+ﬁnd regions in two inputs which agree and then uses these to
+anchor speakers in broadcast news for text summarization, but
+train potentially more accurate speaker models. These systems
+there may be other tasks (such as for speaker adaptation within
+generally produce performance gains, but tend to place some re-
+automatic transcription, or ascertaining the opinions of several
+striction on the systems being combined, such as the required ar-
+speakers in a quick debate) for which it is less appropriate. The
+chitecture or equalizing the number of speakers. An alternative
+same formulation can be modiﬁed to be speaker weighted in-
+approach introduced in [50] uses a “cluster voting” technique to
+stead of time weighted if necessary, but this is not discussed
+compare the output of arbitrary diarization systems, maintaining
+here. The utility of either weighting depends on the application
+areas of agreement and voting using conﬁdences or an external
+of the diarization output.
+judging scheme in areas of conﬂict.
+J. Sequential Speaker Clustering B. Data
+For some applications, it can be important to produce speaker The RT-04F speaker diarization data consists of one 30-min
+labels immediately without collecting all of the potential data extract from 12 different U.S. broadcast news shows. These were
+from a particular scenario, for example real-time captioning of derived from TV shows: three from ABC, three from CNN, two
+a broadcast news show. This constraint prevents the standard hi- from CNBC, two from PBS, one from CSPAN, and one from
+erarchical clustering techniques being used, and instead requires WBN. The style of show varied from a set of lectures from a few
+the clustering to be performed sequentially or online. An elegant speakers (CSPAN) to rapid headline news reporting (CNN Head-
+solution to this, described in [34], takes the segments in turn and line News). Details of the exact composition of the data sets can
+decides if they match any of the existing speaker clusters using be found in [52].
+thresholds on distance metrics based on the generalized likeli-
+hood ratio and a penalized within-cluster dispersion. If a match C. Results
+is found, the statistics of the matched cluster are updated using
+The results from the main diarization techniques are shown
+the new segment information, whereas if no match is found, the
+in Fig. 3. Using a top-down clustering approach with full
+segment starts a new speaker cluster. This process is much faster
+covariance models, arithmetic harmonic sphericity (AHS)
+than the conventional hierarchical approach, particularly when
+distance metric and BIC stopping criterion gave a DER of be-
+there are a large number of initial segments, and has been used
+tween 20.5% and 22.5% [38]. The corresponding performance
+for both ﬁnding speaker turns [34] and for speaker adaptation
+on the six-show RT diarization development data sets ranged
+within a real-time speech recognition framework [51].
+from 15.9% to 26.9%, showing that the top-down method
+seems more unpredictable than the agglomerative method.
+III. EVALUATION OF PERFORMANCE
+This is thought to be because the initial clusters contain many
+In this section we brieﬂy describe the NIST RT-04F speaker speakers and segments may thus be assigned incorrectly early
+diarization evaluation and present the results when using the key on, leading to an unrecoverable error. In contrast, the agglom-
+techniques discussed in this paper on the RT-04F diarization erative scheme grows clusters from the original segments and
+evaluation data. should not contain impure multispeaker clusters until very
+late in the clustering process. The agglomerative clustering
+A. Speaker Diarization Error Measure
+BIC-based scheme got around 17%–18% DER [11], [15],
+A system hypothesizes a set of speaker segments each of [17], [31], with Viterbi resegmentation between each step
+which consists of a (relative) speaker-id label such as “Mspkr1” providing a slight beneﬁt to 16.4% [11]. Further improvements
+or “Fspkr2” and the corresponding start and end times. This is to around 13% were made using CLR cluster recombinationTRANTER AND REYNOLDS: OVERVIEW OF AUTOMATIC SPEAKER DIARISATION SYSTEMS 1563
+Fig. 5. Accessing broadcast news audio from automatically derived
+speaker names via a wavesurfer plug-in. (Color version available online at
+Fig. 3. DERs for different methods on the RT-04F evaluation data. Each http://ieeexplore.ieee.org.)
+dot represents a different version of a system built using the indicated core
+technique. E-HMM not tuned on the U.S. broadcast news development sets.
+(Color version available online at http://ieeexplore.ieee.org.) Reducing this variability is a source of ongoing work. Certain
+techniques or parameter settings can perform better for different
+styles of show. Systems may potentially be improved by ei-
+ther automatically detecting the type of show and modifying
+the choice of techniques or parameters accordingly, or by com-
+bining different systems directly as discussed in Section II-A.
+IV. CONCLUSION AND FUTURE DIRECTIONS
+There has been tremendous progress in task deﬁnition, data
+availability, scoring measures, and technical approaches for
+speaker diarization over recent years. The methods used in
+broadcast news diarization are now being deployed across other
+domains, for example, improving speaker recognition perfor-
+mance using multispeaker train and test data in conversational
+telephone speech [15] and ﬁnding speakers within meeting data
+[6], [23]–[25], [53]. The latter sometimes contains an additional
+stage when multiple microphones are present to either select
+the most prominent microphone [53] or to weight the audio
+signal from multiple microphones to form a single “superior”
+signal before further processing [6], [24]. Different methods
+Fig. 4. DER per show for the system with lowest DER. There is a large for obtaining these channel weights have been tried including
+variability between the different styles of show. (Color version available online equal weighting [6], [24], using signal-to-noise ratio estimates
+at http://ieeexplore.ieee.org.)
+[6], [24], using the correlation between different channels [6],
+and “delay-and-sum” beamforming [6]. However, the other
+and resegmentation [15]. The CLR cluster recombination stage
+components of the systems generally match those used in
+which included feature warping produced a further reduction
+broadcast news with only the pretrained models and in some
+to around 8.5%–9.5% [14], [17], and using the whole of the
+cases parameters being changed to reﬂect the new domain.
+RT-04F evaluation data in the UBM build of the CLR cluster
+Indeed, [6] is working toward the goal of complete portability
+recombination stage gave a ﬁnal performance of 6.9% [17].
+between domains by trying to remove domain-speciﬁc models
+The proxy model technique performed better than the equiva-
+and parameters completely.
+lent BIC stages, giving 14.1% initially and 11.0% after CLR
+Other tasks, such as ﬁnding true speaker identities (see Sec-
+cluster recombination and resegmentation [15]. The E-HMM
+tion II-H) or speaker tracking (e.g., in [54]) are increasingly
+system, despite not being tuned on the U.S. broadcast news
+using diarization output as a starting point and performance is
+development sets, gave 16.1% DER.
+approaching a level where it can be considered “useful” for real
+For the system with the lowest DER, the per-show results are
+human interaction.
+given in Fig. 4. Typical of most systems, there is a large vari-
+Additions to applications which display audio and optionally
+ability in performance over the shows, reﬂecting the variability
+transcriptions, such as wavesurfer1 (see Fig. 5) or transcriber2
+in the number of speakers, the dominance of speakers, and the
+style and structure of the speech. Most of the variability is from 1Wavesurfer is available from www.speech.kth.se/wavesurfer
+the speaker error component due to over or under clustering. 2Transcriber is available from http://trans.sourceforge.net/1564 IEEE TRANSACTIONS ON AUDIO, SPEECH, AND LANGUAGE PROCESSING, VOL. 14, NO. 5, SEPTEMBER 2006
+[6] X. Anguera, C. Wooters, B. Peskin, and M. Aguiló, “Robust speaker
+segmentation for meetings: The ICSI-SRI Spring 2005 Diarization
+System,” in Proc. Machine Learning for Multimodal Interaction Work-
+shop (MLMI), Edinburgh, U.K., Jul. 2005, pp. 402–414.
+[7] Benchmark Tests: Rich Transcription (RT). NIST. [Online]. Available:
+http://www.nist.gov/speech/tests/rt/
+[8] Benchmark Tests: Speaker Recognition. NIST. [Online]. Available:
+http://www.nist.gov/speech/tests/spk/
+[9] A. Martin and M. Przybocki, “Speaker recognition in a multi-speaker
+environment,” in Proc. Eur. Conf. Speech Commun. Technol., vol. 2, Aal-
+borg, Denmark, Sep. 2001, pp. 787–790.
+[10] D. Moraru, L. Besacier, and E. Castelli, “Using a-priori information for
+speaker diarization,” in Proc. Odyssey Speaker and Language Recogni-
+tion Workshop, Toledo, Spain, May 2004, pp. 355–362.
+[11] C. Wooters, J. Fung, B. Peskin, and X. Anguera, “Toward Robust
+speaker segmentation: The ICSI-SRI Fall 2004 Diarization System,”
+in Proc. Fall 2004 Rich Transcription Workshop (RT-04), Palisades,
+NY, Nov. 2004, [Online]. Available: http://www.icsi.berkeley.edu/cgi-
+Fig. 6. Diarization information, including automatically found speaker bin/pubs/publication.pl?ID=000100.
+identities, being used in the “Transcriber” tool to improve readability [12] P. Nguyen, L. Rigazio, Y. Moh, and J. C. Junqua. Rich transcription
+and facilitate searching by speaker. (Color version available online at 2002 site report. Panasonic speech technology laboratory (PSTL). pre-
+http://ieeexplore.ieee.org.) sented at Proc. Rich Transcription Workshop (RT-02). [Online]. Avail-
+able: http://www.nist.gov/speech/tests/rt/rt2002/presentations/rt02.pdf
+(see Fig. 6), and the inclusion in complete retrieval systems such [13] J.-L. Gauvain, L. Lamel, and G. Adda, “Partitioning and transcription of
+as Rough ’n’ Ready [55] and SpeechFind [56] allow users to broadcast news data,” in Proc. Int. Conf. Spoken Lang. Process., vol. 4,
+Sydney, Australia, Dec. 1998, pp. 1335–1338.
+see the current speaker information, understand the general ﬂow
+[14] X. Zhu, C. Barras, S. Meignier, and J.-L. Gauvain, “Combining
+of speakers throughout the broadcast, or search for a particular speaker identiﬁcation and BIC for speaker diarization,” in Proc. Eur.
+speaker within the audio. Experiments are also underway to as- Conf. Speech Commun. Technol., Lisbon, Portugal, Sep. 2005, pp.
+2441–2444.
+certain if additional tasks, such as the process of annotating data,
+[15] D. A. Reynolds and P. Torres-Carrasquillo, “The MIT Lincoln Labora-
+can be facilitated using diarization output. tory RT-04F diarization systems: Applications to broadcast audio and
+The diarization tasks of the future will cover a wider scope telephone conversations,” in Proc. Fall 2004 Rich Transcription Work-
+shop (RT-04), Palisades, NY, Nov. 2004.
+than currently, both in terms of the amount of data (hundreds of
+[16] T. Hain, S. E. Johnson, A. Tuerk, P. C. Woodland, and S. J. Young.
+hours) and information required (speaker identity, speaker char- Segment generation and clustering in the HTK broadcast news tran-
+acteristics, or potentially even emotion). Current techniques and scription system. presented at Proc. 1998 DARPA Broadcast News
+Transcription and Understanding Workshop. [Online]. Available:
+toolkits (for example, ALIZE [57]) will provide a ﬁrm base to
+http://mi.eng.cam.ac.uk/reports/abstracts/hain_darpa98.html
+start from, but new methods, particularly combining informa- [17] R. Sinha, S. E. Tranter, M. J. F. Gales, and P. C. Woodland, “The
+tion from many different approaches (as is currently done in Cambridge University March 2005 speaker diarization system,” in
+Proc. Eur. Conf. Speech Commun. Technol., Lisbon, Portugal, Sep.
+the speaker recognition ﬁeld [58]) will need to be developed to
+2005, pp. 2437–2440.
+allow diarization to be maximally beneﬁcial to real users and po- [18] D. Liu and F. Kubala, “Fast speaker change detection for broadcast
+tential downstream processing such as machine translation and news transcription and indexing,” in Proc. Eur. Conf. Speech
+Commun. Technol., vol. III, Budapest, Hungary, Sep. 1999, pp.
+parsing. Additionally, further development of tools to allow user
+1031–1034.
+interactions with diarization output for speciﬁc jobs will help [19] S. Meignier, D. Moraru, C. Fredouille, J.-F. Bonastre, and L. Besacier,
+focus the research to contribute to high-utility human language “Step-by-Step and integrated approaches in broadcast news speaker di-
+arization,” Comput. Speech Lang., no. 20, pp. 303–330, Sep. 2005, to
+technology.
+be published.
+[20] S. E. Tranter and D. A. Reynolds, “Speaker diarization for broadcast
+ACKNOWLEDGMENT news,” in Proc. Odyssey Speaker and Language Recognition Workshop,
+Toledo, Spain, Jun. 2004, pp. 337–344.
+The authors would like to thank C. Barras, J.-F. Bonastre, C. [21] S. E. Tranter, K. Yu, G. Evermann, and P. C. Woodland, “Generating
+Fredouille, P. Nguyen, P. Torres-Carrasquillo, and C. Wooters and evaluating segmentations for automatic speech recognition of con-
+versational telephone speech,” in Proc. ICASSP, vol. I, Montreal, QC,
+for their help in the construction of this paper.
+Canada, May 2004, pp. 753–756.
+[22] D. Liu and F. Kubala, “A cross-channel modeling approach for au-
+REFERENCES tomatic segmentation of conversational telephone speech,” in Proc.
+IEEE ASRU Workshop, St. Thomas, U.S. Virgin Islands, Dec. 2003, pp.
+[1] D. A. Reynolds and P. Torres-Carrasquillo, “Approaches and applica- 333–338.
+tions of audio diarization,” in Proc. IEEE Int. Conf. Acoust., Speech, [23] D. A. van Leeuwan, “The TNO speaker diarization system for NIST
+Signal Process., vol. V, Philadelphia, PA, Mar. 2005, pp. 953–956. RT05s meeting data,” in Proc. Machine Learning for Multimodal
+[2] J. Saunders, “Real-time discrimination of broadcast speech/music,” in Interaction Workshop (MLMI), Edinburgh, UK, Jul. 2005, pp.
+Proc. IEEE Int. Conf. Acoust., Speech, Signal Process., vol. II, Atlanta, 440–449.
+GA, May 1996, pp. 993–996. [24] D. Istrate, C. Fredouille, S. Meignier, L. Besacier, and J.-F. Bonastre,
+[3] Z. Liu, Y. Wang, and T. Chen, “Audio feature extraction and analysis “NIST RT’05 evaluation: Preprocessing techniques and speaker diariza-
+for scene segmentation and classiﬁcation,” J. VLSI Signal Process. Syst., tion on multiple microphone meetings,” in Proc. Machine Learning for
+vol. 20, no. 1–2, pp. 61–79, Oct. 1998. Multimodal Interaction Workshop (MLMI), Edinburgh, U.K., Jul. 2005,
+[4] S. E. Johnson and P. C. Woodland, “A method for direct audio search pp. 428–439.
+with applications to indexing and retrieval,” in Proc. IEEE Int. Conf. [25] S. Cassidy, “The macquarie speaker diarization system for RT05s,” in
+Acoust., Speech, Signal Process., vol. 3, Istanbul, Turkey, Jun. 2000, pp. Proc. NIST Spring Rich Transcription Evaluation Workshop (RT-05s),
+1427–1430. Edinburgh, UK, Jul. 2005.
+[5] Y. Moh, P. Nguyen, and J.-C. Junqua, “Toward domain independent clus- [26] T. Pfau, D. Ellis, and A. Stolcke, “Multispeaker speech activity detection
+tering,” in Proc. IEEE Int. Conf. Acoust., Speech, Signal Process., vol. for the ICSI meeting recorder,” in Proc. IEEE ASRU Workshop, Trento,
+II, China, Apr. 2003, pp. 85–88. Italy, Dec. 2001, pp. 107–110.TRANTER AND REYNOLDS: OVERVIEW OF AUTOMATIC SPEAKER DIARISATION SYSTEMS 1565
+[27] J. G. Fiscus, N. Radde, J. S. Garofolo, A. Le, J. Ajot, and C. Laprun, [47] S. E. Tranter, “Who really spoke when?—Finding speaker turns and
+“The rich transcription 2005 spring meeting recogntion evaluation,” in identities in audio,” in Proc. IEEE Int. Conf. Acoust., Speech, Signal
+Proc. Machine Learning for Multimodal Interaction Workshop (MLMI), Process., vol. I, Toulouse, France, May 2006, pp. 1013–1016.
+Edinburgh, UK, Jul. 2005, pp. 369–389. [48] M. J. F. Gales, D. Y. Kim, P. C. Woodland, H. Y. Chan, D. Mrva, R. Sinha,
+[28] S. S. Chen and P. S. Gopalakrishnam, “Speaker, environment and S. E. Tranter, “Progress in the CU-HTK transcription system,” IEEE
+and channel change detection and clustering via the bayesian Trans. Audio, Speech, Lang, Process., vol. 14, no. 5, pp. 1511–1523, Sep.
+information criterion,” in Proc. 1998 DARPA Broadcast News 2006.
+Transcription and Understanding Workshop, Lansdowne, VA, 1998, [49] D. Moraru, S. Meignier, C. Fredouille, L. Besacier, and J.-F. Bonastre,
+pp. 127–132. “The ELISA consortium approaches in speaker segmentation during the
+[29] B. Zhou and J. Hansen, “Unsupervised audio stream segmentation NIST 2003 Rich Transcription evaluation,” in Proc. IEEE Int. Conf.
+and clustering via the Bayesian information criterion,” in Proc. Int. Acoust., Speech, Signal Process., vol. 1, Montreal, QC, Canada, May
+Conf. Spoken Language Process., vol. 3, Beijing, China, Oct. 2000, pp. 2004, pp. 373–376.
+714–717. [50] S. E. Tranter, “Two-way cluster voting to improve speaker diarization
+[30] M. A. Siegler, U. Jain, B. Raj, and R. M. Stern, “Automatic segmenta- performance,” in Proc. IEEE Int. Conf. Acoust., Speech, Signal Process.,
+tion, classiﬁcation and clustering of broadcast news,” in Proc. DARPA vol. I, Philadelphia, PA, Mar. 2005, pp. 753–756.
+Speech Recognition Workshop, Chantilly, VA, Feb. 1997, pp. 97–99. [51] D. Liu, D. Kiecza, A. Srivastava, and F. Kubala, “Online speaker adap-
+[31] C. Barras, X. Zhu, S. Meignier, and J.-L. Gauvain, “Improving speaker tation and tracking for real-time speech recognition,” in Proc. Eur. Conf.
+diarization,” in Proc. Fall Rich Transcription Workshop (RT-04), Speech Commun. Technol., Lisbon, Portugal, Sep. 2005, pp. 281–284.
+Palisades, NY, Nov. 2004, [Online]. Available: http://www.limsi.fr/In- [52] J. G. Fiscus, J. S. Garofolo, A. Le, A. F. Martin, D. S. Pallett, M. A.
+dividu/barras/publis/rt04f_diarization.pdf. Przybocki, and G. Sanders, “Results of the fall 2004 STT and MDE
+[32] A. E. Rosenberg, A. Gorin, Z. Liu, and S. Parthasarathy, “Unsupervised evaluation,” in Proc. Fall 2004 Rich Transcription Workshop (RT-04),
+speaker segmentation of telephone conversations,” in Proc. Int. Conf. Palisades, NY, Nov. 2004.
+Spoken Language Process., Denver, CO, Sep. 2002, pp. 565–568. [53] Q. Jin, K. Laskowski, T. Schultz, and A. Waibel, “Speaker segmenta-
+[33] S. Meignier, D. Moraru, C. Fredouille, L. Besacier, and J.-F. Bonastre, tion and clustering in meetings,” in Proc. ICASSP Meeting Recogni-
+“Beneﬁts of prior acoustic segmentation for automatic speaker segmen- tion Workshop, Montreal, QC, Canada, May 2004, [Online]. Available:
+tation,” in Proc. IEEE Int. Conf. Acoust., Speech, Signal Process., vol. I, http://isl.ira.uka.de/publications/SchultzJin_NIST04.pdf.
+Montreal, QC, Canada, May 2004, pp. 397–400. [54] D. Istrate, N. Schefﬂer, C. Fredouille, and J.-F. Bonastre, “Broadcast
+[34] D. Liu and F. Kubala, “Online speaker clustering,” in Proc. IEEE Int. news speaker tracking for ESTER 2005 campaign,” in Proc. Eur. Conf.
+Conf. Acoust., Speech, Signal Process., vol. I, Hong Kong, China, Apr. Speech Commun. Technol., Lisbon, Portugal, Sep. 2005, pp. 2445–2448.
+2003, pp. 572–575. [55] F. Kubala, S. Colbath, D. Liu, A. Srivastava, and J. Makhoul, “Integrated
+[35] D. Moraru, S. Meignier, L. Besacier, J.-F. Bonastre, and I. technologies for indexing spoken language,” Commun. ACM, vol. 43, no.
+Magrin-Chagnolleau. The ELISA consortium approaches in speaker 2, pp. 48–56, Feb. 2000.
+segmentation during the NIST 2002 speaker recognition evaluation. [56] J. H. L. Hansen, R. Huang, B. Z. M. Seadle, J. J. R. Deller, A. R. Gurijala,
+presented at Proc. IEEE Int. Conf. Acoust., Speech, Signal Process.. M. Kurimo, and P. Angkititrakul, “Speechﬁnd: Advances in spoken doc-
+[Online]. Available: http://www.lia.univ-avignon.fr/ﬁch_art/339-mor- ument retrieval for a national gallery of the spoken word,” IEEE Trans.
+icassp2003.pdf Speech Audio Process., vol. 13, no. 5, pp. 712–730, Sep. 2005.
+[36] M. Cettolo, “Segmentation, classiﬁcation and clustering of an [57] J. F. Bonastre, F. Wils, and S. Meignier, “Alize: A free toolkit for speaker
+Italian corpus,” in Proc. Recherche d’Information Assisté par Or- recogntion,” in Proc. IEEE Int. Conf. Acoust., Speech, Signal Process.,
+dinateur (RIAO), Paris, France, Apr. 2000, [Online]. Available: vol. I, Philadelphia, PA, Mar. 2005, pp. 737–740.
+http://munst.itc.it/people/cettolo/papers/riao00a.ps.gz. [58] D. Reynolds, W. Andrews, J. Campbell, J. Navratil, B. Peskin, A. Adami,
+[37] J. Ajmera and C. Wooters, “A Robust Speaker Clustering Algorithm,” Q. Jin, D. Klusacek, J. Abramson, R. Mihaescu, J. Godfrey, D. Jones,
+in Proc. IEEE ASRU Workshop, St Thomas, U.S. Virgin Islands, Nov. and B. Xiang, “The superSID project: Exploiting high-level informa-
+2003, pp. 411–416. tion for high-accuracy speaker recognition,” in Proc. IEEE Int. Conf.
+[38] S. E. Tranter, M. J. F. Gales, R. Sinha, S. Umesh, and P. C. Wood- Acoust., Speech, Signal Process., vol. IV, Hong Kong, China, Apr. 2003,
+land, “The development of the Cambridge University RT-04 diarization pp. 784–787.
+system,” in Proc. Fall 2004 Rich Transcription Workshop (RT-04), Pal-
+isades, NY, Nov. 2004, [Online]. Available: http://mi.eng.cam.ac.uk/re-
+ports/abstracts/tranter_rt04.html. Sue E. Tranter (M’04) received the M.Eng. degree
+[39] H. Jin, F. Kubala, and R. Schwartz, “Automatic speaker clustering,” in in engineering science, specializing in information
+Proc. DARPA Speech Recognition Workshop, Chantilly, VA, Feb. 1997, engineering, from the University of Oxford, Oxford,
+pp. 108–111. U.K., in 1996 and the M.Phil. degree in computer
+[40] M. Ben, M. Betser, F. Bimbot, and G. Gravier, “Speaker diarization using speech and language processing from the University
+bottom-up clustering based on a parameter-derived distance between of Cambridge, Cambridge, U.K., in 1997.
+adapted GMMs,” in Proc. Int. Conf. Spoken Language Processing, Jeju Following this, she worked as a Research Assistant
+Island, Korea, Oct. 2004, pp. 2329–2332. on MultiMedia Document Retrieval at the University
+[41] S. Meignier, J.-F. Bonastre, C. Fredouille, and T. Merlin, “Evolutive of Cambridge until 2000, and then on nonlinear con-
+HMM for multispeaker tracking system,” in Proc. IEEE Int. Conf. trol theory at the University of Oxford. Since 2002
+Acoust., Speech, Signal Process., vol. II, Istanbul, Turkey, Jun. 2000, she has been a Research Associate on the Effective
+pp. 1201–1204. Affordable Reusable Speech-To-Text (EARS) project at the University of Cam-
+[42] S. Meignier, J.-F. Bonastre, and S. Igounet, “E-HMM approach for bridge, specializing in speaker segmentation and clustering.
+learning and adapting sound models for speaker indexing,” in Proc.
+Odyssey Speaker and Language Recognition Workshop, Crete, Greece,
+Jun. 2001, pp. 175–180. Douglas Reynolds (SM’98) received the B.E.E. de-
+[43] D. Reynolds, E. Singer, B. Carlson, J. O’Leary, J. McLaughlin, and M. gree (with highest honors) and the Ph.D. degree in
+Zissman, “Blind clustering of speech utterances based on speaker and electrical engineering, both from the Georgia Insti-
+language characteristics,” in Proc. Int. Conf. Spoken Language Process., tute of Technology, Atlanta.
+vol. 7, Sydney, Australia, Dec. 1998, pp. 3193–3196. He joined the Speech Systems Technology Group
+[44] J. Pelecanos and S. Sridharan, “Feature warping for Robust speaker ver- (now the Information Systems Technology Group),
+iﬁcation,” in Proc. Odyssey Speaker and Language Recognition Work- Lincoln Laboratory, Massachusetts Institute of Tech-
+shop, Crete, Greece, Jun. 2001, pp. 213–218. nology, Cambridge, in 1992. Currently, he is a Se-
+[45] C. Barras and J.-L. Gauvain, “Feature and score normalization for nior Member of Technical Staff and his research in-
+speaker veriﬁcation of cellular data,” in Proc. IEEE Int. Conf. Acoust., terests include robust speaker and language identiﬁ-
+Speech, Signal Process., vol. II, Hong Kong, China, Apr. 2003, pp. cation and veriﬁcation, speech recognition, and gen-
+49–52. eral problems in signal classiﬁcation and clustering.
+[46] L. Canseco-Rodriguez, L. Lamel, and J.-L. Gauvain, “Speaker Diariza- Douglas is a Senior Member of IEEE Signal Processing Society and a co-
+tion from Speech Transcripts,” in Proc. Int. Conf. Spoken Language founder and member of the steering committee of the Odyssey Speaker Recog-
 Process., Jeju Island, Korea, Oct. 2004, pp. 1272–1275. nition workshop.

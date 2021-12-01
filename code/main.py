@@ -4,6 +4,7 @@ import extraction
 import sort_terms
 import iob_tagging
 import sequence_tagger
+import evaluation
 
 import spacy
 
@@ -25,9 +26,12 @@ nlp = spacy.load("en_core_web_sm")
 # To convert all test data into txt, uncomment the following line
 #pdftotxt.convert(r'articles/pdf/test/*')
 # To preprocess all train data, uncomment the following line
-preprocessing.preprocess(True)
+#preprocessing.preprocess(True)
 # To tag the train data with IOB, uncomment the following line
+print('IOB tagging evaluation:')
 iob_tagging.tag_files(True)
+evaluation.evaluate()
 
 # To re-train the model, uncomment the line 27 in sequence_tagger.py
-#sequence_tagger.prepare_data()
+print('Sequence tagger evaluation:')
+evaluation.evaluate(sequence_tagger.prepare_data())

@@ -1,7 +1,7 @@
 import spacy
 import glob
 import pandas as pd
-
+import sequence_tagger
 
 def iob_formatting(text: str):
     nlp = spacy.load("en_core_web_sm")
@@ -15,9 +15,9 @@ def iob_tagging(tokens: list, terms: list):
     iob = []
     i, j, k = 0, 1, 2
     while i < len(tokens):
-        token = tokens[i]
+        token = str(tokens[i])
         found = False
-        if token == '':
+        if token == 'nan':
             iob.append('')
             found = True
             i+=1
@@ -27,7 +27,7 @@ def iob_tagging(tokens: list, terms: list):
             st = term.strip().split(' ')
             if len(st) == 1:
                 if token == st[0]:
-                    iob.append('B')
+                    iob.append('b')
                     found = True
                     i+=1
                     j+=1
@@ -36,8 +36,8 @@ def iob_tagging(tokens: list, terms: list):
             elif j < len(tokens) and len(st) == 2:
                 second_token = tokens[j]
                 if token == st[0] and second_token == st[1]:
-                    iob.append('B')
-                    iob.append('I')
+                    iob.append('b')
+                    iob.append('i')
                     i+=2
                     j+=2
                     k+=2
@@ -47,45 +47,37 @@ def iob_tagging(tokens: list, terms: list):
                 second_token = tokens[j]
                 third_token = tokens[k]
                 if token == st[0] and second_token == st[1] and third_token == st[2]:
-                    iob.append('B')
-                    iob.append('I')
-                    iob.append('I')
+                    iob.append('b')
+                    iob.append('i')
+                    iob.append('i')
                     i+=3
                     j+=3
                     k+=3
                     found = True
                     break
         if not found:
-            iob.append('O')
+            iob.append('o')
             i+=1
             j+=1
             k+=1
     return iob
 
-
-def tag_files(test: bool):
+def tag_files(test:bool):
+    # Load the data
     if test:
-        path = 'output/tokens_pos_test.txt'
+        data = pd.read_csv("output/ground_truth_iob.csv")
         iob_path = "output/iob_format_test.csv"
     else:
-        path = 'output/tokens_pos.txt'
+        data = pd.read_csv("output/iob_format.csv")
         iob_path = "output/iob_format.csv"
-    with open(iob_path, 'r+') as f:
-        f.truncate(0)
-    terms, tokens, pos = [], [], []
+    tokens = list(data["Token"].values)
+    pos = list(data["POS"].values)
+    terms = []
     with open('output/sorted_terms.txt', 'r') as f:
         for line in f.readlines():
             terms.append(line)
-    with open(path, 'r') as f:
-        for line in f.readlines():
-            sl = line.split('\t')
-            if len(sl) == 1:
-                tokens.append('')
-                pos.append('')
-            else:
-                tokens.append(sl[0].strip('\n'))
-                pos.append(sl[1].strip('\n'))
     iob = iob_tagging(tokens, terms)
     data = {'Token':tokens, "POS":pos, "IOB":iob}
     df = pd.DataFrame(data=data)
     df.to_csv(iob_path, index=False)
+    return iob

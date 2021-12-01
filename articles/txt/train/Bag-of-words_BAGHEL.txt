@@ -3898,4 +3898,784 @@ Conference on Acoustics, Speech, and Signal Processing, vol. 3, 1997,
 speech. Therefore, harmonic patterns present in speech signals
 pp. 1647–1650.
 need to be explored as an extension of this work.
+Authorized licensed use limited to: Cornell University Library. Downloaded on September 17,2020 at 07:34:33 UTC from IEEE Xplore.  Restrictions apply. Overlapped/Non-Overlapped Speech Transition
+Point Detection Using Bag-of-Audio-Words
+Shikha Baghel1, S. R. Mahadeva Prasanna2, and Prithwijit Guha1
+1 Department of Electronics and Electrical Engineering
+Indian Institute of Technology Guwahati, Assam 781039, India
+2 Department of Electrical Engineering
+Indian Institute of Technology Dharwad, Dharwad-580011, India
+Email: shikha.baghel, prasanna, pguha @iitg.ac.in
+{ }
+Non-overlapped Overlapped Speech Non-overlapped
+Abstract—Overlapped speech refers to an audio signal which Speech (Sp1)  (Sp1 + Sp2)    Speech (Sp2)
+cOovnetralianpspsepdeescpheeocfhtwisooonre mofotrheesmpeaaiknesrosusrpceeaskoifnegrsriomrufoltranspeoeauksleyr. mplitude -00..5501 (a)
+diarization systems. This work presents an initial study to identify A
+2 4 6 8 10 12
+the transition points of overlapped to non-overlapped speech Wide Band Spectrogram
+4
+and vice-versa. Characteristics of overlapped and non-overlapped
+speech are examined in terms of the vocal tract system, exci- Hz) 2 (b)
+t(eaHxtcEiiot)natoisofonuLriscnoeeu,arracnePdcrhemdaoircdatcuiotlenartiis(oLtnicPss)porefecstsirdpuuemeac.lhTsihsgienganHlailrl.beTperrhteeseeSnnuvtsemlotphoeef Frequency (K 040 2 Narro4w Band S6pectrogr8am 10 12
+Ten Largest Peaks (STLP) of the spectrum and Mel-Frequency 2 (c)
+Cepstral Coefﬁcients (MFCCs) represent the vocal tract shape 0
+information. The modulation spectrum energy (ModSE) captures 0 2 4 6 8 10 12
+Time (sec)
+the information of slowly varying temporal envelope of speech.
+A Bag-of-Audio-Words (BoAW) based approach is used to detect
+Fig. 1. Illustrating the Spectrogram. (a) Speech signal, High intensity
+the transition points. News debates are one of the main sources
+of (b) wideband spectrogram, and (c) narrowband spectrogram for
+of naturally occurred overlapped speech. Therefore, the present
+overlapped speech than non-overlapped speech.
+work is evaluated on Indian news debate scenario. A high
+Identiﬁcation Rate (IR) and low Spurious Rate (SR) is observed
+when all the features are used simultaneously as a 16d feature(13- Overlapped speech can be produced in a competitive or a
+MFCCs, HE of LP residual, STLP and ModSE) for the detection non-competitive scenario [4]. Competitive overlapped speech
+task. is produced when two or more speakers are in a competition
+Index Terms—Overlapped speech, MFCCs, excitation source,
+to grab the opportunity for speaking, and thus they continue
+Hilbert envelope, vocal tract system, modulation spectrum, Bag-
+to speak simultaneously for a signiﬁcant duration [4]. Over-
+of-Audio-Words
+lapped speech present in news debates is considered as the
+competitive one. In a non-competitive scenario, speakers co-
+I. INTRODUCTION operate with each other and allow others to speak. In such
+cases, overlapping occur for a small duration [4]. Overlaps
+Overlapped speech is produced when two or more speakers present in conversational speech are an example of a non-
+speak simultaneously. It is considered as one of the main competitive scenario.
+sources of error for diarization systems [1], [2]. Ryant et
+The signal characteristics of non-overlapped speech vary
+al. [3] discussed the importance of handling overlapped speech
+signiﬁcantly from overlapped speech. These deviations in the
+for speaker diarization. Conventional speech processing ap-
+characteristics can be observed from the spectrograms shown
+plications such as speech and speaker recognition, consider
+in Fig. 1. Spectrum for overlapped speech is harmonically
+speech only from a single speaker. Hence, the overlapped
+richer than non-overlapping speech due to the presence of
+speech regions need to be identiﬁed and processed separately.
+more than one fundamental frequency (F ). This can be
+0
+This requires the detection of transition points from non-
+observed from the narrowband spectrum shown in Fig. 1(c).
+overlapped to overlapped speech and vice-versa. In this work,
+A wideband spectrogram is shown in Fig. 1(b), which shows
+non-overlapped speech refers to the audio signal containing
+higher energy for overlapped speech than non-overlapped
+the speech of only one speaker at a time. This study aims
+regions. Fig. 1(a) shows a 12 sec long speech signal contains
+to detect such transition points in news debate audio. The
+non-overlapped speech for ﬁrst and last 4 sec, and overlapped
+frequent presence of overlapped speech in news debates makes
+speech for middle 4 sec. These 4 sec long overlapped and
+it appropriate to consider for this study.
+non-overlapped speech segments are taken from a news debate
+978-1-7281-8895-9/20/$31.00 c 2020 IEEE audio.
+�
+Authorized licensed use limited to: Cornell University Library. Downloaded on September 17,2020 at 07:34:33 UTC from IEEE Xplore.  Restrictions apply. 1 12 12
+0.5 10 10
+Amplitude 01 0 20 40 (a) 60 80 100 Amplitude 468 Amplitude 468
+0.5 2 2
+0 0 20 4ti0me ((bm)s6e0c) 80 100 00 DFT(1 a0p)0oints 200 00 DFT1 p(0bo0)ints 200
+Fig. 2. Illustrating HE of LP residual. (a) Non-overlapped speech Fig. 3. Illustrating spectral peaks for one frame of (a) non-overlapped
+contains a lower residual, (b) a higher residual is exhibited for speech, which shows lower spectral peaks amplitude, and (b) over-
+overlapped speech. lapped speech with higher spectral peaks amplitude.
+Thus, the LP residual signal exhibits different behavior for
+Different nature of spectrograms for overlapped and non-
+both the speech cases.
+overlapped speech motivates to study the speech characteristics
+HE of LP Residual– A 12th order LP analysis is performed
+for transition point detection. An enhanced time-frequency
+to obtain the corresponding LP residual signal. The time-
+based representation called pyknogram has been used for
+varying changes of the excitation characteristics are smeared
+tracking harmonic patterns present in speech signal for de-
+in the LP residual due to its bipolar nature. These changes are
+tecting overlapped speech [2]. Youseﬁ et al. [5] proposed two
+further enhanced by computing the HE of the LP residual [10].
+features derived from online Convolutive Non-negative Matrix
+Fig. 2 illustrates the higher residual error for overlapped
+Factorization (CNMF). Boakye et al. [6] explored spectral ﬂat-
+speech (Fig. 2(b)) than that in non-overlapped one (Fig. 2(a)).
+ness, harmonic energy ratio, modulation spectrogram features,
+Similarly, Fig. 5(b) represents the HE of LP residual (blue
+and MFCC features for overlapping speech detection in distant
+color), which shows the higher values for overlapped speech
+microphone audio. The usefulness of Fundamental frequency
+compared to the non-overlap one.
+(F ) and related features have also been explored [7], [8].
+0
+Some works have also utilized prosodic and voice quality
+B. Vocal Tract System Features
+features such as loudness, voice-probability Jitter, shimmer,
+Vocal tract shape can be represented in terms of the formants
+and logarithmic harmonics-to-noise ratio (logHNR) [8]. Lin-
+and the envelope of the short-time power spectrum of the
+ear prediction (LP) residual energy and LP coefﬁcients also
+speech signal. MFCCs capture the information of power spec-
+show discrimination between non-overlapped and overlapped
+trum envelope by taking human perception into consideration.
+speech [9].
+Short-time spectra of speech signal show spectral peaks corre-
+This work presents an initial study done in the direction of
+sponding to formant locations [11]. Thus, the ﬁrst ten largest
+overlapped/non-overlapped transition point detection in news
+peaks of the spectrum can be considered for representing
+debate scenarios. Excitation source, vocal tract and modulation
+the formant information. Spectra of overlapped speech are
+spectrum characteristics of a speech signal are explored for
+expected to have sufﬁciently higher energies distributed up
+this work (section II). The Hilbert Envelope (HE) of LP
+to high frequencies due to the superimposition of two speech
+residual (sub-section II-A), Sum of Ten Largest Peaks (STLP)
+signals. However, spectrum energies are mostly concentrated
+(sub-section II-B), Modulation Spectrum Energy (ModSE)
+towards low frequencies for non-overlapped speech (Fig. 1(b)).
+(sub-section II-C) and MFCC (sub-section II-B) features are
+Therefore, the features such as MFCCs and Sum of Ten
+studied. The Bag-of-Audio-Words (BoAW) approach is used
+Largest Peaks (STLP) are worth exploring in this study.
+to transform these speech features into distribution based rep-
+resentation (section III). Transition points are detected based Sum of Ten Largest Spectral Peaks (STLP)– Ten largest
+peaks are picked from the magnitude spectrum of each frame
+on the dissimilarity of these distributions (section IV). The
+and summed to obtain the STLP feature. Fig. 3 illustrates
+proposed approach is evaluated on a news debate dataset and
+the ten largest peaks (highlighted in red circles) in spectrum
+the results are discussed in section V. Section VI concludes
+for one frame of overlapped (Fig. 3(b)) and non-overlapped
+the present work and discusses the future directions.
+(Fig. 3(a)) speech. This ﬁgure shows the discriminative be-
+II. FEATURES FOR OVERLAPPED/NON-OVERLAPPED havior of the STLP feature for both the classes. The STLP
+SPEECH TRANSITION POINT DETECTION feature (blue color) is plotted in Fig. 5(c) for a 12 sec long
+This section explains the speech features used for transition speech signal. This ﬁgure shows higher values of STLP for
+point detection. Speech signal (sampling rate, F = 8 kHz) is overlapped speech than that in the non-overlapped regions.
+s
+processed with a frame size of 20 ms, and a shift of 10 ms to Mel Frequency Cepstral Coefﬁcients (MFCC)– The power
+extract features. spectrum of each frame is mapped onto the mel scale using a
+mel ﬁlter bank with 26 overlapping triangular ﬁlters. The ﬁrst
+A. Excitation Source Feature 13 coefﬁcients of MFCCs are considered for the detection of
+The LP residual signal captures the excitation source infor- transition points.
+mation of a speech signal [10]. The LP residual represents
+C. Modulation Spectrum Feature
+the error in predicting the current sample based on the past
+p samples. This error is expected to be higher in overlapped Modulation refers to the slowly varying temporal envelope
+speech due to the presence of more than one speaker’s speech. of speech. The envelope of speech can be varied according
+Authorized licensed use limited to: Cornell University Library. Downloaded on September 17,2020 at 07:34:33 UTC from IEEE Xplore.  Restrictions apply. 0.5 Non-overlapped Overlapped Non-overlapped
+0 Speech Speech Speech
+−0.50 100 200 300 400 500 1
+1 Time( a(m) sec) -10 (a)
+0.5 2 4 6 8 10 12
+Amplitude 0010 2 4 6 Filt8er (nbu)m10ber 12 14 16 18 mplitude 0120 2 4 6 8 10 12 (b)
+−10 100 2T00ime (mse3c0)0 400 500 A0.51 (c)
+1 (c) 0
+0.5 2 4 6 8 10 12
+00 2 4 6 8 10 12 14 16 18 1
+Filter (ndu)mber 0.5 (d)
+0
+2 4 6 8 10 12
+Fig. 4. Illustrating Modulation spectrum energy. (a) Non-overlapped Time(sec)
+speech, (b) Modulation spectrum energy components from the critical
+Fig. 5. Illustrating speech speciﬁc features. (a) Speech signal of 12 sec
+band ﬁlters for non-overlapped speech, (c) Overlapped speech, (d)
+duration, (b) HE of LP residual, (c) Sum of ten largest spectral peaks
+Modulation spectrum energy components from the critical band ﬁlters
+(STLP), (d) Modulation spectrum energy (ModSE). The blue color
+for overlapped speech which is higher than non-overlapped speech.
+plots ((b), (c) and (d)) represent raw features, while the corresponding
+smoothed features are plotted in red color.
+to the number of sound units spoken per unit time, which is
+known as the syllabic rate of speech. In the case of overlapped where, a label li is assigned to the feature vector fi. This
+speech, the syllabic rate is expected to be higher due to the step is termed as the vector quantization. A second level of
+superimposition of more than one speech signal. feature extraction is needed to execute the transition point
+Modulation Spectrum Energy (ModSE)– The syllabic rate detection. After vector quantization, a ﬁxed size feature vector
+can be represented in terms of the modulation spectrum is generated by considering the frequency of each code-
+energy. The extraction of modulation spectrum energy can word in a given speech signal. This results in a histogram
+be found in detail in [12]. A higher modulation spectrum representing the word vector. Mathematically, the histogram
+energy is expected for overlapped speech (Fig. 4(d)) than non- is constructed as
+N
+overlapped one (Fig. 4(b)). Fig. 4 illustrates the modulation
+w = δ(l , j); j = 1, 2, . . . K (3)
+j i
+energy distribution of 4 Hz component for a frame. However,
+i=1
+Fig. 5(d) illustrates the ModSE feature (blue color) for a 12 where, δ(.) denotes�the Kronecker delta, l is the label of ith
+i
+sec long speech signal. feature vector and N is the total number of feature vectors. The
+frequency of occurrence of jth code-word in a given duration
+III. METHODOLOGY: BAG OF AUDIO WORDS
+is represented by w ; j = 1, 2, . . . K (Fig. 6(b)). Histograms
+j
+The Bag-of-Audio-Words (BoAW) approach is motivated
+are considered as the second level representation of features.
+by the Bag-of-Words (BoW) representation used in text anal-
+The dissimilarity between two consecutive histograms are
+ysis. The BoW approach is basically used to represent text
+calculated for transition point detection. A higher similarity
+documents. The words appearing in the natural language are
+between two histograms indicates their belongingness to thr
+considered as the units in BoW (text ﬁle), and thus these units
+same category.
+are discrete one. While, in BoAW (audio ﬁle) approach, audio
+words are not discrete. However, audio words are obtained by IV. OVERLAPPED/NON-OVERLAPPED SPEECH
+a clustering method to demonstrate the original feature space TRANSITION POINT DETECTION
+perfectly. The BoAW approach provides a ﬁxed size histogram Section II illustrates the different behavior of features for
+as a feature. overlapped and non-overlapped speech. The evidences from all
+The BoAW approach is described in Fig. 6. First, K- the features need to be combined for the effective transition
+Means clustering is performed on the extracted features to point detection. The HE of LP Residual, STLP, and ModSE
+obtain representative audio words (basic units) for the BoAW are combined to create a 3 dimensional feature (3d feature).
+approach (Fig. 6(a)). The number of clusters (k) is varied from MFCCs(13d) and 3d feature are combined to create a 16d
+2 to 10 and ﬁnalized the one at which the minimum detection feature for the detection task. In Fig. 5(b), (c) and (d),
+error is achieved. For this work, k = 5 is used. The set of k some lower feature values (blue color) are observed in the
+centroids act as the code-book of the system which is given overlapped speech region than that in the non-overlapped
+as regions. These lower values observed in overlapped speech
+CB = c1, c2, . . . ck (1) may be attributed to the presence of silence or non-speech
+{ }
+where, cj; j = 1, 2, . . . K are the K centroids. These centroids regions. This may affect the overall detection performance.
+act as the primary words (basic units) that are considered to be Therefore, smoothing is performed over a period of 1 sec
+present in an input signal. These words (centroids) are termed on the raw features to remove such spurious regions. This
+as audio words to highlight the fact that they are associated is plotted by red color in Fig. 5(b), (c) and (d).
+with atomic and perceptual units of hearing, and not to the In the BoAW approach, the transition point detection is
+linguistic units. Further, the learned code-book is used to label based on the dissimilarity between the distribution of two
+an input data which is mathematically given as audio ﬁles. The detection is performed using 3d features, 13-
+li = arg min fi cj ; j = 1, 2, . . . k (2) MFCCs, and 16d feature, separately. These features are the
+j | − |
+Authorized licensed use limited to: Cornell University Library. Downloaded on September 17,2020 at 07:34:33 UTC from IEEE Xplore.  Restrictions apply. (a)
+50
+(cid:0)Speech signal EFxetraatcutrioen Extracted features ckl-umsetearninsg  k-clusters centers Histogram 1 2400 (a) Histogram 1 12340000 (c) Histogram 1 2400 (e)
+(Audio words) 0 1 2 3 4 5 0 1 2 3 4 5 0 1 2 3 4 5
+(b) Num of Bins Num of Bins (a) Num of Bins
+Feature Bag of audio 50
+sApe sehcohr ti sd ucorantsioidne oref d Extraction Extracted features words Histogram of considered Histogram 2 2400 (b) Histogram 2 246000 (d) Histogram 2 12340000 (f)
+ speech of short duration 0 1 2 3 4 5 0 1 2 3 4 5 0 1 2 3 4 5
+Num of Bins Num of Bins Num of Bins
+(c) Audio words Fig. 7. Demonstrating histograms for, non-overlapped speech which
+Feature Bag of audio shows similar shape for (a) histogram 1 and (b) histogram 2, transition
+Extraction words from non-overlap to overlapped speech which shows different shape
+Dissimilarity for both the histograms (c) and (d), overlapped speech which shows
+measure
+Feature Bag of audio similar shape for both histograms (e) and (f).
+Extraction words Dotted rectangles show transition 
+regions and peaks correspond 
+to transition points 
+the total number of bins in histograms. The Otsu threshold-
+Fig. 6. Illustrating Bag-of-Audio-Words approach. (a) Code-book ing, an adaptive thresholding approach, is performed on the
+generation from the extracted features of the entire speech, (b) His- dissimilarity values calculated by using Eq. 4. The regions
+togram generation with the help of code-book and features extracted
+over which dissimilarity crosses the threshold are considered
+from short-duration speech, (c) Transition point detection based on
+as the regions of interest i.e., the transition regions. The
+the dissimilarity between two consecutive histograms.
+differentiation for the detected transition regions is performed
+ﬁrst level of feature representation and considered as inputs for to detect the peaks in the dissimilarity values and mark these
+the BoAW approach. Fig. 6(c) illustrates the transition point peak locations as the transition points. A tolerance window of
+detection approach used in this work. The BoAW approach 50 ms is used to declare a detected point as a true transition
+transforms ﬁrst level features into the labeled data using vector point.
+quantization. The labeled data is further processed in the
+V. RESULTS AND DISCUSSION
+following manner. A time instance t is considered as a counter
+at which the decision of transition point is to be made. This The proposed approach is evaluated on news debates broad-
+counter is moved across the entire speech ﬁle with an incre- casted in an Indian news channel. Short audio ﬁles of 12 sec
+ment of 10 ms. A duration of 1 sec is considered on both sides duration are generated from broadcast news debates. The ﬁrst
+of this tth instance to compute the histograms for both of these and last 4 sec of each audio ﬁle contains the non-overlapping
+1 sec intervals (Fig. 6(c)). If these histograms belong to the speech of two different speakers (say, Sp1 and Sp2). The
+same speech region i.e., either overlapped or non-overlapped middle 4 sec (i.e. the speech from 4 to 8 sec) contains
+speech, then the shape of these histograms is expected to overlapped speech of two speakers (say, Sp1 + Sp2). This
+be similar. This results in a low dissimilarity value between 4 sec of overlapped speech is taken from naturally occurred
+the two histograms. The dissimilarity value is expected to instances of overlapping speech of the same news debate.
+increase as the counter t moves from one speech region to Such 12 sec long speech ﬁles (Fig. 1(a)) are synthetically
+others and is maximum when tth time instance is the transition generated by concatenating 4 sec of non-overlapped speech
+point. At such points, the shape of both of the histograms is of Sp1, 4 sec of overlapped speech of Sp1 + Sp2 and 4 sec of
+different as they belong to different speech categories. Fig. 7 non-overlapped speech of Sp2. For the evaluation of current
+shows the similar shape for histogram 1 and histogram 2 for work, 256 such ﬁles are used. The motive of the synthetic
+both the categories i.e. overlapped (Fig. 7(e) and (f)) and generation of speech ﬁles is to make sure the presence of
+non-overlapped speech (Fig. 7(a) and (b)). Fig. 7(c) and (d) overlapped speech for sufﬁcient duration for analysis purposes.
+show two histograms for the transition from non-overlapped to The present work studies the overlapped speech containing
+overlapped speech. The shape of these histograms is different only two simultaneous speakers. Speech signals are resampled
+since histogram 1 (Fig. 7(c)) corresponds to non-overlapped to 8 kHz.
+speech, and histogram 2 (Fig. 7(d)) belongs to the overlapped The performance of the proposed method is measured in
+speech. Therefore, a higher dissimilarity value is expected terms of the Identiﬁcation Rate (IR) and Spurious Rate (SR).
+during the transitions than the homogeneous region (i.e., either IR is the percentage of correctly identiﬁed transition points,
+overlapped or non-overlapped region), and is maximum at the and SR is the percentage of falsely identiﬁed transition points.
+transition point. The performance in terms of IR and SR for different features
+The dissimilarity between two distributions p and q is with respect to different threshold values is mentioned in the
+calculated by the Bhattacharyya distance which is given as TABLE I. The present work is evaluated for three different
+N thresholds η1, η2, and η3 as 1.5, 1.3, and 1.1 times of the
+BD(p, q) = 1 ( p(j)q(j)) (4) Otsu threshold of respective features and observed the similar
+−
+j=0 performance for these three thresholds. The IR for the 3d
+� �
+where, BD(p, q) is the Bhattacharyya dissimilarity, N is feature is lower than the 13d feature and 16d features. Since 3d
+Authorized licensed use limited to: Cornell University Library. Downloaded on September 17,2020 at 07:34:33 UTC from IEEE Xplore.  Restrictions apply. 1
+TABLE I h
+RESULTS IN TERMS OF IDENTIFICATION RATE (IR) AND SPURIOUS RATE eec 0
+p
+(SR) S
+−1
+0 5 10 15 20 25 30
+Speech speciﬁc features (a)
+Threshold 3d feature 13d feature 16d feature 1
+↓ IR SR IR SR IR SR 0.5
+feηηηa123tu===re111...c531o×××ntηηηaoooitttnssssuuu ST655L077P...175898as th344922e...824v101oca777l220t...806ra868ct f222e779a...193tu131re w777444h...851ic567h is222455o...848n532e Bhattacharya dissimilarity 0.0101500 55 1100 1155((bc)) 2200 2255 3300
+dimensional and may not capture all the aspects of vocal tract
+0.5
+shape which may be captured by the 13 dimensional MFCCs.
+0
+The IR for 13d feature is almost comparable but lower than 0 5 10 15 20 25 30
+(d)
+the IR of 16d feature. Since, 16d feature considered excitation time in sec
+source and modulation spectrum along with the vocal tract
+Fig. 8. Illustrating the transition point detection in a 32 sec long
+shape while 13d feature considered only vocal tract shape
+news debate segment containing naturally occured transitions: (a)
+information. The SR is highest for the 3d feature and lowest Speech signal with solid red lines represent actual transition points,
+for the 16d features. Therefore 16d feature is preferable for the transition point detection using (b) 3d feature which shows more
+overlapped/non-overlapped speech transition point detection number of spurious detection highlighted by green dotted rectangles,
+(c) 13d feature which shows comparatively lesser number of spurious
+than the other two features.
+detection than 3d feature, and (d) 16d feature which shows least
+The present approach is also evaluated on a short segment number of spurious detection.
+(32 sec duration) of news debate. This short segment contains
+naturally occurred transitions in a news debate scenario. The
+speech signal of this short segment is shown in Fig. 8(a), where REFERENCES
+red solid vertical lines represent the actual transition points. [1] M. Moattar and M. Homayounpour, “A review on speaker diarization
+Fig. 8(b), (c) and (d) show the detected transition points by systems and approaches,” Speech Communication, vol. 54, no. 10, pp.
+solid vertical blue lines using 3d feature, 13d feature and 16d 1065–1103, 2012.
+[2] N. Shokouhi and J. H. L. Hansen, “Teagerkaiser energy operators
+feature, respectively. Some spurious transition points are also for overlapped speech detection,” IEEE/ACM Transactions on Audio,
+detected by the proposed approach. Those are highlighted by Speech, and Language Processing, vol. 25, no. 5, pp. 1035–1047, May
+2017.
+the green dotted rectangles (Fig. 8(b), (c) and (d)). It can be
+[3] N. Ryant, K. Church, C. Cieri, A. Cristia, J. Du, S. Ganapathy, and
+observed that the number of spurious transition points is large M. Liberman, “First dihard challenge evaluation plan,” 2018, tech. Rep.,
+in case of 3d feature in comparison with the other two features. 2018.
+All actual transition points are detected by using 13d feature [4] S. A. Chowdhury, M. Danieli, and G. Riccardi, “Annotating and cat-
+egorizing competition in overlap speech,” in 2015 IEEE International
+and 16d feature, but the number of spurious transition points Conference on Acoustics, Speech and Signal Processing (ICASSP), April
+is more in case of 13d feature than 16d feature. This shows 2015, pp. 5316–5320.
+that the 16d feature is more suitable for the task than the other [5] M. Youseﬁ, N. Shokouhi, and J. H. Hansen, “Assessing speaker engage-
+ment in 2-person debates: Overlap detection in united states presidential
+two features. debates,” in Interspeech, 2018, pp. 2117–2121.
+[6] K. Boakye, O. Vinyals, and G. Friedland, “Two’s a crowd: Improving
+VI. CONCLUSION AND FUTURE DIRECTIONS speaker diarization by automatically identifying and excluding over-
+lapped speech,” in Ninth Annual Conference of the International Speech
+Speech speciﬁc features are explored for the Communication Association, 2008, pp. 32–35.
+[7] Yang Shao and DeLiang Wang, “Co-channel speaker identiﬁcation
+overlapped/non-overlapped speech transition point detection
+using usable speech extraction based on multi-pitch tracking,” in IEEE
+for news debate scenario. The HE of LP residual, Sum of Ten International Conference on Acoustics, Speech, and Signal Processing
+Largest spectral Peaks (STLP), Modulation Spectrum Energy (ICASSP)., vol. 2, 2003, pp. II–205.
+[8] E. Kurti, G. J. Brown, and B. Wells, “Resources for turn competition
+(ModSE), and MFCCs are studied for this work. This work
+in overlapping talk,” Speech Communication, vol. 55, no. 5, pp. 721 –
+utilizes the excitation source, modulation spectrum, and vocal 743, 2013.
+tract characteristics for the transition point detection task. [9] J. T. Geiger, F. Eyben, B. Schuller, and G. Rigoll, “Detecting overlapping
+speech with long short-term memory recurrent neural networks,” in
+This work is an initial attempt in the direction of character- Proceedings INTERSPEECH, 2013, pp. 1668–1672.
+izing overlapped speech and detecting the transition points. [10] T. Ananthapadmanabha and B. Yegnanarayana, “Epoch extraction from
+linear prediction residual for identiﬁcation of closed glottis interval,”
+The present work studies overlapped speech of only two
+IEEE Transactions on Acoustics, Speech, and Signal Processing, vol. 27,
+simultaneous speakers. As such, we intend to extend the work no. 4, pp. 309–319, Aug 1979.
+by doing analysis on a large data taken from news debates [11] B. K. Khonglah and S. R. M. Prasanna, “Speech / music classiﬁcation
+using speech-speciﬁc features,” Digital Signal Processing, vol. 48, pp.
+considering overlapped speech of more than two simultaneous
+71–83, 2016.
+speakers. The harmonic patterns present in the spectra of non- [12] S. Greenberg and B. E. D. Kingsbury, “The modulation spectrogram: in
+overlapped speech are expected to be disturbed in overlapped pursuit of an invariant representation of speech,” in IEEE International
+Conference on Acoustics, Speech, and Signal Processing, vol. 3, 1997,
+speech. Therefore, harmonic patterns present in speech signals
+pp. 1647–1650.
+need to be explored as an extension of this work.
+Authorized licensed use limited to: Cornell University Library. Downloaded on September 17,2020 at 07:34:33 UTC from IEEE Xplore.  Restrictions apply. Overlapped/Non-Overlapped Speech Transition
+Point Detection Using Bag-of-Audio-Words
+Shikha Baghel1, S. R. Mahadeva Prasanna2, and Prithwijit Guha1
+1 Department of Electronics and Electrical Engineering
+Indian Institute of Technology Guwahati, Assam 781039, India
+2 Department of Electrical Engineering
+Indian Institute of Technology Dharwad, Dharwad-580011, India
+Email: shikha.baghel, prasanna, pguha @iitg.ac.in
+{ }
+Non-overlapped Overlapped Speech Non-overlapped
+Abstract—Overlapped speech refers to an audio signal which Speech (Sp1)  (Sp1 + Sp2)    Speech (Sp2)
+cOovnetralianpspsepdeescpheeocfhtwisooonre mofotrheesmpeaaiknesrosusrpceeaskoifnegrsriomrufoltranspeoeauksleyr. mplitude -00..5501 (a)
+diarization systems. This work presents an initial study to identify A
+2 4 6 8 10 12
+the transition points of overlapped to non-overlapped speech Wide Band Spectrogram
+4
+and vice-versa. Characteristics of overlapped and non-overlapped
+speech are examined in terms of the vocal tract system, exci- Hz) 2 (b)
+t(eaHxtcEiiot)natoisofonuLriscnoeeu,arracnePdcrhemdaoircdatcuiotlenartiis(oLtnicPss)porefecstsirdpuuemeac.lhTsihsgienganHlailrl.beTperrhteeseeSnnuvtsemlotphoeef Frequency (K 040 2 Narro4w Band S6pectrogr8am 10 12
+Ten Largest Peaks (STLP) of the spectrum and Mel-Frequency 2 (c)
+Cepstral Coefﬁcients (MFCCs) represent the vocal tract shape 0
+information. The modulation spectrum energy (ModSE) captures 0 2 4 6 8 10 12
+Time (sec)
+the information of slowly varying temporal envelope of speech.
+A Bag-of-Audio-Words (BoAW) based approach is used to detect
+Fig. 1. Illustrating the Spectrogram. (a) Speech signal, High intensity
+the transition points. News debates are one of the main sources
+of (b) wideband spectrogram, and (c) narrowband spectrogram for
+of naturally occurred overlapped speech. Therefore, the present
+overlapped speech than non-overlapped speech.
+work is evaluated on Indian news debate scenario. A high
+Identiﬁcation Rate (IR) and low Spurious Rate (SR) is observed
+when all the features are used simultaneously as a 16d feature(13- Overlapped speech can be produced in a competitive or a
+MFCCs, HE of LP residual, STLP and ModSE) for the detection non-competitive scenario [4]. Competitive overlapped speech
+task. is produced when two or more speakers are in a competition
+Index Terms—Overlapped speech, MFCCs, excitation source,
+to grab the opportunity for speaking, and thus they continue
+Hilbert envelope, vocal tract system, modulation spectrum, Bag-
+to speak simultaneously for a signiﬁcant duration [4]. Over-
+of-Audio-Words
+lapped speech present in news debates is considered as the
+competitive one. In a non-competitive scenario, speakers co-
+I. INTRODUCTION operate with each other and allow others to speak. In such
+cases, overlapping occur for a small duration [4]. Overlaps
+Overlapped speech is produced when two or more speakers present in conversational speech are an example of a non-
+speak simultaneously. It is considered as one of the main competitive scenario.
+sources of error for diarization systems [1], [2]. Ryant et
+The signal characteristics of non-overlapped speech vary
+al. [3] discussed the importance of handling overlapped speech
+signiﬁcantly from overlapped speech. These deviations in the
+for speaker diarization. Conventional speech processing ap-
+characteristics can be observed from the spectrograms shown
+plications such as speech and speaker recognition, consider
+in Fig. 1. Spectrum for overlapped speech is harmonically
+speech only from a single speaker. Hence, the overlapped
+richer than non-overlapping speech due to the presence of
+speech regions need to be identiﬁed and processed separately.
+more than one fundamental frequency (F ). This can be
+0
+This requires the detection of transition points from non-
+observed from the narrowband spectrum shown in Fig. 1(c).
+overlapped to overlapped speech and vice-versa. In this work,
+A wideband spectrogram is shown in Fig. 1(b), which shows
+non-overlapped speech refers to the audio signal containing
+higher energy for overlapped speech than non-overlapped
+the speech of only one speaker at a time. This study aims
+regions. Fig. 1(a) shows a 12 sec long speech signal contains
+to detect such transition points in news debate audio. The
+non-overlapped speech for ﬁrst and last 4 sec, and overlapped
+frequent presence of overlapped speech in news debates makes
+speech for middle 4 sec. These 4 sec long overlapped and
+it appropriate to consider for this study.
+non-overlapped speech segments are taken from a news debate
+978-1-7281-8895-9/20/$31.00 c 2020 IEEE audio.
+�
+Authorized licensed use limited to: Cornell University Library. Downloaded on September 17,2020 at 07:34:33 UTC from IEEE Xplore.  Restrictions apply. 1 12 12
+0.5 10 10
+Amplitude 01 0 20 40 (a) 60 80 100 Amplitude 468 Amplitude 468
+0.5 2 2
+0 0 20 4ti0me ((bm)s6e0c) 80 100 00 DFT(1 a0p)0oints 200 00 DFT1 p(0bo0)ints 200
+Fig. 2. Illustrating HE of LP residual. (a) Non-overlapped speech Fig. 3. Illustrating spectral peaks for one frame of (a) non-overlapped
+contains a lower residual, (b) a higher residual is exhibited for speech, which shows lower spectral peaks amplitude, and (b) over-
+overlapped speech. lapped speech with higher spectral peaks amplitude.
+Thus, the LP residual signal exhibits different behavior for
+Different nature of spectrograms for overlapped and non-
+both the speech cases.
+overlapped speech motivates to study the speech characteristics
+HE of LP Residual– A 12th order LP analysis is performed
+for transition point detection. An enhanced time-frequency
+to obtain the corresponding LP residual signal. The time-
+based representation called pyknogram has been used for
+varying changes of the excitation characteristics are smeared
+tracking harmonic patterns present in speech signal for de-
+in the LP residual due to its bipolar nature. These changes are
+tecting overlapped speech [2]. Youseﬁ et al. [5] proposed two
+further enhanced by computing the HE of the LP residual [10].
+features derived from online Convolutive Non-negative Matrix
+Fig. 2 illustrates the higher residual error for overlapped
+Factorization (CNMF). Boakye et al. [6] explored spectral ﬂat-
+speech (Fig. 2(b)) than that in non-overlapped one (Fig. 2(a)).
+ness, harmonic energy ratio, modulation spectrogram features,
+Similarly, Fig. 5(b) represents the HE of LP residual (blue
+and MFCC features for overlapping speech detection in distant
+color), which shows the higher values for overlapped speech
+microphone audio. The usefulness of Fundamental frequency
+compared to the non-overlap one.
+(F ) and related features have also been explored [7], [8].
+0
+Some works have also utilized prosodic and voice quality
+B. Vocal Tract System Features
+features such as loudness, voice-probability Jitter, shimmer,
+Vocal tract shape can be represented in terms of the formants
+and logarithmic harmonics-to-noise ratio (logHNR) [8]. Lin-
+and the envelope of the short-time power spectrum of the
+ear prediction (LP) residual energy and LP coefﬁcients also
+speech signal. MFCCs capture the information of power spec-
+show discrimination between non-overlapped and overlapped
+trum envelope by taking human perception into consideration.
+speech [9].
+Short-time spectra of speech signal show spectral peaks corre-
+This work presents an initial study done in the direction of
+sponding to formant locations [11]. Thus, the ﬁrst ten largest
+overlapped/non-overlapped transition point detection in news
+peaks of the spectrum can be considered for representing
+debate scenarios. Excitation source, vocal tract and modulation
+the formant information. Spectra of overlapped speech are
+spectrum characteristics of a speech signal are explored for
+expected to have sufﬁciently higher energies distributed up
+this work (section II). The Hilbert Envelope (HE) of LP
+to high frequencies due to the superimposition of two speech
+residual (sub-section II-A), Sum of Ten Largest Peaks (STLP)
+signals. However, spectrum energies are mostly concentrated
+(sub-section II-B), Modulation Spectrum Energy (ModSE)
+towards low frequencies for non-overlapped speech (Fig. 1(b)).
+(sub-section II-C) and MFCC (sub-section II-B) features are
+Therefore, the features such as MFCCs and Sum of Ten
+studied. The Bag-of-Audio-Words (BoAW) approach is used
+Largest Peaks (STLP) are worth exploring in this study.
+to transform these speech features into distribution based rep-
+resentation (section III). Transition points are detected based Sum of Ten Largest Spectral Peaks (STLP)– Ten largest
+peaks are picked from the magnitude spectrum of each frame
+on the dissimilarity of these distributions (section IV). The
+and summed to obtain the STLP feature. Fig. 3 illustrates
+proposed approach is evaluated on a news debate dataset and
+the ten largest peaks (highlighted in red circles) in spectrum
+the results are discussed in section V. Section VI concludes
+for one frame of overlapped (Fig. 3(b)) and non-overlapped
+the present work and discusses the future directions.
+(Fig. 3(a)) speech. This ﬁgure shows the discriminative be-
+II. FEATURES FOR OVERLAPPED/NON-OVERLAPPED havior of the STLP feature for both the classes. The STLP
+SPEECH TRANSITION POINT DETECTION feature (blue color) is plotted in Fig. 5(c) for a 12 sec long
+This section explains the speech features used for transition speech signal. This ﬁgure shows higher values of STLP for
+point detection. Speech signal (sampling rate, F = 8 kHz) is overlapped speech than that in the non-overlapped regions.
+s
+processed with a frame size of 20 ms, and a shift of 10 ms to Mel Frequency Cepstral Coefﬁcients (MFCC)– The power
+extract features. spectrum of each frame is mapped onto the mel scale using a
+mel ﬁlter bank with 26 overlapping triangular ﬁlters. The ﬁrst
+A. Excitation Source Feature 13 coefﬁcients of MFCCs are considered for the detection of
+The LP residual signal captures the excitation source infor- transition points.
+mation of a speech signal [10]. The LP residual represents
+C. Modulation Spectrum Feature
+the error in predicting the current sample based on the past
+p samples. This error is expected to be higher in overlapped Modulation refers to the slowly varying temporal envelope
+speech due to the presence of more than one speaker’s speech. of speech. The envelope of speech can be varied according
+Authorized licensed use limited to: Cornell University Library. Downloaded on September 17,2020 at 07:34:33 UTC from IEEE Xplore.  Restrictions apply. 0.5 Non-overlapped Overlapped Non-overlapped
+0 Speech Speech Speech
+−0.50 100 200 300 400 500 1
+1 Time( a(m) sec) -10 (a)
+0.5 2 4 6 8 10 12
+Amplitude 0010 2 4 6 Filt8er (nbu)m10ber 12 14 16 18 mplitude 0120 2 4 6 8 10 12 (b)
+−10 100 2T00ime (mse3c0)0 400 500 A0.51 (c)
+1 (c) 0
+0.5 2 4 6 8 10 12
+00 2 4 6 8 10 12 14 16 18 1
+Filter (ndu)mber 0.5 (d)
+0
+2 4 6 8 10 12
+Fig. 4. Illustrating Modulation spectrum energy. (a) Non-overlapped Time(sec)
+speech, (b) Modulation spectrum energy components from the critical
+Fig. 5. Illustrating speech speciﬁc features. (a) Speech signal of 12 sec
+band ﬁlters for non-overlapped speech, (c) Overlapped speech, (d)
+duration, (b) HE of LP residual, (c) Sum of ten largest spectral peaks
+Modulation spectrum energy components from the critical band ﬁlters
+(STLP), (d) Modulation spectrum energy (ModSE). The blue color
+for overlapped speech which is higher than non-overlapped speech.
+plots ((b), (c) and (d)) represent raw features, while the corresponding
+smoothed features are plotted in red color.
+to the number of sound units spoken per unit time, which is
+known as the syllabic rate of speech. In the case of overlapped where, a label li is assigned to the feature vector fi. This
+speech, the syllabic rate is expected to be higher due to the step is termed as the vector quantization. A second level of
+superimposition of more than one speech signal. feature extraction is needed to execute the transition point
+Modulation Spectrum Energy (ModSE)– The syllabic rate detection. After vector quantization, a ﬁxed size feature vector
+can be represented in terms of the modulation spectrum is generated by considering the frequency of each code-
+energy. The extraction of modulation spectrum energy can word in a given speech signal. This results in a histogram
+be found in detail in [12]. A higher modulation spectrum representing the word vector. Mathematically, the histogram
+energy is expected for overlapped speech (Fig. 4(d)) than non- is constructed as
+N
+overlapped one (Fig. 4(b)). Fig. 4 illustrates the modulation
+w = δ(l , j); j = 1, 2, . . . K (3)
+j i
+energy distribution of 4 Hz component for a frame. However,
+i=1
+Fig. 5(d) illustrates the ModSE feature (blue color) for a 12 where, δ(.) denotes�the Kronecker delta, l is the label of ith
+i
+sec long speech signal. feature vector and N is the total number of feature vectors. The
+frequency of occurrence of jth code-word in a given duration
+III. METHODOLOGY: BAG OF AUDIO WORDS
+is represented by w ; j = 1, 2, . . . K (Fig. 6(b)). Histograms
+j
+The Bag-of-Audio-Words (BoAW) approach is motivated
+are considered as the second level representation of features.
+by the Bag-of-Words (BoW) representation used in text anal-
+The dissimilarity between two consecutive histograms are
+ysis. The BoW approach is basically used to represent text
+calculated for transition point detection. A higher similarity
+documents. The words appearing in the natural language are
+between two histograms indicates their belongingness to thr
+considered as the units in BoW (text ﬁle), and thus these units
+same category.
+are discrete one. While, in BoAW (audio ﬁle) approach, audio
+words are not discrete. However, audio words are obtained by IV. OVERLAPPED/NON-OVERLAPPED SPEECH
+a clustering method to demonstrate the original feature space TRANSITION POINT DETECTION
+perfectly. The BoAW approach provides a ﬁxed size histogram Section II illustrates the different behavior of features for
+as a feature. overlapped and non-overlapped speech. The evidences from all
+The BoAW approach is described in Fig. 6. First, K- the features need to be combined for the effective transition
+Means clustering is performed on the extracted features to point detection. The HE of LP Residual, STLP, and ModSE
+obtain representative audio words (basic units) for the BoAW are combined to create a 3 dimensional feature (3d feature).
+approach (Fig. 6(a)). The number of clusters (k) is varied from MFCCs(13d) and 3d feature are combined to create a 16d
+2 to 10 and ﬁnalized the one at which the minimum detection feature for the detection task. In Fig. 5(b), (c) and (d),
+error is achieved. For this work, k = 5 is used. The set of k some lower feature values (blue color) are observed in the
+centroids act as the code-book of the system which is given overlapped speech region than that in the non-overlapped
+as regions. These lower values observed in overlapped speech
+CB = c1, c2, . . . ck (1) may be attributed to the presence of silence or non-speech
+{ }
+where, cj; j = 1, 2, . . . K are the K centroids. These centroids regions. This may affect the overall detection performance.
+act as the primary words (basic units) that are considered to be Therefore, smoothing is performed over a period of 1 sec
+present in an input signal. These words (centroids) are termed on the raw features to remove such spurious regions. This
+as audio words to highlight the fact that they are associated is plotted by red color in Fig. 5(b), (c) and (d).
+with atomic and perceptual units of hearing, and not to the In the BoAW approach, the transition point detection is
+linguistic units. Further, the learned code-book is used to label based on the dissimilarity between the distribution of two
+an input data which is mathematically given as audio ﬁles. The detection is performed using 3d features, 13-
+li = arg min fi cj ; j = 1, 2, . . . k (2) MFCCs, and 16d feature, separately. These features are the
+j | − |
+Authorized licensed use limited to: Cornell University Library. Downloaded on September 17,2020 at 07:34:33 UTC from IEEE Xplore.  Restrictions apply. (a)
+50
+(cid:0)Speech signal EFxetraatcutrioen Extracted features ckl-umsetearninsg  k-clusters centers Histogram 1 2400 (a) Histogram 1 12340000 (c) Histogram 1 2400 (e)
+(Audio words) 0 1 2 3 4 5 0 1 2 3 4 5 0 1 2 3 4 5
+(b) Num of Bins Num of Bins (a) Num of Bins
+Feature Bag of audio 50
+sApe sehcohr ti sd ucorantsioidne oref d Extraction Extracted features words Histogram of considered Histogram 2 2400 (b) Histogram 2 246000 (d) Histogram 2 12340000 (f)
+ speech of short duration 0 1 2 3 4 5 0 1 2 3 4 5 0 1 2 3 4 5
+Num of Bins Num of Bins Num of Bins
+(c) Audio words Fig. 7. Demonstrating histograms for, non-overlapped speech which
+Feature Bag of audio shows similar shape for (a) histogram 1 and (b) histogram 2, transition
+Extraction words from non-overlap to overlapped speech which shows different shape
+Dissimilarity for both the histograms (c) and (d), overlapped speech which shows
+measure
+Feature Bag of audio similar shape for both histograms (e) and (f).
+Extraction words Dotted rectangles show transition 
+regions and peaks correspond 
+to transition points 
+the total number of bins in histograms. The Otsu threshold-
+Fig. 6. Illustrating Bag-of-Audio-Words approach. (a) Code-book ing, an adaptive thresholding approach, is performed on the
+generation from the extracted features of the entire speech, (b) His- dissimilarity values calculated by using Eq. 4. The regions
+togram generation with the help of code-book and features extracted
+over which dissimilarity crosses the threshold are considered
+from short-duration speech, (c) Transition point detection based on
+as the regions of interest i.e., the transition regions. The
+the dissimilarity between two consecutive histograms.
+differentiation for the detected transition regions is performed
+ﬁrst level of feature representation and considered as inputs for to detect the peaks in the dissimilarity values and mark these
+the BoAW approach. Fig. 6(c) illustrates the transition point peak locations as the transition points. A tolerance window of
+detection approach used in this work. The BoAW approach 50 ms is used to declare a detected point as a true transition
+transforms ﬁrst level features into the labeled data using vector point.
+quantization. The labeled data is further processed in the
+V. RESULTS AND DISCUSSION
+following manner. A time instance t is considered as a counter
+at which the decision of transition point is to be made. This The proposed approach is evaluated on news debates broad-
+counter is moved across the entire speech ﬁle with an incre- casted in an Indian news channel. Short audio ﬁles of 12 sec
+ment of 10 ms. A duration of 1 sec is considered on both sides duration are generated from broadcast news debates. The ﬁrst
+of this tth instance to compute the histograms for both of these and last 4 sec of each audio ﬁle contains the non-overlapping
+1 sec intervals (Fig. 6(c)). If these histograms belong to the speech of two different speakers (say, Sp1 and Sp2). The
+same speech region i.e., either overlapped or non-overlapped middle 4 sec (i.e. the speech from 4 to 8 sec) contains
+speech, then the shape of these histograms is expected to overlapped speech of two speakers (say, Sp1 + Sp2). This
+be similar. This results in a low dissimilarity value between 4 sec of overlapped speech is taken from naturally occurred
+the two histograms. The dissimilarity value is expected to instances of overlapping speech of the same news debate.
+increase as the counter t moves from one speech region to Such 12 sec long speech ﬁles (Fig. 1(a)) are synthetically
+others and is maximum when tth time instance is the transition generated by concatenating 4 sec of non-overlapped speech
+point. At such points, the shape of both of the histograms is of Sp1, 4 sec of overlapped speech of Sp1 + Sp2 and 4 sec of
+different as they belong to different speech categories. Fig. 7 non-overlapped speech of Sp2. For the evaluation of current
+shows the similar shape for histogram 1 and histogram 2 for work, 256 such ﬁles are used. The motive of the synthetic
+both the categories i.e. overlapped (Fig. 7(e) and (f)) and generation of speech ﬁles is to make sure the presence of
+non-overlapped speech (Fig. 7(a) and (b)). Fig. 7(c) and (d) overlapped speech for sufﬁcient duration for analysis purposes.
+show two histograms for the transition from non-overlapped to The present work studies the overlapped speech containing
+overlapped speech. The shape of these histograms is different only two simultaneous speakers. Speech signals are resampled
+since histogram 1 (Fig. 7(c)) corresponds to non-overlapped to 8 kHz.
+speech, and histogram 2 (Fig. 7(d)) belongs to the overlapped The performance of the proposed method is measured in
+speech. Therefore, a higher dissimilarity value is expected terms of the Identiﬁcation Rate (IR) and Spurious Rate (SR).
+during the transitions than the homogeneous region (i.e., either IR is the percentage of correctly identiﬁed transition points,
+overlapped or non-overlapped region), and is maximum at the and SR is the percentage of falsely identiﬁed transition points.
+transition point. The performance in terms of IR and SR for different features
+The dissimilarity between two distributions p and q is with respect to different threshold values is mentioned in the
+calculated by the Bhattacharyya distance which is given as TABLE I. The present work is evaluated for three different
+N thresholds η1, η2, and η3 as 1.5, 1.3, and 1.1 times of the
+BD(p, q) = 1 ( p(j)q(j)) (4) Otsu threshold of respective features and observed the similar
+−
+j=0 performance for these three thresholds. The IR for the 3d
+� �
+where, BD(p, q) is the Bhattacharyya dissimilarity, N is feature is lower than the 13d feature and 16d features. Since 3d
+Authorized licensed use limited to: Cornell University Library. Downloaded on September 17,2020 at 07:34:33 UTC from IEEE Xplore.  Restrictions apply. 1
+TABLE I h
+RESULTS IN TERMS OF IDENTIFICATION RATE (IR) AND SPURIOUS RATE eec 0
+p
+(SR) S
+−1
+0 5 10 15 20 25 30
+Speech speciﬁc features (a)
+Threshold 3d feature 13d feature 16d feature 1
+↓ IR SR IR SR IR SR 0.5
+feηηηa123tu===re111...c531o×××ntηηηaoooitttnssssuuu ST655L077P...175898as th344922e...824v101oca777l220t...806ra868ct f222e779a...193tu131re w777444h...851ic567h is222455o...848n532e Bhattacharya dissimilarity 0.0101500 55 1100 1155((bc)) 2200 2255 3300
+dimensional and may not capture all the aspects of vocal tract
+0.5
+shape which may be captured by the 13 dimensional MFCCs.
+0
+The IR for 13d feature is almost comparable but lower than 0 5 10 15 20 25 30
+(d)
+the IR of 16d feature. Since, 16d feature considered excitation time in sec
+source and modulation spectrum along with the vocal tract
+Fig. 8. Illustrating the transition point detection in a 32 sec long
+shape while 13d feature considered only vocal tract shape
+news debate segment containing naturally occured transitions: (a)
+information. The SR is highest for the 3d feature and lowest Speech signal with solid red lines represent actual transition points,
+for the 16d features. Therefore 16d feature is preferable for the transition point detection using (b) 3d feature which shows more
+overlapped/non-overlapped speech transition point detection number of spurious detection highlighted by green dotted rectangles,
+(c) 13d feature which shows comparatively lesser number of spurious
+than the other two features.
+detection than 3d feature, and (d) 16d feature which shows least
+The present approach is also evaluated on a short segment number of spurious detection.
+(32 sec duration) of news debate. This short segment contains
+naturally occurred transitions in a news debate scenario. The
+speech signal of this short segment is shown in Fig. 8(a), where REFERENCES
+red solid vertical lines represent the actual transition points. [1] M. Moattar and M. Homayounpour, “A review on speaker diarization
+Fig. 8(b), (c) and (d) show the detected transition points by systems and approaches,” Speech Communication, vol. 54, no. 10, pp.
+solid vertical blue lines using 3d feature, 13d feature and 16d 1065–1103, 2012.
+[2] N. Shokouhi and J. H. L. Hansen, “Teagerkaiser energy operators
+feature, respectively. Some spurious transition points are also for overlapped speech detection,” IEEE/ACM Transactions on Audio,
+detected by the proposed approach. Those are highlighted by Speech, and Language Processing, vol. 25, no. 5, pp. 1035–1047, May
+2017.
+the green dotted rectangles (Fig. 8(b), (c) and (d)). It can be
+[3] N. Ryant, K. Church, C. Cieri, A. Cristia, J. Du, S. Ganapathy, and
+observed that the number of spurious transition points is large M. Liberman, “First dihard challenge evaluation plan,” 2018, tech. Rep.,
+in case of 3d feature in comparison with the other two features. 2018.
+All actual transition points are detected by using 13d feature [4] S. A. Chowdhury, M. Danieli, and G. Riccardi, “Annotating and cat-
+egorizing competition in overlap speech,” in 2015 IEEE International
+and 16d feature, but the number of spurious transition points Conference on Acoustics, Speech and Signal Processing (ICASSP), April
+is more in case of 13d feature than 16d feature. This shows 2015, pp. 5316–5320.
+that the 16d feature is more suitable for the task than the other [5] M. Youseﬁ, N. Shokouhi, and J. H. Hansen, “Assessing speaker engage-
+ment in 2-person debates: Overlap detection in united states presidential
+two features. debates,” in Interspeech, 2018, pp. 2117–2121.
+[6] K. Boakye, O. Vinyals, and G. Friedland, “Two’s a crowd: Improving
+VI. CONCLUSION AND FUTURE DIRECTIONS speaker diarization by automatically identifying and excluding over-
+lapped speech,” in Ninth Annual Conference of the International Speech
+Speech speciﬁc features are explored for the Communication Association, 2008, pp. 32–35.
+[7] Yang Shao and DeLiang Wang, “Co-channel speaker identiﬁcation
+overlapped/non-overlapped speech transition point detection
+using usable speech extraction based on multi-pitch tracking,” in IEEE
+for news debate scenario. The HE of LP residual, Sum of Ten International Conference on Acoustics, Speech, and Signal Processing
+Largest spectral Peaks (STLP), Modulation Spectrum Energy (ICASSP)., vol. 2, 2003, pp. II–205.
+[8] E. Kurti, G. J. Brown, and B. Wells, “Resources for turn competition
+(ModSE), and MFCCs are studied for this work. This work
+in overlapping talk,” Speech Communication, vol. 55, no. 5, pp. 721 –
+utilizes the excitation source, modulation spectrum, and vocal 743, 2013.
+tract characteristics for the transition point detection task. [9] J. T. Geiger, F. Eyben, B. Schuller, and G. Rigoll, “Detecting overlapping
+speech with long short-term memory recurrent neural networks,” in
+This work is an initial attempt in the direction of character- Proceedings INTERSPEECH, 2013, pp. 1668–1672.
+izing overlapped speech and detecting the transition points. [10] T. Ananthapadmanabha and B. Yegnanarayana, “Epoch extraction from
+linear prediction residual for identiﬁcation of closed glottis interval,”
+The present work studies overlapped speech of only two
+IEEE Transactions on Acoustics, Speech, and Signal Processing, vol. 27,
+simultaneous speakers. As such, we intend to extend the work no. 4, pp. 309–319, Aug 1979.
+by doing analysis on a large data taken from news debates [11] B. K. Khonglah and S. R. M. Prasanna, “Speech / music classiﬁcation
+using speech-speciﬁc features,” Digital Signal Processing, vol. 48, pp.
+considering overlapped speech of more than two simultaneous
+71–83, 2016.
+speakers. The harmonic patterns present in the spectra of non- [12] S. Greenberg and B. E. D. Kingsbury, “The modulation spectrogram: in
+overlapped speech are expected to be disturbed in overlapped pursuit of an invariant representation of speech,” in IEEE International
+Conference on Acoustics, Speech, and Signal Processing, vol. 3, 1997,
+speech. Therefore, harmonic patterns present in speech signals
+pp. 1647–1650.
+need to be explored as an extension of this work.
 Authorized licensed use limited to: Cornell University Library. Downloaded on September 17,2020 at 07:34:33 UTC from IEEE Xplore.  Restrictions apply. 

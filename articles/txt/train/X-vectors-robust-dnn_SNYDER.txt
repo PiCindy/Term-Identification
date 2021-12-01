@@ -3588,4 +3588,722 @@ Spoken Language Technology Workshop (SLT). IEEE, 2016.
 [18] S. Zhang, Z. Chen, Y. Zhao, J. Li, and Y. Gong, “End-to-end
 attention based text-dependent speaker veriﬁcation,” in Spo-
 ken Language Technology Workshop (SLT), 2016 IEEE. IEEE,
+2016, pp. 171–178.X-VECTORS: ROBUST DNN EMBEDDINGS FOR SPEAKER RECOGNITION
+David Snyder, Daniel Garcia-Romero, Gregory Sell, Daniel Povey, Sanjeev Khudanpur
+Center for Language and Speech Processing & Human Language Technology Center of Excellence
+The Johns Hopkins University, Baltimore, MD 21218, USA
+ABSTRACT Alternatively, neural networks can be directly optimized to dis-
+criminate between speakers. This has potential to produce power-
+In this paper, we use data augmentation to improve performance of ful, compact systems [13], that only require speaker labels to train.
+deep neural network (DNN) embeddings for speaker recognition. In early systems, neural networks are trained to separate speakers,
+The DNN, which is trained to discriminate between speakers, maps and frame-level representations are extracted from the network and
+variable-length utterances to ﬁxed-dimensional embeddings that we used as features for Gaussian speaker models [14, 15, 16]. Heigold
+call x-vectors. Prior studies have found that embeddings leverage et al., introduced an end-to-end system, trained on the phrase “OK
+large-scale training datasets better than i-vectors. However, it can be Google,” that jointly learns an embedding along with a similarity
+challenging to collect substantial quantities of labeled data for train- metric to compare pairs of embeddings [13]. Snyder et al., adapted
+ing. We use data augmentation, consisting of added noise and rever- this approach to a text-independent application and inserted a tem-
+beration, as an inexpensive method to multiply the amount of train- poral pooling layer into the network to handle variable-length seg-
+ing data and improve robustness. The x-vectors are compared with ments [17]. The work in [1] split the end-to-end approach into two
+i-vector baselines on Speakers in the Wild and NIST SRE 2016 Can- parts: a DNN to produce embeddings and a separately trained classi-
+tonese. We ﬁnd that while augmentation is beneﬁcial in the PLDA ﬁer to compare them. This facilitates the use of all the accumulated
+classiﬁer, it is not helpful in the i-vector extractor. However, the backend technology developed over the years for i-vectors, such as
+x-vector DNN effectively exploits data augmentation, due to its su- length-normalization, PLDA scoring, and domain adaptation tech-
+pervised training. As a result, the x-vectors achieve superior perfor- niques.
+mance on the evaluation datasets.
+DNN embedding performance appears to be highly scalable with
+Index Terms— speaker recognition, deep neural networks, data the amount of training data. As a result, these systems have found
+augmentation, x-vectors success leveraging large proprietary datasets [13, 17, 18]. However,
+recent systems have shown promising performance trained on only
+publicly available speaker recognition corpora [1, 19, 20]. This pa-
+1. INTRODUCTION per is based on the work in [1] and applies data augmentation to the
+DNN training procedure. This increases the amount and diversity of
+Using deep neural networks (DNN) to capture speaker characteris- the existing training data, and achieves a signiﬁcant improvement for
+tics is currently a very active research area. In our approach, repre- the x-vector system. In comparing with x-vectors, we also contribute
+sentations called x-vectors are extracted from a DNN and used like a study of augmentation in i-vector systems.
+i-vectors. This paper builds on our recent DNN embedding architec-
+ture [1]. We show that artiﬁcially augmenting the training data with
+noises and reverberation is a highly effective strategy for improving
+performance in DNN embedding systems. 2. SPEAKER RECOGNITION SYSTEMS
+Most speaker recognition systems are based on i-vectors [2].
+The standard approach consists of a universal background model This section describes the speaker recognition systems developed
+(UBM), and a large projection matrix T that are learned in an unsu- for this study, which consist of two i-vector baselines and the DNN
+pervised way to maximize the data likelihood. The projection maps x-vector system. All systems are built using the Kaldi speech recog-
+high-dimensional statistics from the UBM into a low-dimensional nition toolkit [21].
+representation, known as an i-vector. A probabilistic linear discrimi-
+nant analysis (PLDA) [3] classiﬁer is used to compare i-vectors, and
+enable same-or-different speaker decisions [4, 5, 6].
+The DNNs most often found in speaker recognition are trained 2.1. Acoustic i-vector
+as acoustic models for automatic speech recognition (ASR), and are
+then used to enhance phonetic modeling in the i-vector UBM: either A traditional i-vector system based on the GMM-UBM recipe de-
+posteriors from the ASR DNN replace those from a Gaussian mix- scribed in [11] serves as our acoustic-feature baseline system. The
+ture model (GMM) [7, 8], or bottleneck features are extracted from features are 20 MFCCs with a frame-length of 25ms that are mean-
+the DNN and combined with acoustic features [9]. In either case, if normalized over a sliding window of up to 3 seconds. Delta and
+the ASR DNN is trained on in-domain data, the improvement over acceleration are appended to create 60 dimension feature vectors.
+traditional acoustic i-vectors is substantial [10, 11, 12]. However, An energy-based speech activity detection (SAD) system selects fea-
+this approach introduces the need for transcribed training data and tures corresponding to speech frames. The UBM is a 2048 com-
+greatly increases computational complexity compared to traditional ponent full-covariance GMM. The system uses a 600 dimensional
+i-vectors. i-vector extractor and PLDA for scoring (see Section 2.4).2.2. Phonetic bottleneck i-vector gether and propagated through segment-level layers and ﬁnally the
+softmax output layer. The nonlinearities are all rectiﬁed linear units
+This i-vector system incorporates phonetic bottleneck features
+(ReLUs).
+(BNF) from an ASR DNN acoustic model and is similar to [9].
+The DNN is trained to classify the N speakers in the training
+The DNN is a time-delay acoustic model with p-norm nonlineari-
+data. A training example consists of a chunk of speech features
+ties. The ASR DNN is trained on the Fisher English corpus and uses
+(about 3 seconds average), and the corresponding speaker label. Af-
+the same recipe and architecture as the system described in Section
+ter training, embeddings are extracted from the afﬁne component of
+2.2 of [11], except that the penultimate layer is replaced with a 60
+layer segment6. Excluding the softmax output layer and segment7
+dimensional linear bottleneck layer. Excluding the softmax output
+(because they are not needed after training) there is a total of 4.2
+layer, which is not needed to compute BNFs, the DNN has 9.2
+million parameters.
+million parameters.
+The BNFs are concatenated with the same 20 dimensional
+MFCCs described in Section 2.1 plus deltas to create 100 dimen- 2.4. PLDA classiﬁer
+sional features. The remaining components of the system (feature
+The same type of PLDA [3] classiﬁer is used for the x-vector and
+processing, UBM, i-vector extractor, and PLDA classiﬁer) are iden-
+i-vector systems. The representations (x-vectors or i-vectors) are
+tical to the acoustic system in Section 2.1.
+centered, and projected using LDA. The LDA dimension was tuned
+on the SITW development set to 200 for i-vectors and 150 for
+2.3. The x-vector system x-vectors. After dimensionality reduction, the representations are
+length-normalized and modeled by PLDA. The scores are normal-
+This section describes the x-vector system. It is based on the DNN
+ized using adaptive s-norm [22].
+embeddings in [1] and described in greater detail there.
+Our software framework has been made available in the Kaldi
+toolkit. An example recipe is in the main branch of Kaldi at https: 3. EXPERIMENTAL SETUP
+//github.com/kaldi-asr/kaldi/tree/master/egs/
+sre16/v2 and a pretrained x-vector system can be downloaded 3.1. Training data
+from http://kaldi-asr.org/models.html. The recipe
+The training data consists of both telephone and microphone speech,
+and model are similar to the x-vector system described in Section
+the bulk of which is in English. All wideband audio is downsampled
+4.4.
+to 8kHz.
+The SWBD portion consists of Switchboard 2 Phases 1, 2, and 3
+Layer Layer context Total context Input x output
+as well as Switchboard Cellular. In total, the SWBD dataset contains
+frame1 [t − 2, t + 2] 5 120x512
+about 28k recordings from 2.6k speakers. The SRE portion con-
+frame2 {t − 2, t, t + 2} 9 1536x512
+sists of NIST SREs from 2004 to 2010 along with Mixer 6 and con-
+frame3 {t − 3, t, t + 3} 15 1536x512
+tains about 63k recordings from 4.4k speakers. In the experiments
+frame4 {t} 15 512x512
+in Sections 4.1–4.4 the extractors (UBM/T or embedding DNN) are
+frame5 {t} 15 512x1500
+trained on SWBD and SRE and the PLDA classiﬁers are trained on
+stats pooling [0, T ) T 1500T x3000
+just SRE. Data augmentation is described in Section 3.3 and is ap-
+segment6 {0} T 3000x512
+plied to these datasets as explained throughout Section 4.
+segment7 {0} T 512x512
+In the last experiment in Section 4.5 we incorporate audio from
+softmax {0} T 512xN the new VoxCeleb dataset [19] into both extractor and PLDA train-
+ing lists. The dataset consists of videos from 1,251 celebrity speak-
+ers. Although SITW and VoxCeleb were collected independently,
+Table 1. The embedding DNN architecture. x-vectors are extracted
+we discovered an overlap of 60 speakers between the two datasets.
+at layer segment6, before the nonlinearity. The N in the softmax
+We removed the overlapping speakers from VoxCeleb prior to using
+layer corresponds to the number of training speakers.
+it for training. This reduces the size of the dataset to 1,191 speakers
+and about 20k recordings.
+The features are 24 dimensional ﬁlterbanks with a frame-length The ASR DNN used in the i-vector (BNF) system was trained
+of 25ms, mean-normalized over a sliding window of up to 3 seconds. on the Fisher English corpus. To achieve a limited form of domain
+The same energy SAD as used in the baseline systems ﬁlters out adaptation, the development data from SITW and SRE16 is pooled
+nonspeech frames. and used for centering and score normalization. No augmentation is
+The DNN conﬁguration is outlined in Table 1. Suppose an input applied to these lists.
+segment has T frames. The ﬁrst ﬁve layers operate on speech frames,
+with a small temporal context centered at the current frame t. For
+3.2. Evaluation
+example, the input to layer frame3 is the spliced output of frame2, at
+frames t − 3, t and t + 3. This builds on the temporal context of the Our evaluation consists of two distinct datasets: Speakers in the Wild
+earlier layers, so that frame3 sees a total context of 15 frames. (SITW) Core [23] and the Cantonese portion of the NIST SRE 2016
+The statistics pooling layer aggregates all T frame-level outputs evaluation (SRE16) [24]. SITW consists of unconstrained video au-
+from layer frame5 and computes its mean and standard deviation. dio of English speakers, with naturally occurring noises, reverber-
+The statistics are 1500 dimensional vectors, computed once for each ation, as well as device and codec variability. The SRE16 portion
+input segment. This process aggregates information across the time consists of Cantonese conversational telephone speech. Both en-
+dimension so that subsequent layers operate on the entire segment. roll and test SITW utterances vary in length form 6–240 seconds.
+In Table 1, this is denoted by a layer context of {0} and a total con- For SRE16, the enrollment utterances contain about 60 seconds of
+text of T . The mean and standard deviation are concatenated to- speech while the test utterances vary from 10–60 seconds.SITW Core SRE16 Cantonese
+EER(%) DCF10−2 DCF10−3 EER(%) DCF10−2 DCF10−3
+i-vector (acoustic) 9.29 0.621 0.785 9.23 0.568 0.741
+4.1 Original systems i-vector (BNF) 9.10 0.558 0.719 9.68 0.574 0.765
+x-vector 9.40 0.632 0.790 8.00 0.491 0.697
+i-vector (acoustic) 8.64 0.588 0.755 8.92 0.544 0.717
+4.2 PLDA aug. i-vector (BNF) 8.00 0.514 0.689 8.82 0.532 0.726
+x-vector 7.56 0.586 0.746 7.45 0.463 0.669
+i-vector (acoustic) 8.89 0.626 0.790 9.20 0.575 0.748
+4.3 Extractor aug. i-vector (BNF) 7.27 0.533 0.730 8.89 0.569 0.777
+x-vector 7.19 0.535 0.719 6.29 0.428 0.626
+i-vector (acoustic) 8.04 0.578 0.752 8.95 0.555 0.720
+PLDA and
+4.4 i-vector (BNF) 6.49 0.492 0.690 8.29 0.534 0.749
+extractor aug.
+x-vector 6.00 0.488 0.677 5.86 0.410 0.593
+i-vector (acoustic) 7.45 0.552 0.723 9.23 0.557 0.742
+4.5 Incl. VoxCeleb i-vector (BNF) 6.09 0.472 0.660 8.12 0.523 0.751
+x-vector 4.16 0.393 0.606 5.71 0.399 0.569
+Table 2. Results using data augmentation in various systems. “Extractor” refers to either the UBM/T or the embedding DNN. For each
+experiment, the best results are boldface.
+We report results in terms of equal error-rate (EER) and the min- 4.1. Original systems
+imum of the normalized detection cost function (DCF) at P =
+Target
+10−2 and P = 10−3. Note that the SRE16 results have not In this section, we evaluate systems without data augmentation. The
+Target
+extractors are trained on the SWBD and SRE datasets described
+been “equalized [24].”
+in Section 3.1. The PLDA classiﬁers are trained on just the SRE
+dataset. Without using augmentation, the best results on SITW are
+3.3. Data augmentation
+obtained by i-vector (BNF), which is 12% better than the x-vector
+Augmentation increases the amount and diversity of the existing system at DCF10−2. The acoustic i-vector system also achieves
+training data. Our strategy employs additive noises and reverber- slightly lower error-rates than the x-vector system on SITW. How-
+ation. Reverberation involves convolving room impulse responses ever, even without augmentation, the best results for SRE16 Can-
+(RIR) with audio. We use the simulated RIRs described by Ko et tonese are obtained by the x-vectors. In terms of DCF10−2, these
+al. in [25], and the reverberation itself is performed with the multi- embeddings are about 14% better than either i-vector system. We
+condition training tools in the Kaldi ASpIRE recipe [21]. For addi- observe that i-vector (BNF) has no advantage over i-vector (acous-
+tive noise, we use the MUSAN dataset, which consists of over 900 tic) for this Cantonese speech. This echoes recent studies that have
+noises, 42 hours of music from various genres and 60 hours of speech found that the large gains achieved by BNFs in English speech are
+from twelve languages [26]. Both MUSAN and the RIR datasets are not necessarily transferable to non-English data [27].
+freely available from http://www.openslr.org.
+We use a 3-fold augmentation that combines the original “clean”
+4.2. PLDA augmentation
+training list with two augmented copies. To augment a recording, we
+choose between one of the following randomly: In this experiment, the augmentation strategy described in Section
+• babble: Three to seven speakers are randomly picked from 3.3 is applied to only the PLDA training list. We use the same ex-
+MUSAN speech, summed together, then added to the original tractors as the previous section, which were trained on the original
+signal (13-20dB SNR). datasets. PLDA augmentation results in a clear improvement for all
+three systems relative to Section 4.1. However, it appears that the
+• music: A single music ﬁle is randomly selected from MU-
+x-vectors may beneﬁt from the PLDA augmentation more than the
+SAN, trimmed or repeated as necessary to match duration,
+baseline systems. On SITW, the x-vector system achieves slightly
+and added to the original signal (5-15dB SNR).
+lower error-rates than i-vector (acoustic), but continues to lag behind
+• noise: MUSAN noises are added at one second intervals i-vector (BNF) at most operating points. On SRE16, the x-vectors
+throughout the recording (0-15dB SNR). maintain an advantage over the i-vectors by about 14% in DCF10−2.
+• reverb: The training recording is artiﬁcially reverberated via
+convolution with simulated RIRs.
+4.3. Extractor augmentation
+4. RESULTS We now apply data augmentation to the extractor (UBM/T or em-
+bedding DNN) training lists but not the PLDA list. The effect of
+The main results are presented in Table 2 and are referenced through- augmenting the UBM/T is inconsistent in the i-vector system. This
+out Sections 4.1–4.5. We compare performance of two i-vector sys- observation is supported by prior studies on i-vectors, which have
+tems, labeled i-vector (acoustic) and i-vector (BNF), with the x- found that augmentation is only effective in the PLDA classiﬁer
+vector system. The systems are described in Sections 2.1, 2.2 and [28, 29]. On the other hand, augmenting the embedding DNN train-
+2.3, respectively. Throughout the following sections, we use the term ing list results in a large improvement. In contrast to the i-vector sys-
+extractor to refer to either the UBM/T or the embedding DNN. tems, this is considerably more effective than augmenting the PLDAtraining list. On SITW, the x-vector system achieves lower error-   60  
+i-vector (acoustic)
+rates than i-vector (acoustic) and has now caught up to the i-vector
+i-vector (BNF)
+(BNF) system. On SRE16, the x-vectors are now 25% better than the   40   x-vector
+i-vectors in DCF10−2, which is almost double the improvement the
+DNN embeddings had with PLDA augmentation alone. The ﬁndings
+in this section indicate that data augmentation is only beneﬁcial for %)   20  
+extractors trained with supervision. y (in 
+bilit   10  
+a
+4.4. PLDA and extractor augmentation b   5   
+o
+pr
+In the previous sections, we saw that PLDA augmentation was help- ss    2   
+ful in both i-vector and DNN embedding systems, although extractor Mi
+  1   
+augmentation was only clearly beneﬁcial in the embedding system.
+In this experiment, we apply data augmentation to both the extractor  0.5  
+and PLDA training lists. We continue to use SWBD and SRE for
+extractor training and only SRE for PLDA. On SITW the x-vectors   0.1 
+are now 10-25% better than i-vector (acoustic) and are slightly better  0.01    0.1   0.5    1     2      5     10    20     40     60  
+False Alarm probability (in %)
+than i-vector (BNF) at all operating points. On SRE16 Cantonese,
+the x-vectors continue to maintain the large lead over the i-vector
+systems established in Section 4.3. Fig. 2. DET curve for the SITW Core using Section 4.5 systems.
+4.5. Including VoxCeleb These results are illustrated by detection error tradeoff (DET) plots
+in Figures 1 and 2.
+  60  
+i-vector (acoustic) 5. CONCLUSIONS
+i-vector (BNF)
+  40   x-vector This paper studied DNN embeddings for speaker recognition. We
+found that data augmentation is an easily implemented and effective
+%)   20   strategy for improving their performance. We also made the x-vector
+n  system – our implementation of DNN embeddings – available in the
+y (i Kaldi toolkit. We found that the x-vector system signiﬁcantly outper-
+bilit   10   formed two standard i-vector baselines on SRE16 Cantonese. After
+ba   5    including a large amount of augmented microphone speech, the x-
+o
+pr vectors achieved much lower error-rates than our best baseline on
+ss    2    Speakers in the Wild. Bottleneck features from an ASR DNN are
+Mi used in our best i-vector system, and so it requires transcribed data
+  1   
+during training. On the other hand, the x-vector DNN needs only
+ 0.5  
+speaker labels to train, making it potentially ideal for domains with
+little transcribed speech. More generally, it appears that x-vectors
+  0.1  are now a strong contender for next-generation representations for
+ 0.01    0.1   0.5    1     2      5     10    20     40     60  
+speaker recognition.
+False Alarm probability (in %)
+Fig. 1. DET curve for the Cantonese portion of NIST SRE16 using 6. ACKNOWLEDGMENTS
+Section 4.5 systems.
+This material is based upon work supported by the National Sci-
+ence Foundation Graduate Research Fellowship under Grant No.
+The training data in Sections 4.1–4.4 is dominated by telephone
+1232825. This work was partially supported by NSF Grant No CRI-
+speech. In this experiment, we explore the effect of adding a large
+1513128. Any opinion, ﬁndings, and conclusions or recommenda-
+amount of microphone speech to the systems in Section 4.4. The
+tions expressed in this material are those of the authors(s) and do not
+VoxCeleb dataset [19] is augmented, and added to both the extractor
+necessarily reﬂect the views of the National Science Foundation.
+and PLDA lists. As noted in Section 3.1, we found 60 speakers
+which overlap with SITW; all speech for these speakers was removed
+from the training lists. 7. REFERENCES
+On SITW, both i-vector and x-vector systems improve signif-
+[1] D. Snyder, D. Garcia-Romero, D. Povey, and S. Khudan-
+icantly. However, the x-vector exploits the large increase in the
+pur, “Deep neural network embeddings for text-independent
+amount of in-domain data better than the i-vector systems. Com-
+speaker veriﬁcation,” Proc. Interspeech, pp. 999–1003, 2017.
+pared to i-vector (acoustic), the x-vectors are better by 44% in EER
+and 29% in DCF10−2. Compared to the i-vector (BNF) system, it is [2] N. Dehak, P. Kenny, R. Dehak, P. Dumouchel, and P. Ouel-
+now better by 32% in EER and 17% in DCF10−2. On SRE16, the let, “Front-end factor analysis for speaker veriﬁcation,” IEEE
+i-vector systems remain roughly the same compared to Section 4.4, Transactions on Audio, Speech, and Language Processing, vol.
+but the x-vectors improve on all operating points by a small amount. 19, no. 4, pp. 788–798, 2011.[3] S. Ioffe, “Probabilistic linear discriminant analysis,” Computer [19] A. Nagrani, J. S. Chung, and A. Zisserman, “Voxceleb: a large-
+Vision–ECCV 2006, pp. 531–542, 2006. scale speaker identiﬁcation dataset,” in Interspeech, 2017.
+[4] P. Kenny, “Bayesian speaker veriﬁcation with heavy-tailed pri- [20] C. Zhang and K. Koishida, “End-to-end text-independent
+ors.,” in Odyssey, 2010, p. 14. speaker veriﬁcation with triplet loss on short utterances,” Proc.
+[5] N. Bru¨mmer and E. De Villiers, “The speaker partitioning Interspeech, pp. 1487–1491, 2017.
+problem.,” in Odyssey, 2010, p. 34. [21] D. Povey, A. Ghoshal, G. Boulianne, L. Burget, O. Glembek,
+[6] D. Garcia-Romero and C. Espy-Wilson, “Analysis of i-vector N. Goel, M. Hannemann, P. Motl´ıcˇek, Y. Qian, P. Schwarz,
+length normalization in speaker recognition systems.,” in In- et al., “The Kaldi speech recognition toolkit,” in Proceedings
+terspeech, 2011, pp. 249–252. of the Automatic Speech Recognition & Understanding (ASRU)
+Workshop, 2011.
+[7] Y. Lei, N. Scheffer, L. Ferrer, and M. McLaren, “A novel
+scheme for speaker recognition using a phonetically-aware [22] D. Sturim and D. Reynolds, “Speaker adaptive cohort se-
+deep neural network,” in 2014 IEEE International Conference lection for tnorm in text-independent speaker veriﬁcation,”
+on Acoustics, Speech and Signal Processing (ICASSP). IEEE, in Acoustics, Speech, and Signal Processing, 2005. Proceed-
+2014, pp. 1695–1699. ings.(ICASSP’05). IEEE International Conference on. IEEE,
+2005, vol. 1, pp. I–741.
+[8] P. Kenny, V. Gupta, T. Stafylakis, P. Ouellet, and J. Alam,
+“Deep neural networks for extracting Baum-Welch statistics [23] M. McLaren, L. Ferrer, D. Castan, and A. Lawson, “The 2016
+for speaker recognition,” in Proc. Odyssey, 2014. speakers in the wild speaker recognition evaluation.,” in Inter-
+[9] M. McLaren, Y. Lei, and L. Ferrer, “Advances in deep neu- speech, 2016, pp. 823–827.
+ral network approaches to speaker recognition,” in Acoustics, [24] “NIST speaker recognition evaluation 2016,”
+Speech and Signal Processing (ICASSP), 2015 IEEE Interna- https://www.nist.gov/itl/iad/mig/
+tional Conference on. IEEE, 2015, pp. 4814–4818. speaker-recognition-evaluation-2016/, 2016.
+[10] D. Garcia-Romero, X. Zhang, A. McCree, and D. Povey, “Im- [25] T. Ko, V. Peddinti, D. Povey, M. Seltzer, and S. Khudanpur, “A
+proving speaker recognition performance in the domain adap- study on data augmentation of reverberant speech for robust
+tation challenge using deep neural networks,” in Spoken Lan- speech recognition,” in Acoustics, Speech and Signal Process-
+guage Technology Workshop (SLT), 2014 IEEE. IEEE, 2014, ing (ICASSP), 2017 IEEE International Conference on. IEEE,
+pp. 378–383. 2017, pp. 5220–5224.
+[11] D. Snyder, D. Garcia-Romero, and D. Povey, “Time delay deep
+[26] D. Snyder, G Chen, and D. Povey, “MUSAN: A Music,
+neural network-based universal background models for speaker
+Speech, and Noise Corpus,” 2015, arXiv:1510.08484v1.
+recognition,” in 2015 IEEE Workshop on Automatic Speech
+Recognition and Understanding (ASRU). IEEE, 2015, pp. 92– [27] O. Novotny´, P. Mateˇjka, O. Glembeck, O Plchot, F. Gre´zl,
+97. L. Burget, and J. Cˇ ernocky´, “Analysis of the dnn-based sre
+systems in multi-language conditions,” in Spoken Language
+[12] S. O. Sadjadi, J. Pelecanos, and S. Ganapathy, “The ibm
+Technology Workshop (SLT). IEEE, 2016.
+speaker recognition system: Recent advances and error anal-
+ysis,” Interspeech, pp. 3633–3637, 2016. [28] Y. Lei, L. Burget, L. Ferrer, M. Graciarena, and N. Scheffer,
+“Towards noise-robust speaker recognition using probabilistic
+[13] G. Heigold, I. Moreno, S. Bengio, and N. Shazeer, “End-to-end
+linear discriminant analysis,” in Acoustics, Speech and Signal
+text-dependent speaker veriﬁcation,” in 2016 IEEE Interna-
+Processing (ICASSP), 2012 IEEE International Conference on.
+tional Conference on Acoustics, Speech and Signal Processing
+IEEE, 2012, pp. 4253–4256.
+(ICASSP). IEEE, 2016, pp. 5115–5119.
+[29] D. Garcia-Romero, X. Zhou, and C. Espy-Wilson, “Multicon-
+[14] Y. Konig, L. Heck, M. Weintraub, and K. Sonmez, “Nonlin-
+dition training of Gaussian plda models in i-vector space for
+ear discriminant feature extraction for robust text-independent
+noise and reverberation robust speaker recognition,” in 2012
+speaker recognition,” in Proc. RLA2C, ESCA workshop on
+IEEE International Conference on Acoustics, Speech and Sig-
+Speaker Recognition and its Commercial and Forensic Appli-
+nal Processing (ICASSP). IEEE, 2012, pp. 4257–4260.
+cations, 1998.
+[15] L. Heck, Y. Konig, K. Sonmez, and M. Weintraub, “Ro-
+bustness to telephone handset distortion in speaker recognition
+by discriminative feature design,” in Speech Communication,
+2000, vol. 31, pp. 181–192.
+[16] A. Salman, Learning speaker-speciﬁc characteristics with
+deep neural architecture, Ph.D. thesis, University of Manch-
+ester, 2012.
+[17] D. Snyder, P. Ghahremani, D. Povey, D. Garcia-Romero,
+Y. Carmiel, and S. Khudanpur, “Deep neural network-based
+speaker embeddings for end-to-end speaker veriﬁcation,” in
+Spoken Language Technology Workshop (SLT). IEEE, 2016.
+[18] S. Zhang, Z. Chen, Y. Zhao, J. Li, and Y. Gong, “End-to-end
+attention based text-dependent speaker veriﬁcation,” in Spo-
+ken Language Technology Workshop (SLT), 2016 IEEE. IEEE,
+2016, pp. 171–178.X-VECTORS: ROBUST DNN EMBEDDINGS FOR SPEAKER RECOGNITION
+David Snyder, Daniel Garcia-Romero, Gregory Sell, Daniel Povey, Sanjeev Khudanpur
+Center for Language and Speech Processing & Human Language Technology Center of Excellence
+The Johns Hopkins University, Baltimore, MD 21218, USA
+ABSTRACT Alternatively, neural networks can be directly optimized to dis-
+criminate between speakers. This has potential to produce power-
+In this paper, we use data augmentation to improve performance of ful, compact systems [13], that only require speaker labels to train.
+deep neural network (DNN) embeddings for speaker recognition. In early systems, neural networks are trained to separate speakers,
+The DNN, which is trained to discriminate between speakers, maps and frame-level representations are extracted from the network and
+variable-length utterances to ﬁxed-dimensional embeddings that we used as features for Gaussian speaker models [14, 15, 16]. Heigold
+call x-vectors. Prior studies have found that embeddings leverage et al., introduced an end-to-end system, trained on the phrase “OK
+large-scale training datasets better than i-vectors. However, it can be Google,” that jointly learns an embedding along with a similarity
+challenging to collect substantial quantities of labeled data for train- metric to compare pairs of embeddings [13]. Snyder et al., adapted
+ing. We use data augmentation, consisting of added noise and rever- this approach to a text-independent application and inserted a tem-
+beration, as an inexpensive method to multiply the amount of train- poral pooling layer into the network to handle variable-length seg-
+ing data and improve robustness. The x-vectors are compared with ments [17]. The work in [1] split the end-to-end approach into two
+i-vector baselines on Speakers in the Wild and NIST SRE 2016 Can- parts: a DNN to produce embeddings and a separately trained classi-
+tonese. We ﬁnd that while augmentation is beneﬁcial in the PLDA ﬁer to compare them. This facilitates the use of all the accumulated
+classiﬁer, it is not helpful in the i-vector extractor. However, the backend technology developed over the years for i-vectors, such as
+x-vector DNN effectively exploits data augmentation, due to its su- length-normalization, PLDA scoring, and domain adaptation tech-
+pervised training. As a result, the x-vectors achieve superior perfor- niques.
+mance on the evaluation datasets.
+DNN embedding performance appears to be highly scalable with
+Index Terms— speaker recognition, deep neural networks, data the amount of training data. As a result, these systems have found
+augmentation, x-vectors success leveraging large proprietary datasets [13, 17, 18]. However,
+recent systems have shown promising performance trained on only
+publicly available speaker recognition corpora [1, 19, 20]. This pa-
+1. INTRODUCTION per is based on the work in [1] and applies data augmentation to the
+DNN training procedure. This increases the amount and diversity of
+Using deep neural networks (DNN) to capture speaker characteris- the existing training data, and achieves a signiﬁcant improvement for
+tics is currently a very active research area. In our approach, repre- the x-vector system. In comparing with x-vectors, we also contribute
+sentations called x-vectors are extracted from a DNN and used like a study of augmentation in i-vector systems.
+i-vectors. This paper builds on our recent DNN embedding architec-
+ture [1]. We show that artiﬁcially augmenting the training data with
+noises and reverberation is a highly effective strategy for improving
+performance in DNN embedding systems. 2. SPEAKER RECOGNITION SYSTEMS
+Most speaker recognition systems are based on i-vectors [2].
+The standard approach consists of a universal background model This section describes the speaker recognition systems developed
+(UBM), and a large projection matrix T that are learned in an unsu- for this study, which consist of two i-vector baselines and the DNN
+pervised way to maximize the data likelihood. The projection maps x-vector system. All systems are built using the Kaldi speech recog-
+high-dimensional statistics from the UBM into a low-dimensional nition toolkit [21].
+representation, known as an i-vector. A probabilistic linear discrimi-
+nant analysis (PLDA) [3] classiﬁer is used to compare i-vectors, and
+enable same-or-different speaker decisions [4, 5, 6].
+The DNNs most often found in speaker recognition are trained 2.1. Acoustic i-vector
+as acoustic models for automatic speech recognition (ASR), and are
+then used to enhance phonetic modeling in the i-vector UBM: either A traditional i-vector system based on the GMM-UBM recipe de-
+posteriors from the ASR DNN replace those from a Gaussian mix- scribed in [11] serves as our acoustic-feature baseline system. The
+ture model (GMM) [7, 8], or bottleneck features are extracted from features are 20 MFCCs with a frame-length of 25ms that are mean-
+the DNN and combined with acoustic features [9]. In either case, if normalized over a sliding window of up to 3 seconds. Delta and
+the ASR DNN is trained on in-domain data, the improvement over acceleration are appended to create 60 dimension feature vectors.
+traditional acoustic i-vectors is substantial [10, 11, 12]. However, An energy-based speech activity detection (SAD) system selects fea-
+this approach introduces the need for transcribed training data and tures corresponding to speech frames. The UBM is a 2048 com-
+greatly increases computational complexity compared to traditional ponent full-covariance GMM. The system uses a 600 dimensional
+i-vectors. i-vector extractor and PLDA for scoring (see Section 2.4).2.2. Phonetic bottleneck i-vector gether and propagated through segment-level layers and ﬁnally the
+softmax output layer. The nonlinearities are all rectiﬁed linear units
+This i-vector system incorporates phonetic bottleneck features
+(ReLUs).
+(BNF) from an ASR DNN acoustic model and is similar to [9].
+The DNN is trained to classify the N speakers in the training
+The DNN is a time-delay acoustic model with p-norm nonlineari-
+data. A training example consists of a chunk of speech features
+ties. The ASR DNN is trained on the Fisher English corpus and uses
+(about 3 seconds average), and the corresponding speaker label. Af-
+the same recipe and architecture as the system described in Section
+ter training, embeddings are extracted from the afﬁne component of
+2.2 of [11], except that the penultimate layer is replaced with a 60
+layer segment6. Excluding the softmax output layer and segment7
+dimensional linear bottleneck layer. Excluding the softmax output
+(because they are not needed after training) there is a total of 4.2
+layer, which is not needed to compute BNFs, the DNN has 9.2
+million parameters.
+million parameters.
+The BNFs are concatenated with the same 20 dimensional
+MFCCs described in Section 2.1 plus deltas to create 100 dimen- 2.4. PLDA classiﬁer
+sional features. The remaining components of the system (feature
+The same type of PLDA [3] classiﬁer is used for the x-vector and
+processing, UBM, i-vector extractor, and PLDA classiﬁer) are iden-
+i-vector systems. The representations (x-vectors or i-vectors) are
+tical to the acoustic system in Section 2.1.
+centered, and projected using LDA. The LDA dimension was tuned
+on the SITW development set to 200 for i-vectors and 150 for
+2.3. The x-vector system x-vectors. After dimensionality reduction, the representations are
+length-normalized and modeled by PLDA. The scores are normal-
+This section describes the x-vector system. It is based on the DNN
+ized using adaptive s-norm [22].
+embeddings in [1] and described in greater detail there.
+Our software framework has been made available in the Kaldi
+toolkit. An example recipe is in the main branch of Kaldi at https: 3. EXPERIMENTAL SETUP
+//github.com/kaldi-asr/kaldi/tree/master/egs/
+sre16/v2 and a pretrained x-vector system can be downloaded 3.1. Training data
+from http://kaldi-asr.org/models.html. The recipe
+The training data consists of both telephone and microphone speech,
+and model are similar to the x-vector system described in Section
+the bulk of which is in English. All wideband audio is downsampled
+4.4.
+to 8kHz.
+The SWBD portion consists of Switchboard 2 Phases 1, 2, and 3
+Layer Layer context Total context Input x output
+as well as Switchboard Cellular. In total, the SWBD dataset contains
+frame1 [t − 2, t + 2] 5 120x512
+about 28k recordings from 2.6k speakers. The SRE portion con-
+frame2 {t − 2, t, t + 2} 9 1536x512
+sists of NIST SREs from 2004 to 2010 along with Mixer 6 and con-
+frame3 {t − 3, t, t + 3} 15 1536x512
+tains about 63k recordings from 4.4k speakers. In the experiments
+frame4 {t} 15 512x512
+in Sections 4.1–4.4 the extractors (UBM/T or embedding DNN) are
+frame5 {t} 15 512x1500
+trained on SWBD and SRE and the PLDA classiﬁers are trained on
+stats pooling [0, T ) T 1500T x3000
+just SRE. Data augmentation is described in Section 3.3 and is ap-
+segment6 {0} T 3000x512
+plied to these datasets as explained throughout Section 4.
+segment7 {0} T 512x512
+In the last experiment in Section 4.5 we incorporate audio from
+softmax {0} T 512xN the new VoxCeleb dataset [19] into both extractor and PLDA train-
+ing lists. The dataset consists of videos from 1,251 celebrity speak-
+ers. Although SITW and VoxCeleb were collected independently,
+Table 1. The embedding DNN architecture. x-vectors are extracted
+we discovered an overlap of 60 speakers between the two datasets.
+at layer segment6, before the nonlinearity. The N in the softmax
+We removed the overlapping speakers from VoxCeleb prior to using
+layer corresponds to the number of training speakers.
+it for training. This reduces the size of the dataset to 1,191 speakers
+and about 20k recordings.
+The features are 24 dimensional ﬁlterbanks with a frame-length The ASR DNN used in the i-vector (BNF) system was trained
+of 25ms, mean-normalized over a sliding window of up to 3 seconds. on the Fisher English corpus. To achieve a limited form of domain
+The same energy SAD as used in the baseline systems ﬁlters out adaptation, the development data from SITW and SRE16 is pooled
+nonspeech frames. and used for centering and score normalization. No augmentation is
+The DNN conﬁguration is outlined in Table 1. Suppose an input applied to these lists.
+segment has T frames. The ﬁrst ﬁve layers operate on speech frames,
+with a small temporal context centered at the current frame t. For
+3.2. Evaluation
+example, the input to layer frame3 is the spliced output of frame2, at
+frames t − 3, t and t + 3. This builds on the temporal context of the Our evaluation consists of two distinct datasets: Speakers in the Wild
+earlier layers, so that frame3 sees a total context of 15 frames. (SITW) Core [23] and the Cantonese portion of the NIST SRE 2016
+The statistics pooling layer aggregates all T frame-level outputs evaluation (SRE16) [24]. SITW consists of unconstrained video au-
+from layer frame5 and computes its mean and standard deviation. dio of English speakers, with naturally occurring noises, reverber-
+The statistics are 1500 dimensional vectors, computed once for each ation, as well as device and codec variability. The SRE16 portion
+input segment. This process aggregates information across the time consists of Cantonese conversational telephone speech. Both en-
+dimension so that subsequent layers operate on the entire segment. roll and test SITW utterances vary in length form 6–240 seconds.
+In Table 1, this is denoted by a layer context of {0} and a total con- For SRE16, the enrollment utterances contain about 60 seconds of
+text of T . The mean and standard deviation are concatenated to- speech while the test utterances vary from 10–60 seconds.SITW Core SRE16 Cantonese
+EER(%) DCF10−2 DCF10−3 EER(%) DCF10−2 DCF10−3
+i-vector (acoustic) 9.29 0.621 0.785 9.23 0.568 0.741
+4.1 Original systems i-vector (BNF) 9.10 0.558 0.719 9.68 0.574 0.765
+x-vector 9.40 0.632 0.790 8.00 0.491 0.697
+i-vector (acoustic) 8.64 0.588 0.755 8.92 0.544 0.717
+4.2 PLDA aug. i-vector (BNF) 8.00 0.514 0.689 8.82 0.532 0.726
+x-vector 7.56 0.586 0.746 7.45 0.463 0.669
+i-vector (acoustic) 8.89 0.626 0.790 9.20 0.575 0.748
+4.3 Extractor aug. i-vector (BNF) 7.27 0.533 0.730 8.89 0.569 0.777
+x-vector 7.19 0.535 0.719 6.29 0.428 0.626
+i-vector (acoustic) 8.04 0.578 0.752 8.95 0.555 0.720
+PLDA and
+4.4 i-vector (BNF) 6.49 0.492 0.690 8.29 0.534 0.749
+extractor aug.
+x-vector 6.00 0.488 0.677 5.86 0.410 0.593
+i-vector (acoustic) 7.45 0.552 0.723 9.23 0.557 0.742
+4.5 Incl. VoxCeleb i-vector (BNF) 6.09 0.472 0.660 8.12 0.523 0.751
+x-vector 4.16 0.393 0.606 5.71 0.399 0.569
+Table 2. Results using data augmentation in various systems. “Extractor” refers to either the UBM/T or the embedding DNN. For each
+experiment, the best results are boldface.
+We report results in terms of equal error-rate (EER) and the min- 4.1. Original systems
+imum of the normalized detection cost function (DCF) at P =
+Target
+10−2 and P = 10−3. Note that the SRE16 results have not In this section, we evaluate systems without data augmentation. The
+Target
+extractors are trained on the SWBD and SRE datasets described
+been “equalized [24].”
+in Section 3.1. The PLDA classiﬁers are trained on just the SRE
+dataset. Without using augmentation, the best results on SITW are
+3.3. Data augmentation
+obtained by i-vector (BNF), which is 12% better than the x-vector
+Augmentation increases the amount and diversity of the existing system at DCF10−2. The acoustic i-vector system also achieves
+training data. Our strategy employs additive noises and reverber- slightly lower error-rates than the x-vector system on SITW. How-
+ation. Reverberation involves convolving room impulse responses ever, even without augmentation, the best results for SRE16 Can-
+(RIR) with audio. We use the simulated RIRs described by Ko et tonese are obtained by the x-vectors. In terms of DCF10−2, these
+al. in [25], and the reverberation itself is performed with the multi- embeddings are about 14% better than either i-vector system. We
+condition training tools in the Kaldi ASpIRE recipe [21]. For addi- observe that i-vector (BNF) has no advantage over i-vector (acous-
+tive noise, we use the MUSAN dataset, which consists of over 900 tic) for this Cantonese speech. This echoes recent studies that have
+noises, 42 hours of music from various genres and 60 hours of speech found that the large gains achieved by BNFs in English speech are
+from twelve languages [26]. Both MUSAN and the RIR datasets are not necessarily transferable to non-English data [27].
+freely available from http://www.openslr.org.
+We use a 3-fold augmentation that combines the original “clean”
+4.2. PLDA augmentation
+training list with two augmented copies. To augment a recording, we
+choose between one of the following randomly: In this experiment, the augmentation strategy described in Section
+• babble: Three to seven speakers are randomly picked from 3.3 is applied to only the PLDA training list. We use the same ex-
+MUSAN speech, summed together, then added to the original tractors as the previous section, which were trained on the original
+signal (13-20dB SNR). datasets. PLDA augmentation results in a clear improvement for all
+three systems relative to Section 4.1. However, it appears that the
+• music: A single music ﬁle is randomly selected from MU-
+x-vectors may beneﬁt from the PLDA augmentation more than the
+SAN, trimmed or repeated as necessary to match duration,
+baseline systems. On SITW, the x-vector system achieves slightly
+and added to the original signal (5-15dB SNR).
+lower error-rates than i-vector (acoustic), but continues to lag behind
+• noise: MUSAN noises are added at one second intervals i-vector (BNF) at most operating points. On SRE16, the x-vectors
+throughout the recording (0-15dB SNR). maintain an advantage over the i-vectors by about 14% in DCF10−2.
+• reverb: The training recording is artiﬁcially reverberated via
+convolution with simulated RIRs.
+4.3. Extractor augmentation
+4. RESULTS We now apply data augmentation to the extractor (UBM/T or em-
+bedding DNN) training lists but not the PLDA list. The effect of
+The main results are presented in Table 2 and are referenced through- augmenting the UBM/T is inconsistent in the i-vector system. This
+out Sections 4.1–4.5. We compare performance of two i-vector sys- observation is supported by prior studies on i-vectors, which have
+tems, labeled i-vector (acoustic) and i-vector (BNF), with the x- found that augmentation is only effective in the PLDA classiﬁer
+vector system. The systems are described in Sections 2.1, 2.2 and [28, 29]. On the other hand, augmenting the embedding DNN train-
+2.3, respectively. Throughout the following sections, we use the term ing list results in a large improvement. In contrast to the i-vector sys-
+extractor to refer to either the UBM/T or the embedding DNN. tems, this is considerably more effective than augmenting the PLDAtraining list. On SITW, the x-vector system achieves lower error-   60  
+i-vector (acoustic)
+rates than i-vector (acoustic) and has now caught up to the i-vector
+i-vector (BNF)
+(BNF) system. On SRE16, the x-vectors are now 25% better than the   40   x-vector
+i-vectors in DCF10−2, which is almost double the improvement the
+DNN embeddings had with PLDA augmentation alone. The ﬁndings
+in this section indicate that data augmentation is only beneﬁcial for %)   20  
+extractors trained with supervision. y (in 
+bilit   10  
+a
+4.4. PLDA and extractor augmentation b   5   
+o
+pr
+In the previous sections, we saw that PLDA augmentation was help- ss    2   
+ful in both i-vector and DNN embedding systems, although extractor Mi
+  1   
+augmentation was only clearly beneﬁcial in the embedding system.
+In this experiment, we apply data augmentation to both the extractor  0.5  
+and PLDA training lists. We continue to use SWBD and SRE for
+extractor training and only SRE for PLDA. On SITW the x-vectors   0.1 
+are now 10-25% better than i-vector (acoustic) and are slightly better  0.01    0.1   0.5    1     2      5     10    20     40     60  
+False Alarm probability (in %)
+than i-vector (BNF) at all operating points. On SRE16 Cantonese,
+the x-vectors continue to maintain the large lead over the i-vector
+systems established in Section 4.3. Fig. 2. DET curve for the SITW Core using Section 4.5 systems.
+4.5. Including VoxCeleb These results are illustrated by detection error tradeoff (DET) plots
+in Figures 1 and 2.
+  60  
+i-vector (acoustic) 5. CONCLUSIONS
+i-vector (BNF)
+  40   x-vector This paper studied DNN embeddings for speaker recognition. We
+found that data augmentation is an easily implemented and effective
+%)   20   strategy for improving their performance. We also made the x-vector
+n  system – our implementation of DNN embeddings – available in the
+y (i Kaldi toolkit. We found that the x-vector system signiﬁcantly outper-
+bilit   10   formed two standard i-vector baselines on SRE16 Cantonese. After
+ba   5    including a large amount of augmented microphone speech, the x-
+o
+pr vectors achieved much lower error-rates than our best baseline on
+ss    2    Speakers in the Wild. Bottleneck features from an ASR DNN are
+Mi used in our best i-vector system, and so it requires transcribed data
+  1   
+during training. On the other hand, the x-vector DNN needs only
+ 0.5  
+speaker labels to train, making it potentially ideal for domains with
+little transcribed speech. More generally, it appears that x-vectors
+  0.1  are now a strong contender for next-generation representations for
+ 0.01    0.1   0.5    1     2      5     10    20     40     60  
+speaker recognition.
+False Alarm probability (in %)
+Fig. 1. DET curve for the Cantonese portion of NIST SRE16 using 6. ACKNOWLEDGMENTS
+Section 4.5 systems.
+This material is based upon work supported by the National Sci-
+ence Foundation Graduate Research Fellowship under Grant No.
+The training data in Sections 4.1–4.4 is dominated by telephone
+1232825. This work was partially supported by NSF Grant No CRI-
+speech. In this experiment, we explore the effect of adding a large
+1513128. Any opinion, ﬁndings, and conclusions or recommenda-
+amount of microphone speech to the systems in Section 4.4. The
+tions expressed in this material are those of the authors(s) and do not
+VoxCeleb dataset [19] is augmented, and added to both the extractor
+necessarily reﬂect the views of the National Science Foundation.
+and PLDA lists. As noted in Section 3.1, we found 60 speakers
+which overlap with SITW; all speech for these speakers was removed
+from the training lists. 7. REFERENCES
+On SITW, both i-vector and x-vector systems improve signif-
+[1] D. Snyder, D. Garcia-Romero, D. Povey, and S. Khudan-
+icantly. However, the x-vector exploits the large increase in the
+pur, “Deep neural network embeddings for text-independent
+amount of in-domain data better than the i-vector systems. Com-
+speaker veriﬁcation,” Proc. Interspeech, pp. 999–1003, 2017.
+pared to i-vector (acoustic), the x-vectors are better by 44% in EER
+and 29% in DCF10−2. Compared to the i-vector (BNF) system, it is [2] N. Dehak, P. Kenny, R. Dehak, P. Dumouchel, and P. Ouel-
+now better by 32% in EER and 17% in DCF10−2. On SRE16, the let, “Front-end factor analysis for speaker veriﬁcation,” IEEE
+i-vector systems remain roughly the same compared to Section 4.4, Transactions on Audio, Speech, and Language Processing, vol.
+but the x-vectors improve on all operating points by a small amount. 19, no. 4, pp. 788–798, 2011.[3] S. Ioffe, “Probabilistic linear discriminant analysis,” Computer [19] A. Nagrani, J. S. Chung, and A. Zisserman, “Voxceleb: a large-
+Vision–ECCV 2006, pp. 531–542, 2006. scale speaker identiﬁcation dataset,” in Interspeech, 2017.
+[4] P. Kenny, “Bayesian speaker veriﬁcation with heavy-tailed pri- [20] C. Zhang and K. Koishida, “End-to-end text-independent
+ors.,” in Odyssey, 2010, p. 14. speaker veriﬁcation with triplet loss on short utterances,” Proc.
+[5] N. Bru¨mmer and E. De Villiers, “The speaker partitioning Interspeech, pp. 1487–1491, 2017.
+problem.,” in Odyssey, 2010, p. 34. [21] D. Povey, A. Ghoshal, G. Boulianne, L. Burget, O. Glembek,
+[6] D. Garcia-Romero and C. Espy-Wilson, “Analysis of i-vector N. Goel, M. Hannemann, P. Motl´ıcˇek, Y. Qian, P. Schwarz,
+length normalization in speaker recognition systems.,” in In- et al., “The Kaldi speech recognition toolkit,” in Proceedings
+terspeech, 2011, pp. 249–252. of the Automatic Speech Recognition & Understanding (ASRU)
+Workshop, 2011.
+[7] Y. Lei, N. Scheffer, L. Ferrer, and M. McLaren, “A novel
+scheme for speaker recognition using a phonetically-aware [22] D. Sturim and D. Reynolds, “Speaker adaptive cohort se-
+deep neural network,” in 2014 IEEE International Conference lection for tnorm in text-independent speaker veriﬁcation,”
+on Acoustics, Speech and Signal Processing (ICASSP). IEEE, in Acoustics, Speech, and Signal Processing, 2005. Proceed-
+2014, pp. 1695–1699. ings.(ICASSP’05). IEEE International Conference on. IEEE,
+2005, vol. 1, pp. I–741.
+[8] P. Kenny, V. Gupta, T. Stafylakis, P. Ouellet, and J. Alam,
+“Deep neural networks for extracting Baum-Welch statistics [23] M. McLaren, L. Ferrer, D. Castan, and A. Lawson, “The 2016
+for speaker recognition,” in Proc. Odyssey, 2014. speakers in the wild speaker recognition evaluation.,” in Inter-
+[9] M. McLaren, Y. Lei, and L. Ferrer, “Advances in deep neu- speech, 2016, pp. 823–827.
+ral network approaches to speaker recognition,” in Acoustics, [24] “NIST speaker recognition evaluation 2016,”
+Speech and Signal Processing (ICASSP), 2015 IEEE Interna- https://www.nist.gov/itl/iad/mig/
+tional Conference on. IEEE, 2015, pp. 4814–4818. speaker-recognition-evaluation-2016/, 2016.
+[10] D. Garcia-Romero, X. Zhang, A. McCree, and D. Povey, “Im- [25] T. Ko, V. Peddinti, D. Povey, M. Seltzer, and S. Khudanpur, “A
+proving speaker recognition performance in the domain adap- study on data augmentation of reverberant speech for robust
+tation challenge using deep neural networks,” in Spoken Lan- speech recognition,” in Acoustics, Speech and Signal Process-
+guage Technology Workshop (SLT), 2014 IEEE. IEEE, 2014, ing (ICASSP), 2017 IEEE International Conference on. IEEE,
+pp. 378–383. 2017, pp. 5220–5224.
+[11] D. Snyder, D. Garcia-Romero, and D. Povey, “Time delay deep
+[26] D. Snyder, G Chen, and D. Povey, “MUSAN: A Music,
+neural network-based universal background models for speaker
+Speech, and Noise Corpus,” 2015, arXiv:1510.08484v1.
+recognition,” in 2015 IEEE Workshop on Automatic Speech
+Recognition and Understanding (ASRU). IEEE, 2015, pp. 92– [27] O. Novotny´, P. Mateˇjka, O. Glembeck, O Plchot, F. Gre´zl,
+97. L. Burget, and J. Cˇ ernocky´, “Analysis of the dnn-based sre
+systems in multi-language conditions,” in Spoken Language
+[12] S. O. Sadjadi, J. Pelecanos, and S. Ganapathy, “The ibm
+Technology Workshop (SLT). IEEE, 2016.
+speaker recognition system: Recent advances and error anal-
+ysis,” Interspeech, pp. 3633–3637, 2016. [28] Y. Lei, L. Burget, L. Ferrer, M. Graciarena, and N. Scheffer,
+“Towards noise-robust speaker recognition using probabilistic
+[13] G. Heigold, I. Moreno, S. Bengio, and N. Shazeer, “End-to-end
+linear discriminant analysis,” in Acoustics, Speech and Signal
+text-dependent speaker veriﬁcation,” in 2016 IEEE Interna-
+Processing (ICASSP), 2012 IEEE International Conference on.
+tional Conference on Acoustics, Speech and Signal Processing
+IEEE, 2012, pp. 4253–4256.
+(ICASSP). IEEE, 2016, pp. 5115–5119.
+[29] D. Garcia-Romero, X. Zhou, and C. Espy-Wilson, “Multicon-
+[14] Y. Konig, L. Heck, M. Weintraub, and K. Sonmez, “Nonlin-
+dition training of Gaussian plda models in i-vector space for
+ear discriminant feature extraction for robust text-independent
+noise and reverberation robust speaker recognition,” in 2012
+speaker recognition,” in Proc. RLA2C, ESCA workshop on
+IEEE International Conference on Acoustics, Speech and Sig-
+Speaker Recognition and its Commercial and Forensic Appli-
+nal Processing (ICASSP). IEEE, 2012, pp. 4257–4260.
+cations, 1998.
+[15] L. Heck, Y. Konig, K. Sonmez, and M. Weintraub, “Ro-
+bustness to telephone handset distortion in speaker recognition
+by discriminative feature design,” in Speech Communication,
+2000, vol. 31, pp. 181–192.
+[16] A. Salman, Learning speaker-speciﬁc characteristics with
+deep neural architecture, Ph.D. thesis, University of Manch-
+ester, 2012.
+[17] D. Snyder, P. Ghahremani, D. Povey, D. Garcia-Romero,
+Y. Carmiel, and S. Khudanpur, “Deep neural network-based
+speaker embeddings for end-to-end speaker veriﬁcation,” in
+Spoken Language Technology Workshop (SLT). IEEE, 2016.
+[18] S. Zhang, Z. Chen, Y. Zhao, J. Li, and Y. Gong, “End-to-end
+attention based text-dependent speaker veriﬁcation,” in Spo-
+ken Language Technology Workshop (SLT), 2016 IEEE. IEEE,
 2016, pp. 171–178.

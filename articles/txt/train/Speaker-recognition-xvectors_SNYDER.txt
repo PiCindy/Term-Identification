@@ -3648,4 +3648,734 @@ ference of the International Speech Communication Associa-
 plied to i-vectors and x-vectors,” in Interspeech 2018, Hyder-
 tion, INTERSPEECH 2018, Hyderabad, India, sep 2018, pp.
 abad, India, 2018, pp. 72–76.
+2808—-2812.SPEAKER RECOGNITION FOR MULTI-SPEAKER CONVERSATIONS USING X-VECTORS
+David Snyder, Daniel Garcia-Romero, Gregory Sell, Alan McCree, Daniel Povey, Sanjeev Khudanpur
+Center for Language and Speech Processing & Human Language Technology Center of Excellence
+The Johns Hopkins University, Baltimore, MD 21218, USA
+ABSTRACT Early work using discriminatively trained neural networks to
+capture speaker characteristics focused on extracting frame-level
+Recently, deep neural networks that map utterances to ﬁxed-
+features to be used as input to Gaussian speaker models [6, 7].
+dimensional embeddings have emerged as the state-of-the-art in
+Heigold et al., introduced an end-to-end system, trained on the
+speaker recognition. Our prior work introduced x-vectors, an em-
+phrase “OK Google,” that jointly learns an embedding along with a
+bedding that is very effective for both speaker recognition and
+similarity metric to compare pairs of embeddings [8]. Snyder et al.,
+diarization. This paper combines our previous work and applies it
+generalized this framework to text-independent speaker recognition
+to the problem of speaker recognition on multi-speaker conversa-
+and inserted a temporal pooling layer into the network to handle
+tions. We measure performance on Speakers in the Wild and report
+variable-length segments [9]. The work in [1, 10] split the end-to-
+what we believe are the best published error rates on this dataset.
+end approach into two parts: a DNN to produce embeddings called
+Moreover, we ﬁnd that diarization substantially reduces error rate
+x-vectors, and a separately trained classiﬁer to compare them. This
+when there are multiple speakers, while maintaining excellent per-
+facilitates use of all the accumulated backend technology developed
+formance on single-speaker recordings. Finally, we introduce an
+over the years for i-vectors, such as length-normalization and PLDA
+easily implemented method to remove the domain-sensitive thresh-
+scoring. The x-vector framework is described in Section 3.
+old typically used in the clustering stage of a diarization system.
+The proposed method is more robust to domain shifts, and achieves
+similar results to those obtained using a well-tuned threshold.
+2.2. Speaker diarization
+Index Terms— speaker recognition, speaker diarization, deep
+neural networks, x-vectors Soon after their development for speaker recognition, Shum et al.,
+adapted i-vectors to the task of speaker diarization [11, 12]. Mir-
+roring progress in speaker recognition, recent systems have replaced
+1. INTRODUCTION
+i-vectors with DNN-based embeddings for capturing speaker char-
+acteristics [13, 14, 15].
+Most research in speaker recognition assumes that there is only
+one speaker per recording and the majority of standard evaluation A popular diarization framework involves extracting representa-
+datasets reﬂect this assumption. However, speech data collected tions (i-vectors or DNN embeddings) from short speech segments,
+from many real-world environments violate this single-speaker as- and clustering them, to discover the individual speakers in a record-
+sumption, and therefore beneﬁt from speaker diarization as a prepro- ing. Early work used K-means or spectral clustering [11, 12]. Al-
+cessing step. Speaker diarization is the process of grouping segments ternatively, a score matrix can be computed between pairs of rep-
+of speech according to the speaker, and is sometimes referred to as resentations using cosine distance [16] or PLDA log-likelihood ra-
+the “who spoke when” task. Recently, both speaker recognition and tios [17], and clustered using agglomerative hierarchical clustering
+diarization have advanced signiﬁcantly due to the adoption of deep (AHC) [18]. Clustering provides a coarse segmentation, which is
+neural network (DNN) embeddings to capture speaker character- often reﬁned at the frame-level, using a process called Variational
+istics. These embeddings are now replacing i-vectors, which have Bayes resegmentation [19].
+been the state-of-the-art in both tasks for almost ten years. Our work
+is based on x-vectors, a type of DNN embedding we developed for
+speaker recognition [1]. This paper studies the problem of speaker 2.3. Multi-speaker conversations
+recognition for multi-speaker conversations using a modern DNN
+embedding-based system. Capturing speaker characteristics in ﬁxed-dimensional embeddings
+assumes that the input speech was generated from a single speaker,
+and violating this assumption reduces the effectiveness of the rep-
+2. BACKGROUND
+resentation [18, 20]. Interest in the topic of speaker recognition on
+multi-speaker conversations has increased with the 2016 Speakers in
+2.1. Speaker recognition
+the Wild (SITW) challenge [21] and the recent NIST 2018 Speaker
+Until recently, most state-of-the-art speaker recognition systems Recognition Evaluation [22] due to the presence of multi-speaker en-
+were based on i-vectors [2]. The standard approach uses Gaussian rollment and test recordings. This encourages diarization to be per-
+mixture models (GMMs) and factor analysis to compress multi- formed in conjunction with speaker recognition. Participants in the
+ple sources of variability into a low-dimensional representation, SITW challenge showed that diarization can signiﬁcantly improve
+known as an i-vector. A probabilistic linear discriminant analy- speaker recognition rates [23, 24]. Our study underscores the value
+sis (PLDA) [3] classiﬁer is used to compare i-vectors, and enable of diarization for speaker recognition in the multi-speaker environ-
+same-or-different speaker decisions [4, 5]. ment.DNN for 6 epochs (instead of 3) and use a minibatch size of 128
+Table 1. X-vector DNN architecture
+(instead of 64).
+Layer Layer Type Context Size
+1 TDNN-ReLU t-2:t+2 512 3.4. Embedding extraction
+2 Dense-ReLU t 512
+3 TDNN-ReLU t-2, t, t+2 512 Once the network is trained, x-vectors are extracted from the afﬁne
+4 Dense-ReLU t 512 component of layer 12. The x-vectors are used as features for two
+5 TDNN-ReLU t-3, t, t+3 512 different PLDA backends (one for the diarization system described
+6 Dense-ReLU t 512 in Section 4 and one for the speaker recognition system described in
+7 TDNN-ReLU t-4, t, t+4 512 Section 5).
+8 Dense-ReLU t 512
+9 Dense-ReLU t 512 4. SPEAKER DIARIZATION
+10 Dense-ReLU t 1500
+11 Pooling (mean+stddev) Full-seq 2x1500 The diarization system is based on a system we devel-
+12 Dense(Embedding)-ReLU 512 oped for the 2018 DIHARD speaker recognition challenge
+13 Dense-ReLU 512 [14, 27]. A similar recipe (for narrowband telephone speech)
+14 Dense-Softmax 7185 (# spkrs) can be found in the main branch of the Kaldi toolkit:
+https://github.com/kaldi-asr/kaldi/tree/
+master/egs/callhome_diarization/v2. The system
+uses x-vectors extracted from the DNN in Section 3 with PLDA, and
+3. X-VECTOR DNN
+agglomerative hierarchical clustering (AHC). The PLDA backend
+This section describes the x-vector DNN. The architecture is consists of centering, whitening and length normalization, followed
+based on the DNN embedding system described in [1, 10]. by scoring. All components of the backend are trained on 3 second
+Our software framework has been made available in the Kaldi segments extracted from the augmented VoxCeleb data described in
+toolkit [25]. An example recipe is in the main branch Section 6.1.
+of Kaldi at https://github.com/kaldi-asr/kaldi/ For either an enrollment recording or a test recording, x-vectors
+tree/master/egs/sitw/v2 and several pretrained x-vector are extracted from 1.5 second segments with a 0.75 second overlap.
+systems can be downloaded from http://kaldi-asr.org/ PLDA scores are computed between all pairs of x-vectors. This is
+models.html. We plan on updating the recipe and pretrained followed by AHC with average linkage clustering. In our primary
+models with the improved system described in this work. system, the number of clusters is controlled by a stopping threshold
+which was tuned on the held-out SITW DEV set. The most similar
+clusters are repeatedly merged, until the average PLDA scores be-
+3.1. Architecture
+tween clusters is less than the threshold. Diarization results in N
+Table 1 summarizes the architecture used in this work. The ﬁrst 10 clusters (which, ideally correspond to speakers).
+layers of the x-vector DNN consists of layers that operate on speech
+frames, with a small temporal context centered around the current 4.1. Removing the AHC threshold
+frame t. The pooling layer receives the output of layer 10 as input,
+aggregates over the input segment, and computes its mean and stan- AHC-based diarization typically requires a well-chosen cluster stop-
+dard deviation. These segment-level statistics are concatenated to- ping threshold to achieve good performance. This threshold is sen-
+gether and passed through the remaining layers of the network. The sitive to the domain of the data, and a poorly chosen threshold will
+output layer computes posterior probabilities for the training speak- result in bad performance. This is a particularly concerning possi-
+ers. Compared to the architecture described in [1], we use a slightly bility when a reliable development set is not available.
+wider temporal context in the TDNN layers, and interleave dense To improve robustness, we propose a simple alternative to elim-
+layers between the TDNN layers. We found that this architecture inate the need for the AHC threshold. Instead of relying on a tuned
+greatly outperforms the baseline architecture available in the Kaldi AHC threshold, we begin with an estimate of the maximum number
+recipes. of speakers K that might appear in the recordings. We assume that
+there are never more than K speakers in an utterance, and perform
+clustering K times, with exactly k ∈ {1, 2, . . . , K} clusters each
+3.2. Features
+time we perform clustering. Taking the union of each of the individ-
+The features are 30 dimensional MFCCs with a frame-length of 25 ual diarizations results in a set of N = K(K+1) ways to partition
+2
+ms, mean-normalized over a sliding window of up to 3 seconds. Au- a recording that has at most K speakers. The N potential speak-
+dio ﬁles are sampled at 16 kHz. The Kaldi energy SAD is used to ers are then treated exactly the same as the speakers discovered by
+ﬁlter out nonspeech frames. clustering with an AHC threshold, as described in Section 5.
+Looking at the SITW DEV set, we found that the performance
+isn’t very sensitive to different values of K ≥ 3. We use K = 5 for
+3.3. Training
+the experiments in the results section.
+The DNN is trained to classify the 7,185 speakers in the training
+data using a multi-class cross entropy objective function. A training
+4.2. Diarizing enrollment recordings
+example consists of a 2–4 second speech segment (about 3 seconds
+average), along with the corresponding speaker label. Following a If we are processing an enrollment recording, then the goal is to use
+study by McLaren et al. in [26], we use much more aggressive data an assist segment to identify any other speech in the recording which
+augmentation than in previous studies (see Section 6.1), train the belongs to the speaker we wish to enroll, while removing any speechbelonging to other speakers. As described in Section 6.2, an assist DNN was trained on 7.2 million segments, comprised of the 1.2
+segment is about 5 seconds of speech in a longer recording, which is million “raw” segments extracted directly from VoxCeleb, plus an
+known to contain the speaker we wish to enroll. additional 6 million segments obtained by data augmentation. The
+The speech corresponding to the assist segment is treated as an PLDA backend for speaker recognition (Section 5) was trained on
+“auxiliary enrollment” and the entire recording is treated as an “aux- the full-length recordings of VoxCeleb, but we only keep the speech
+iliary test” recording. After clustering, we obtain N speakers in the belonging to the speakers of interest (as provided by the segments
+auxiliary test. We then perform the procedure described in Section 5, that are distributed with the corpora). We apply augmentation to
+which involves computing PLDA scores between the auxiliary en- double the amount of training data, which increases the number of
+rollment and each of the N speakers discovered in the auxiliary test. recordings from about 150,000 to 300,000. Finally, the diarization
+All the speech segments belonging to the speaker in the auxiliary backend (Section 4) was trained on 256,000 three second segments
+test that maximizes the PLDA score (as in Equation 1) are identiﬁed, extracted randomly from the full-length augmented recordings.
+and used by the speaker recognition system to extract an enrollment
+x-vector.
+6.2. Speakers in the Wild
+4.3. Diarizing test recordings We perform experiments on the Speakers in the Wild (SITW) dataset
+developed by SRI International [21]. The dataset consists of chal-
+Handling the test recordings is straightforward once AHC is per- lenging audio collected from diverse conditions in the video audio
+formed. The speech segments are grouped according to the N speak- domain. One of the challenges is the presence of multiple speakers
+ers discovered in the conversation, and are passed directly to the in some of the utterances. The recordings vary in length, from 6 to
+speaker recognition system, where they are used to perform recog- 240 seconds.
+nition as described in the next section. The dataset is divided into a development set DEV (which we
+use only for tuning) and an evaluation set EVAL. The EVAL set con-
+5. SPEAKER RECOGNITION tains 180 speakers divided into 4,170 models and a total of 2,883
+audio ﬁles.
+Recognition is performed using x-vectors extracted from the DNN in Enrollment conditions
+Section 3 and a PLDA backend. The x-vectors are centered, dimen- • CORE: Enrollment recordings contain exactly one speaker.
+sionality reduced to 225 using LDA, and are length-normalized. All • ASSIST: One or more speakers in enroll, along with an “as-
+parameters in the backend are estimated on the augmented VoxCeleb sist” mark, which is a short segment (typically 5 seconds) of
+data, as described in Section 6.1. the recording that is known to contain the speaker of interest.
+If diarization was performed on a test recording, then, instead of
+Test conditions
+extracting a single x-vector for the entire test recording, we extract N
+x-vectors, one for each of the N speakers identiﬁed in the recording. • CORE: Test recordings contain exactly one speaker.
+Suppose R(, ) is the PLDA log-likelihood ratio score, u is the x- • MULTI: One or more speakers in the test recordings.
+vector for the enrolled speaker and v , v , . . . , v are the x-vectors
+1 2 N
+for each of the N speakers in the test recording. To perform speaker
+7. EXPERIMENTAL RESULTS
+recognition, we compute the PLDA score as in Equation 1, which is
+the maximum of the PLDA scores between the enrollment x-vector In Table 2 we report results on the EVAL portion of the Speakers in
+and all N test x-vectors. the Wild (SITW) dataset. The four evaluation conditions are formed
+by pairing an enrollment condition with a test condition described in
+R(enroll, test) = max{R(u, v ), . . . , R(u, v )} (1)
+1 N Section 6.2. Performance on these conditions is examined in Sec-
+Handling a diarized enrollment recording is simpler, since there tions 7.1–7.4. The results are further broken down by whether or
+can only be one speaker of interest at a time. We simply extract the not the enroll or test recordings are diarized. The diarization system
+enrollment x-vector from all speech frames identiﬁed as belonging and its interaction with speaker recognition is the subject of Sections
+to the speaker of interest (as described in Section 4.2), and ignore 4–5. We report results in terms of equal error rate (EER) and the
+the remaining frames. minimum of the normalized detection cost function (DCF). DCF1
+uses P =10−2 and DCF2 uses P =10−3.
+Target Target
+The Threshold system uses an AHC threshold tuned on the DEV
+6. EXPERIMENTAL SETUP
+set to control the number of speakers, whereas No threshold uses the
+alternative method described in Section 4.1 to eliminate the thresh-
+6.1. Training data
+old. In Section 7.5, we discuss performance using the proposed al-
+The system is trained on a large subset of the combined VoxCeleb 1 ternative system that eliminates the AHC threshold.
+[28] and VoxCeleb 2 [29] corpora sampled at 16 kHz. The test por-
+tion of VoxCeleb 2 as well as 60 speakers from VoxCeleb 1 over-
+7.1. CORE-CORE
+lap with the evaluation dataset, and so we removed them before
+training. See http://www.openslr.org/resources/49/ In the simplest SITW evaluation condition, there is exactly one
+voxceleb1_sitw_overlap.txt for a list of speakers from speaker present in both the test and enrollment recordings. In the
+VoxCeleb 1 which are known to overlap with SITW. This leaves a ﬁrst row of results in Table 2 (NO DIAR), we do not apply any
+total of over 150,000 recordings from 7,185 speakers. Using the tar- diarization and achieve very low error rates. In the next row of
+get speaker marks provided in the corpora, the recordings are split results (TEST), we apply diarization to the test recordings. Using
+into over 1.2 million segments. the standard approach, diarizing single-speaker recordings degrades
+We apply a data augmentation strategy based on [1] that consists performance by a very small amount–less than half a percent relative
+of adding noises, music, babble, and reverberation. The x-vector on all performance metrics.Table 2. Results on the SITW evaluation set.
+EVAL CORE-CORE EVAL CORE-MULTI EVAL ASSIST-CORE EVAL ASSIST-MULTI
+Diarization EER DCF1 DCF2 EER DCF1 DCF2 EER DCF1 DCF2 EER DCF1 DCF2
+NO DIAR 1.7 0.20 0.34 3.5 0.28 0.44 3.2 0.24 0.38 4.3 0.28 0.43
+ENROLL 1.6 0.20 0.35 3.0 0.26 0.41
+Threshold TEST 1.8 0.21 0.35 2.1 0.22 0.41 3.3 0.24 0.39 3.8 0.26 0.41
+BOTH 1.7 0.21 0.36 2.1 0.21 0.37
+ENROLL 1.6 0.20 0.36 3.0 0.26 0.42
+No threshold TEST 1.8 0.23 0.36 2.0 0.22 0.40 3.8 0.26 0.40 3.9 0.26 0.41
+BOTH 2.2 0.23 0.38 2.2 0.22 0.38
+CORE-CORE is the most commonly used condition from SITW. Diarizing either enroll or test recordings individually (but not
+Our best performance on this condition is EER=1.7% DCF1=0.20, together) results in moderate improvements in EER, and smaller im-
+which comfortably outperforms the best previously reported num- provements in DCF1 and DCF2. Fortunately, the beneﬁt of com-
+bers in [30], which are EER=2.7% and DCF1=0.33. The x-vector bining enroll and test diarization results in much more dramatic im-
+DNN architecture in this paper is similar to that of the previous work, provements. Looking at the Threshold system, we observe a 50%
+so the improvements are mostly due to a better training recipe, which EER reduction over no diarization and a 14–23% reduction in DCF.
+consists of more aggressive data augmentation than previously used,
+and the addition of a substantial amount of in-domain data from the
+7.5. Removing the threshold
+VoxCeleb 2 Corpus [29].
+The previous sections showed that the Threshold system achieves
+excellent results. It relies on an AHC threshold tuned on labeled
+7.2. CORE-MULTI
+in-domain data. Although this is not an obstacle for this paper, as
+CORE-MULTI extends the previous condition with test recordings we are able to tune on the well-matched DEV set, it cannot be as-
+that contain one or more speakers. We still use single-speaker en- sumed that an in-domain development set is always available. The
+rollment recordings in this condition. No threshold system uses the method described in Section 4.1 to ad-
+Diarizing the multi-speaker test conversations (TEST) results in dress the problem of performing diarizing when no development set
+a clear improvement over performing no diarization (NO DIAR). is available to tune on.
+Using a tuned AHC threshold, diarization reduces EER by 38%, and In Table 2 we see that, under most conditions, the alternative No
+by 20% in DCF1 and 8% in DCF2. The results that eliminate the threshold system performs similarly to Threshold. When diarizing
+AHC threshold are even slightly better. Note that we do not consider is required for multi-speaker conversations, the results of this sys-
+the effect of diarizing the enrollment recordings yet, as we do not tem are very similar to the standard approach. The system performs
+consider that meaningful unless the assist segments are provided. worst on ASSIST-CORE when we needlessly diarize the test record-
+ings. However, the BOTH results are nonetheless better than the
+results without diarization.
+7.3. ASSIST-CORE
+This condition introduces our systems to the assist segments. These
+8. CONCLUSIONS
+segments provide a few seconds of speech of the speaker we wish
+to enroll. As described in Section 4.2, we use the assist marks to
+This paper investigated speaker recognition with multi-speaker
+discover additional speech (in the enrollment recording) that belongs
+recordings. We used a diarization system based on x-vectors, PLDA,
+to the speaker of interest, while discarding any speech from other
+and agglomerative hierarchical clustering (AHC) as a front-end for
+speakers. Although the enrollment recordings may have multiple
+a speaker recognition system. We evaluated performance on the
+speakers, the test recordings are single-speaker in this condition.
+Speakers in the Wild dataset, and found that diarization signiﬁ-
+Diarizing the enrollment recordings (ENROLL) reduces EER
+cantly improved speaker recognition performance on multi-speaker
+by 50% relative to NO DIAR. The DCF numbers also improve, but
+conversations, and retained strong performance on single-speaker
+by a smaller amount. As expected, unnecessarily diarizing the test
+recordings as well. Finally, we showed that the AHC threshold,
+recordings (but not enrollment) results in the worst performance.
+which controls the number of clusters, can be replaced with an
+Nonetheless, the Threshold results are not signiﬁcantly worse than
+alternative method that achieves similar performance under most
+the results without diarization. In the last row (BOTH), we diarize
+conditions, but eliminates the need for a in-domain development set
+both the enrollment and the test recordings. For the Threshold sys-
+for tuning.
+tem, this degrades performance by 2–8% relative to the ENROLL
+results, but still maintains an improvement over NO DIAR.
+9. ACKNOWLEDGMENTS
+7.4. ASSIST-MULTI
+This material is based upon work supported by the National Sci-
+This condition combines the challenge of potential multi-speaker en- ence Foundation Graduate Research Fellowship under Grant No.
+rollment recordings with multi-speaker test recordings. As in the 1232825. Any opinion, ﬁndings, and conclusions or recommenda-
+previous section, diarizing the enrollment recordings is enabled by tions expressed in this material are those of the authors(s) and do not
+the assist segments. necessarily reﬂect the views of the National Science Foundation.10. REFERENCES [15] Q. Wang, C. Downey, L. Wan, P. Mansﬁeld, and I. Lopez
+Moreno, “Speaker diarization with lstm,” in 2018 IEEE In-
+[1] D. Snyder, D. Garcia-Romero, G. Sell, D. Povey, and S. Khu- ternational Conference on Acoustics, Speech and Signal Pro-
+danpur, “X-vectors: Robust dnn embeddings for speaker cessing (ICASSP). IEEE, 2018, pp. 5239–5243.
+recognition,” in 2018 IEEE International Conference on [16] M. Senoussaoui, P. Kenny, T. Stafylakis, and P. Dumouchel,
+Acoustics, Speech and Signal Processing (ICASSP). IEEE, “A study of the cosine distance-based mean shift for telephone
+2018. speech diarization,” IEEE/ACM Transactions on Audio, Speech
+[2] N. Dehak, P. Kenny, R. Dehak, P. Dumouchel, and P. Ouel- and Language Processing (TASLP), vol. 22, no. 1, pp. 217–
+let, “Front-end factor analysis for speaker veriﬁcation,” IEEE 227, 2014.
+Transactions on Audio, Speech, and Language Processing, vol. [17] G. Sell and D. Garcia-Romero, “Speaker diarization with plda
+19, no. 4, pp. 788–798, 2011. i-vector scoring and unsupervised calibration,” in Spoken Lan-
+guage Technology Workshop (SLT), 2014 IEEE. IEEE, 2014,
+[3] S. Ioffe, “Probabilistic linear discriminant analysis,” Computer
+pp. 413–417.
+Vision–ECCV 2006, pp. 531–542, 2006.
+[18] P. Kenny, D. Reynolds, and F. Castaldo, “Diarization of tele-
+[4] P. Kenny, “Bayesian speaker veriﬁcation with heavy-tailed pri-
+phone conversations using factor analysis,” IEEE Journal of
+ors.,” in Odyssey, 2010, p. 14.
+Selected Topics in Signal Processing, vol. 4, no. 6, pp. 1059,
+[5] N. Bru¨mmer and E. De Villiers, “The speaker partitioning 2010.
+problem.,” in Odyssey, 2010, p. 34. [19] M. Diez, L. Burget, and P. Matejka, “Speaker diarization based
+on bayesian hmm with eigenvoice priors,” in Proc. Odyssey
+[6] L. Heck, Y. Konig, K. Sonmez, and M. Weintraub, “Ro-
+2018 The Speaker and Language Recognition Workshop, 2018,
+bustness to telephone handset distortion in speaker recognition
+pp. 147–154.
+by discriminative feature design,” in Speech Communication,
+2000, vol. 31, pp. 181–192. [20] A. Martin and M. Przybocki, “Speaker recognition in a multi-
+speaker environment,” in Seventh European Conference on
+[7] A. Salman, Learning speaker-speciﬁc characteristics with
+Speech Communication and Technology, 2001.
+deep neural architecture, Ph.D. thesis, University of Manch-
+[21] M. McLaren, L. Ferrer, D. Castan, and A. Lawson, “The 2016
+ester, 2012.
+speakers in the wild speaker recognition evaluation.,” in Inter-
+[8] G. Heigold, I. Moreno, S. Bengio, and N. Shazeer, “End-to-end speech, 2016, pp. 823–827.
+text-dependent speaker veriﬁcation,” in 2016 IEEE Interna-
+[22] “NIST speaker recognition evaluation 2018,” https:
+tional Conference on Acoustics, Speech and Signal Processing
+//www.nist.gov/sites/default/files/
+(ICASSP). IEEE, 2016, pp. 5115–5119.
+documents/2018/08/17/sre18_eval_plan_
+[9] D. Snyder, P. Ghahremani, D. Povey, D. Garcia-Romero, 2018-05-31_v6.pdf, 2018.
+Y. Carmiel, and S. Khudanpur, “Deep neural network-based [23] O. Novotny`, P. Matejka, O. Plchot, O. Glembek, L. Burget,
+speaker embeddings for end-to-end speaker veriﬁcation,” in and J. Cernocky`, “Analysis of speaker recognition systems in
+Spoken Language Technology Workshop (SLT). IEEE, 2016. realistic scenarios of the sitw 2016 challenge.,” in Interspeech,
+2016, pp. 828–832.
+[10] D. Snyder, D. Garcia-Romero, D. Povey, and S. Khudan-
+pur, “Deep neural network embeddings for text-independent [24] Y. Liu, Y. Tian, L. He, and J. Liu, “Investigating various
+speaker veriﬁcation,” Proc. Interspeech, pp. 999–1003, 2017. diarization algorithms for speaker in the wild (sitw) speaker
+recognition challenge.,” in Interspeech, 2016, pp. 853–857.
+[11] S. Shum, N. Dehak, E. Chuangsuwanich, D. Reynolds, and
+J. Glass, “Exploiting intra-conversation variability for speaker [25] D. Povey, A. Ghoshal, G. Boulianne, L. Burget, O. Glembek,
+diarization,” in Twelfth Annual Conference of the International N. Goel, M. Hannemann, P. Motl´ıcˇek, Y. Qian, P. Schwarz,
+Speech Communication Association, 2011. et al., “The Kaldi speech recognition toolkit,” in Proceedings
+of the Automatic Speech Recognition & Understanding (ASRU)
+[12] S. Shum, N. Dehak, and J. Glass, “On the use of spectral and Workshop, 2011.
+iterative methods for speaker diarization,” in Thirteenth An-
+[26] M. McLaren, D. Castan, M. Nandwana, L. Ferrer, and
+nual Conference of the International Speech Communication
+E. Yılmaz, “How to train your speaker embeddings extrac-
+Association, 2012.
+tor,” in Odyssey: The Speaker and Language Recognition
+[13] D. Garcia-Romero, D. Snyder, G. Sell, D. Povey, and A. Mc- Workshop, Les Sables dOlonne, 2018.
+Cree, “Speaker diarization using deep neural network em-
+[27] N. Ryant, K. Church, C. Cieri, A. Cristia, J. Du, S. Ganapathy,
+beddings,” in 2017 IEEE International Conference on Acous-
+and M. Liberman, “First dihard challenge evaluation plan,”
+tics, Speech and Signal Processing (ICASSP). IEEE, 2017, pp.
+2018.
+4930–4934.
+[28] A. Nagrani, J. S. Chung, and A. Zisserman, “Voxceleb: a large-
+[14] G. Sell, D. Snyder, A. Mccree, D. Garcia-Romero, J. Villalba, scale speaker identiﬁcation dataset,” in Interspeech, 2017.
+M. Maciejewski, V. Manohar, N. Dehak, D. Povey, S. Watan-
+[29] J. S. Chung, A. Nagrani, and A. Zisserman, “Voxceleb2: Deep
+abe, and S. Khudanpur, “Diarization is Hard: Some Experi-
+speaker recognition,” in INTERSPEECH, 2018.
+ences and Lessons Learned for the JHU Team in the Inaugural
+[30] A. Silnova, N. Bru¨mmer, D. Garcia-Romero, D. Snyder, and
+DIHARD Challenge,” in Proceedings of the 19th Annual Con-
+L. Burget, “Fast Variational Bayes for Heavy-tailed PLDA Ap-
+ference of the International Speech Communication Associa-
+plied to i-vectors and x-vectors,” in Interspeech 2018, Hyder-
+tion, INTERSPEECH 2018, Hyderabad, India, sep 2018, pp.
+abad, India, 2018, pp. 72–76.
+2808—-2812.SPEAKER RECOGNITION FOR MULTI-SPEAKER CONVERSATIONS USING X-VECTORS
+David Snyder, Daniel Garcia-Romero, Gregory Sell, Alan McCree, Daniel Povey, Sanjeev Khudanpur
+Center for Language and Speech Processing & Human Language Technology Center of Excellence
+The Johns Hopkins University, Baltimore, MD 21218, USA
+ABSTRACT Early work using discriminatively trained neural networks to
+capture speaker characteristics focused on extracting frame-level
+Recently, deep neural networks that map utterances to ﬁxed-
+features to be used as input to Gaussian speaker models [6, 7].
+dimensional embeddings have emerged as the state-of-the-art in
+Heigold et al., introduced an end-to-end system, trained on the
+speaker recognition. Our prior work introduced x-vectors, an em-
+phrase “OK Google,” that jointly learns an embedding along with a
+bedding that is very effective for both speaker recognition and
+similarity metric to compare pairs of embeddings [8]. Snyder et al.,
+diarization. This paper combines our previous work and applies it
+generalized this framework to text-independent speaker recognition
+to the problem of speaker recognition on multi-speaker conversa-
+and inserted a temporal pooling layer into the network to handle
+tions. We measure performance on Speakers in the Wild and report
+variable-length segments [9]. The work in [1, 10] split the end-to-
+what we believe are the best published error rates on this dataset.
+end approach into two parts: a DNN to produce embeddings called
+Moreover, we ﬁnd that diarization substantially reduces error rate
+x-vectors, and a separately trained classiﬁer to compare them. This
+when there are multiple speakers, while maintaining excellent per-
+facilitates use of all the accumulated backend technology developed
+formance on single-speaker recordings. Finally, we introduce an
+over the years for i-vectors, such as length-normalization and PLDA
+easily implemented method to remove the domain-sensitive thresh-
+scoring. The x-vector framework is described in Section 3.
+old typically used in the clustering stage of a diarization system.
+The proposed method is more robust to domain shifts, and achieves
+similar results to those obtained using a well-tuned threshold.
+2.2. Speaker diarization
+Index Terms— speaker recognition, speaker diarization, deep
+neural networks, x-vectors Soon after their development for speaker recognition, Shum et al.,
+adapted i-vectors to the task of speaker diarization [11, 12]. Mir-
+roring progress in speaker recognition, recent systems have replaced
+1. INTRODUCTION
+i-vectors with DNN-based embeddings for capturing speaker char-
+acteristics [13, 14, 15].
+Most research in speaker recognition assumes that there is only
+one speaker per recording and the majority of standard evaluation A popular diarization framework involves extracting representa-
+datasets reﬂect this assumption. However, speech data collected tions (i-vectors or DNN embeddings) from short speech segments,
+from many real-world environments violate this single-speaker as- and clustering them, to discover the individual speakers in a record-
+sumption, and therefore beneﬁt from speaker diarization as a prepro- ing. Early work used K-means or spectral clustering [11, 12]. Al-
+cessing step. Speaker diarization is the process of grouping segments ternatively, a score matrix can be computed between pairs of rep-
+of speech according to the speaker, and is sometimes referred to as resentations using cosine distance [16] or PLDA log-likelihood ra-
+the “who spoke when” task. Recently, both speaker recognition and tios [17], and clustered using agglomerative hierarchical clustering
+diarization have advanced signiﬁcantly due to the adoption of deep (AHC) [18]. Clustering provides a coarse segmentation, which is
+neural network (DNN) embeddings to capture speaker character- often reﬁned at the frame-level, using a process called Variational
+istics. These embeddings are now replacing i-vectors, which have Bayes resegmentation [19].
+been the state-of-the-art in both tasks for almost ten years. Our work
+is based on x-vectors, a type of DNN embedding we developed for
+speaker recognition [1]. This paper studies the problem of speaker 2.3. Multi-speaker conversations
+recognition for multi-speaker conversations using a modern DNN
+embedding-based system. Capturing speaker characteristics in ﬁxed-dimensional embeddings
+assumes that the input speech was generated from a single speaker,
+and violating this assumption reduces the effectiveness of the rep-
+2. BACKGROUND
+resentation [18, 20]. Interest in the topic of speaker recognition on
+multi-speaker conversations has increased with the 2016 Speakers in
+2.1. Speaker recognition
+the Wild (SITW) challenge [21] and the recent NIST 2018 Speaker
+Until recently, most state-of-the-art speaker recognition systems Recognition Evaluation [22] due to the presence of multi-speaker en-
+were based on i-vectors [2]. The standard approach uses Gaussian rollment and test recordings. This encourages diarization to be per-
+mixture models (GMMs) and factor analysis to compress multi- formed in conjunction with speaker recognition. Participants in the
+ple sources of variability into a low-dimensional representation, SITW challenge showed that diarization can signiﬁcantly improve
+known as an i-vector. A probabilistic linear discriminant analy- speaker recognition rates [23, 24]. Our study underscores the value
+sis (PLDA) [3] classiﬁer is used to compare i-vectors, and enable of diarization for speaker recognition in the multi-speaker environ-
+same-or-different speaker decisions [4, 5]. ment.DNN for 6 epochs (instead of 3) and use a minibatch size of 128
+Table 1. X-vector DNN architecture
+(instead of 64).
+Layer Layer Type Context Size
+1 TDNN-ReLU t-2:t+2 512 3.4. Embedding extraction
+2 Dense-ReLU t 512
+3 TDNN-ReLU t-2, t, t+2 512 Once the network is trained, x-vectors are extracted from the afﬁne
+4 Dense-ReLU t 512 component of layer 12. The x-vectors are used as features for two
+5 TDNN-ReLU t-3, t, t+3 512 different PLDA backends (one for the diarization system described
+6 Dense-ReLU t 512 in Section 4 and one for the speaker recognition system described in
+7 TDNN-ReLU t-4, t, t+4 512 Section 5).
+8 Dense-ReLU t 512
+9 Dense-ReLU t 512 4. SPEAKER DIARIZATION
+10 Dense-ReLU t 1500
+11 Pooling (mean+stddev) Full-seq 2x1500 The diarization system is based on a system we devel-
+12 Dense(Embedding)-ReLU 512 oped for the 2018 DIHARD speaker recognition challenge
+13 Dense-ReLU 512 [14, 27]. A similar recipe (for narrowband telephone speech)
+14 Dense-Softmax 7185 (# spkrs) can be found in the main branch of the Kaldi toolkit:
+https://github.com/kaldi-asr/kaldi/tree/
+master/egs/callhome_diarization/v2. The system
+uses x-vectors extracted from the DNN in Section 3 with PLDA, and
+3. X-VECTOR DNN
+agglomerative hierarchical clustering (AHC). The PLDA backend
+This section describes the x-vector DNN. The architecture is consists of centering, whitening and length normalization, followed
+based on the DNN embedding system described in [1, 10]. by scoring. All components of the backend are trained on 3 second
+Our software framework has been made available in the Kaldi segments extracted from the augmented VoxCeleb data described in
+toolkit [25]. An example recipe is in the main branch Section 6.1.
+of Kaldi at https://github.com/kaldi-asr/kaldi/ For either an enrollment recording or a test recording, x-vectors
+tree/master/egs/sitw/v2 and several pretrained x-vector are extracted from 1.5 second segments with a 0.75 second overlap.
+systems can be downloaded from http://kaldi-asr.org/ PLDA scores are computed between all pairs of x-vectors. This is
+models.html. We plan on updating the recipe and pretrained followed by AHC with average linkage clustering. In our primary
+models with the improved system described in this work. system, the number of clusters is controlled by a stopping threshold
+which was tuned on the held-out SITW DEV set. The most similar
+clusters are repeatedly merged, until the average PLDA scores be-
+3.1. Architecture
+tween clusters is less than the threshold. Diarization results in N
+Table 1 summarizes the architecture used in this work. The ﬁrst 10 clusters (which, ideally correspond to speakers).
+layers of the x-vector DNN consists of layers that operate on speech
+frames, with a small temporal context centered around the current 4.1. Removing the AHC threshold
+frame t. The pooling layer receives the output of layer 10 as input,
+aggregates over the input segment, and computes its mean and stan- AHC-based diarization typically requires a well-chosen cluster stop-
+dard deviation. These segment-level statistics are concatenated to- ping threshold to achieve good performance. This threshold is sen-
+gether and passed through the remaining layers of the network. The sitive to the domain of the data, and a poorly chosen threshold will
+output layer computes posterior probabilities for the training speak- result in bad performance. This is a particularly concerning possi-
+ers. Compared to the architecture described in [1], we use a slightly bility when a reliable development set is not available.
+wider temporal context in the TDNN layers, and interleave dense To improve robustness, we propose a simple alternative to elim-
+layers between the TDNN layers. We found that this architecture inate the need for the AHC threshold. Instead of relying on a tuned
+greatly outperforms the baseline architecture available in the Kaldi AHC threshold, we begin with an estimate of the maximum number
+recipes. of speakers K that might appear in the recordings. We assume that
+there are never more than K speakers in an utterance, and perform
+clustering K times, with exactly k ∈ {1, 2, . . . , K} clusters each
+3.2. Features
+time we perform clustering. Taking the union of each of the individ-
+The features are 30 dimensional MFCCs with a frame-length of 25 ual diarizations results in a set of N = K(K+1) ways to partition
+2
+ms, mean-normalized over a sliding window of up to 3 seconds. Au- a recording that has at most K speakers. The N potential speak-
+dio ﬁles are sampled at 16 kHz. The Kaldi energy SAD is used to ers are then treated exactly the same as the speakers discovered by
+ﬁlter out nonspeech frames. clustering with an AHC threshold, as described in Section 5.
+Looking at the SITW DEV set, we found that the performance
+isn’t very sensitive to different values of K ≥ 3. We use K = 5 for
+3.3. Training
+the experiments in the results section.
+The DNN is trained to classify the 7,185 speakers in the training
+data using a multi-class cross entropy objective function. A training
+4.2. Diarizing enrollment recordings
+example consists of a 2–4 second speech segment (about 3 seconds
+average), along with the corresponding speaker label. Following a If we are processing an enrollment recording, then the goal is to use
+study by McLaren et al. in [26], we use much more aggressive data an assist segment to identify any other speech in the recording which
+augmentation than in previous studies (see Section 6.1), train the belongs to the speaker we wish to enroll, while removing any speechbelonging to other speakers. As described in Section 6.2, an assist DNN was trained on 7.2 million segments, comprised of the 1.2
+segment is about 5 seconds of speech in a longer recording, which is million “raw” segments extracted directly from VoxCeleb, plus an
+known to contain the speaker we wish to enroll. additional 6 million segments obtained by data augmentation. The
+The speech corresponding to the assist segment is treated as an PLDA backend for speaker recognition (Section 5) was trained on
+“auxiliary enrollment” and the entire recording is treated as an “aux- the full-length recordings of VoxCeleb, but we only keep the speech
+iliary test” recording. After clustering, we obtain N speakers in the belonging to the speakers of interest (as provided by the segments
+auxiliary test. We then perform the procedure described in Section 5, that are distributed with the corpora). We apply augmentation to
+which involves computing PLDA scores between the auxiliary en- double the amount of training data, which increases the number of
+rollment and each of the N speakers discovered in the auxiliary test. recordings from about 150,000 to 300,000. Finally, the diarization
+All the speech segments belonging to the speaker in the auxiliary backend (Section 4) was trained on 256,000 three second segments
+test that maximizes the PLDA score (as in Equation 1) are identiﬁed, extracted randomly from the full-length augmented recordings.
+and used by the speaker recognition system to extract an enrollment
+x-vector.
+6.2. Speakers in the Wild
+4.3. Diarizing test recordings We perform experiments on the Speakers in the Wild (SITW) dataset
+developed by SRI International [21]. The dataset consists of chal-
+Handling the test recordings is straightforward once AHC is per- lenging audio collected from diverse conditions in the video audio
+formed. The speech segments are grouped according to the N speak- domain. One of the challenges is the presence of multiple speakers
+ers discovered in the conversation, and are passed directly to the in some of the utterances. The recordings vary in length, from 6 to
+speaker recognition system, where they are used to perform recog- 240 seconds.
+nition as described in the next section. The dataset is divided into a development set DEV (which we
+use only for tuning) and an evaluation set EVAL. The EVAL set con-
+5. SPEAKER RECOGNITION tains 180 speakers divided into 4,170 models and a total of 2,883
+audio ﬁles.
+Recognition is performed using x-vectors extracted from the DNN in Enrollment conditions
+Section 3 and a PLDA backend. The x-vectors are centered, dimen- • CORE: Enrollment recordings contain exactly one speaker.
+sionality reduced to 225 using LDA, and are length-normalized. All • ASSIST: One or more speakers in enroll, along with an “as-
+parameters in the backend are estimated on the augmented VoxCeleb sist” mark, which is a short segment (typically 5 seconds) of
+data, as described in Section 6.1. the recording that is known to contain the speaker of interest.
+If diarization was performed on a test recording, then, instead of
+Test conditions
+extracting a single x-vector for the entire test recording, we extract N
+x-vectors, one for each of the N speakers identiﬁed in the recording. • CORE: Test recordings contain exactly one speaker.
+Suppose R(, ) is the PLDA log-likelihood ratio score, u is the x- • MULTI: One or more speakers in the test recordings.
+vector for the enrolled speaker and v , v , . . . , v are the x-vectors
+1 2 N
+for each of the N speakers in the test recording. To perform speaker
+7. EXPERIMENTAL RESULTS
+recognition, we compute the PLDA score as in Equation 1, which is
+the maximum of the PLDA scores between the enrollment x-vector In Table 2 we report results on the EVAL portion of the Speakers in
+and all N test x-vectors. the Wild (SITW) dataset. The four evaluation conditions are formed
+by pairing an enrollment condition with a test condition described in
+R(enroll, test) = max{R(u, v ), . . . , R(u, v )} (1)
+1 N Section 6.2. Performance on these conditions is examined in Sec-
+Handling a diarized enrollment recording is simpler, since there tions 7.1–7.4. The results are further broken down by whether or
+can only be one speaker of interest at a time. We simply extract the not the enroll or test recordings are diarized. The diarization system
+enrollment x-vector from all speech frames identiﬁed as belonging and its interaction with speaker recognition is the subject of Sections
+to the speaker of interest (as described in Section 4.2), and ignore 4–5. We report results in terms of equal error rate (EER) and the
+the remaining frames. minimum of the normalized detection cost function (DCF). DCF1
+uses P =10−2 and DCF2 uses P =10−3.
+Target Target
+The Threshold system uses an AHC threshold tuned on the DEV
+6. EXPERIMENTAL SETUP
+set to control the number of speakers, whereas No threshold uses the
+alternative method described in Section 4.1 to eliminate the thresh-
+6.1. Training data
+old. In Section 7.5, we discuss performance using the proposed al-
+The system is trained on a large subset of the combined VoxCeleb 1 ternative system that eliminates the AHC threshold.
+[28] and VoxCeleb 2 [29] corpora sampled at 16 kHz. The test por-
+tion of VoxCeleb 2 as well as 60 speakers from VoxCeleb 1 over-
+7.1. CORE-CORE
+lap with the evaluation dataset, and so we removed them before
+training. See http://www.openslr.org/resources/49/ In the simplest SITW evaluation condition, there is exactly one
+voxceleb1_sitw_overlap.txt for a list of speakers from speaker present in both the test and enrollment recordings. In the
+VoxCeleb 1 which are known to overlap with SITW. This leaves a ﬁrst row of results in Table 2 (NO DIAR), we do not apply any
+total of over 150,000 recordings from 7,185 speakers. Using the tar- diarization and achieve very low error rates. In the next row of
+get speaker marks provided in the corpora, the recordings are split results (TEST), we apply diarization to the test recordings. Using
+into over 1.2 million segments. the standard approach, diarizing single-speaker recordings degrades
+We apply a data augmentation strategy based on [1] that consists performance by a very small amount–less than half a percent relative
+of adding noises, music, babble, and reverberation. The x-vector on all performance metrics.Table 2. Results on the SITW evaluation set.
+EVAL CORE-CORE EVAL CORE-MULTI EVAL ASSIST-CORE EVAL ASSIST-MULTI
+Diarization EER DCF1 DCF2 EER DCF1 DCF2 EER DCF1 DCF2 EER DCF1 DCF2
+NO DIAR 1.7 0.20 0.34 3.5 0.28 0.44 3.2 0.24 0.38 4.3 0.28 0.43
+ENROLL 1.6 0.20 0.35 3.0 0.26 0.41
+Threshold TEST 1.8 0.21 0.35 2.1 0.22 0.41 3.3 0.24 0.39 3.8 0.26 0.41
+BOTH 1.7 0.21 0.36 2.1 0.21 0.37
+ENROLL 1.6 0.20 0.36 3.0 0.26 0.42
+No threshold TEST 1.8 0.23 0.36 2.0 0.22 0.40 3.8 0.26 0.40 3.9 0.26 0.41
+BOTH 2.2 0.23 0.38 2.2 0.22 0.38
+CORE-CORE is the most commonly used condition from SITW. Diarizing either enroll or test recordings individually (but not
+Our best performance on this condition is EER=1.7% DCF1=0.20, together) results in moderate improvements in EER, and smaller im-
+which comfortably outperforms the best previously reported num- provements in DCF1 and DCF2. Fortunately, the beneﬁt of com-
+bers in [30], which are EER=2.7% and DCF1=0.33. The x-vector bining enroll and test diarization results in much more dramatic im-
+DNN architecture in this paper is similar to that of the previous work, provements. Looking at the Threshold system, we observe a 50%
+so the improvements are mostly due to a better training recipe, which EER reduction over no diarization and a 14–23% reduction in DCF.
+consists of more aggressive data augmentation than previously used,
+and the addition of a substantial amount of in-domain data from the
+7.5. Removing the threshold
+VoxCeleb 2 Corpus [29].
+The previous sections showed that the Threshold system achieves
+excellent results. It relies on an AHC threshold tuned on labeled
+7.2. CORE-MULTI
+in-domain data. Although this is not an obstacle for this paper, as
+CORE-MULTI extends the previous condition with test recordings we are able to tune on the well-matched DEV set, it cannot be as-
+that contain one or more speakers. We still use single-speaker en- sumed that an in-domain development set is always available. The
+rollment recordings in this condition. No threshold system uses the method described in Section 4.1 to ad-
+Diarizing the multi-speaker test conversations (TEST) results in dress the problem of performing diarizing when no development set
+a clear improvement over performing no diarization (NO DIAR). is available to tune on.
+Using a tuned AHC threshold, diarization reduces EER by 38%, and In Table 2 we see that, under most conditions, the alternative No
+by 20% in DCF1 and 8% in DCF2. The results that eliminate the threshold system performs similarly to Threshold. When diarizing
+AHC threshold are even slightly better. Note that we do not consider is required for multi-speaker conversations, the results of this sys-
+the effect of diarizing the enrollment recordings yet, as we do not tem are very similar to the standard approach. The system performs
+consider that meaningful unless the assist segments are provided. worst on ASSIST-CORE when we needlessly diarize the test record-
+ings. However, the BOTH results are nonetheless better than the
+results without diarization.
+7.3. ASSIST-CORE
+This condition introduces our systems to the assist segments. These
+8. CONCLUSIONS
+segments provide a few seconds of speech of the speaker we wish
+to enroll. As described in Section 4.2, we use the assist marks to
+This paper investigated speaker recognition with multi-speaker
+discover additional speech (in the enrollment recording) that belongs
+recordings. We used a diarization system based on x-vectors, PLDA,
+to the speaker of interest, while discarding any speech from other
+and agglomerative hierarchical clustering (AHC) as a front-end for
+speakers. Although the enrollment recordings may have multiple
+a speaker recognition system. We evaluated performance on the
+speakers, the test recordings are single-speaker in this condition.
+Speakers in the Wild dataset, and found that diarization signiﬁ-
+Diarizing the enrollment recordings (ENROLL) reduces EER
+cantly improved speaker recognition performance on multi-speaker
+by 50% relative to NO DIAR. The DCF numbers also improve, but
+conversations, and retained strong performance on single-speaker
+by a smaller amount. As expected, unnecessarily diarizing the test
+recordings as well. Finally, we showed that the AHC threshold,
+recordings (but not enrollment) results in the worst performance.
+which controls the number of clusters, can be replaced with an
+Nonetheless, the Threshold results are not signiﬁcantly worse than
+alternative method that achieves similar performance under most
+the results without diarization. In the last row (BOTH), we diarize
+conditions, but eliminates the need for a in-domain development set
+both the enrollment and the test recordings. For the Threshold sys-
+for tuning.
+tem, this degrades performance by 2–8% relative to the ENROLL
+results, but still maintains an improvement over NO DIAR.
+9. ACKNOWLEDGMENTS
+7.4. ASSIST-MULTI
+This material is based upon work supported by the National Sci-
+This condition combines the challenge of potential multi-speaker en- ence Foundation Graduate Research Fellowship under Grant No.
+rollment recordings with multi-speaker test recordings. As in the 1232825. Any opinion, ﬁndings, and conclusions or recommenda-
+previous section, diarizing the enrollment recordings is enabled by tions expressed in this material are those of the authors(s) and do not
+the assist segments. necessarily reﬂect the views of the National Science Foundation.10. REFERENCES [15] Q. Wang, C. Downey, L. Wan, P. Mansﬁeld, and I. Lopez
+Moreno, “Speaker diarization with lstm,” in 2018 IEEE In-
+[1] D. Snyder, D. Garcia-Romero, G. Sell, D. Povey, and S. Khu- ternational Conference on Acoustics, Speech and Signal Pro-
+danpur, “X-vectors: Robust dnn embeddings for speaker cessing (ICASSP). IEEE, 2018, pp. 5239–5243.
+recognition,” in 2018 IEEE International Conference on [16] M. Senoussaoui, P. Kenny, T. Stafylakis, and P. Dumouchel,
+Acoustics, Speech and Signal Processing (ICASSP). IEEE, “A study of the cosine distance-based mean shift for telephone
+2018. speech diarization,” IEEE/ACM Transactions on Audio, Speech
+[2] N. Dehak, P. Kenny, R. Dehak, P. Dumouchel, and P. Ouel- and Language Processing (TASLP), vol. 22, no. 1, pp. 217–
+let, “Front-end factor analysis for speaker veriﬁcation,” IEEE 227, 2014.
+Transactions on Audio, Speech, and Language Processing, vol. [17] G. Sell and D. Garcia-Romero, “Speaker diarization with plda
+19, no. 4, pp. 788–798, 2011. i-vector scoring and unsupervised calibration,” in Spoken Lan-
+guage Technology Workshop (SLT), 2014 IEEE. IEEE, 2014,
+[3] S. Ioffe, “Probabilistic linear discriminant analysis,” Computer
+pp. 413–417.
+Vision–ECCV 2006, pp. 531–542, 2006.
+[18] P. Kenny, D. Reynolds, and F. Castaldo, “Diarization of tele-
+[4] P. Kenny, “Bayesian speaker veriﬁcation with heavy-tailed pri-
+phone conversations using factor analysis,” IEEE Journal of
+ors.,” in Odyssey, 2010, p. 14.
+Selected Topics in Signal Processing, vol. 4, no. 6, pp. 1059,
+[5] N. Bru¨mmer and E. De Villiers, “The speaker partitioning 2010.
+problem.,” in Odyssey, 2010, p. 34. [19] M. Diez, L. Burget, and P. Matejka, “Speaker diarization based
+on bayesian hmm with eigenvoice priors,” in Proc. Odyssey
+[6] L. Heck, Y. Konig, K. Sonmez, and M. Weintraub, “Ro-
+2018 The Speaker and Language Recognition Workshop, 2018,
+bustness to telephone handset distortion in speaker recognition
+pp. 147–154.
+by discriminative feature design,” in Speech Communication,
+2000, vol. 31, pp. 181–192. [20] A. Martin and M. Przybocki, “Speaker recognition in a multi-
+speaker environment,” in Seventh European Conference on
+[7] A. Salman, Learning speaker-speciﬁc characteristics with
+Speech Communication and Technology, 2001.
+deep neural architecture, Ph.D. thesis, University of Manch-
+[21] M. McLaren, L. Ferrer, D. Castan, and A. Lawson, “The 2016
+ester, 2012.
+speakers in the wild speaker recognition evaluation.,” in Inter-
+[8] G. Heigold, I. Moreno, S. Bengio, and N. Shazeer, “End-to-end speech, 2016, pp. 823–827.
+text-dependent speaker veriﬁcation,” in 2016 IEEE Interna-
+[22] “NIST speaker recognition evaluation 2018,” https:
+tional Conference on Acoustics, Speech and Signal Processing
+//www.nist.gov/sites/default/files/
+(ICASSP). IEEE, 2016, pp. 5115–5119.
+documents/2018/08/17/sre18_eval_plan_
+[9] D. Snyder, P. Ghahremani, D. Povey, D. Garcia-Romero, 2018-05-31_v6.pdf, 2018.
+Y. Carmiel, and S. Khudanpur, “Deep neural network-based [23] O. Novotny`, P. Matejka, O. Plchot, O. Glembek, L. Burget,
+speaker embeddings for end-to-end speaker veriﬁcation,” in and J. Cernocky`, “Analysis of speaker recognition systems in
+Spoken Language Technology Workshop (SLT). IEEE, 2016. realistic scenarios of the sitw 2016 challenge.,” in Interspeech,
+2016, pp. 828–832.
+[10] D. Snyder, D. Garcia-Romero, D. Povey, and S. Khudan-
+pur, “Deep neural network embeddings for text-independent [24] Y. Liu, Y. Tian, L. He, and J. Liu, “Investigating various
+speaker veriﬁcation,” Proc. Interspeech, pp. 999–1003, 2017. diarization algorithms for speaker in the wild (sitw) speaker
+recognition challenge.,” in Interspeech, 2016, pp. 853–857.
+[11] S. Shum, N. Dehak, E. Chuangsuwanich, D. Reynolds, and
+J. Glass, “Exploiting intra-conversation variability for speaker [25] D. Povey, A. Ghoshal, G. Boulianne, L. Burget, O. Glembek,
+diarization,” in Twelfth Annual Conference of the International N. Goel, M. Hannemann, P. Motl´ıcˇek, Y. Qian, P. Schwarz,
+Speech Communication Association, 2011. et al., “The Kaldi speech recognition toolkit,” in Proceedings
+of the Automatic Speech Recognition & Understanding (ASRU)
+[12] S. Shum, N. Dehak, and J. Glass, “On the use of spectral and Workshop, 2011.
+iterative methods for speaker diarization,” in Thirteenth An-
+[26] M. McLaren, D. Castan, M. Nandwana, L. Ferrer, and
+nual Conference of the International Speech Communication
+E. Yılmaz, “How to train your speaker embeddings extrac-
+Association, 2012.
+tor,” in Odyssey: The Speaker and Language Recognition
+[13] D. Garcia-Romero, D. Snyder, G. Sell, D. Povey, and A. Mc- Workshop, Les Sables dOlonne, 2018.
+Cree, “Speaker diarization using deep neural network em-
+[27] N. Ryant, K. Church, C. Cieri, A. Cristia, J. Du, S. Ganapathy,
+beddings,” in 2017 IEEE International Conference on Acous-
+and M. Liberman, “First dihard challenge evaluation plan,”
+tics, Speech and Signal Processing (ICASSP). IEEE, 2017, pp.
+2018.
+4930–4934.
+[28] A. Nagrani, J. S. Chung, and A. Zisserman, “Voxceleb: a large-
+[14] G. Sell, D. Snyder, A. Mccree, D. Garcia-Romero, J. Villalba, scale speaker identiﬁcation dataset,” in Interspeech, 2017.
+M. Maciejewski, V. Manohar, N. Dehak, D. Povey, S. Watan-
+[29] J. S. Chung, A. Nagrani, and A. Zisserman, “Voxceleb2: Deep
+abe, and S. Khudanpur, “Diarization is Hard: Some Experi-
+speaker recognition,” in INTERSPEECH, 2018.
+ences and Lessons Learned for the JHU Team in the Inaugural
+[30] A. Silnova, N. Bru¨mmer, D. Garcia-Romero, D. Snyder, and
+DIHARD Challenge,” in Proceedings of the 19th Annual Con-
+L. Burget, “Fast Variational Bayes for Heavy-tailed PLDA Ap-
+ference of the International Speech Communication Associa-
+plied to i-vectors and x-vectors,” in Interspeech 2018, Hyder-
+tion, INTERSPEECH 2018, Hyderabad, India, sep 2018, pp.
+abad, India, 2018, pp. 72–76.
 2808—-2812.

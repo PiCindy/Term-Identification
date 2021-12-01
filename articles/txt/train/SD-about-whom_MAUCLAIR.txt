@@ -3848,4 +3848,774 @@ ICSLP 2004), Jeju, Oct 2004.
 [7] L. Canseco-Rodriguez, L. Lamel, and J.-L. Gauvain, "A com-
 parative study using manual and automatic transcriptions for
 diarization," Jeju, Oct 2005.
+6 2006 IEEE Odyssey - The Speaker and Language Recognition WorkshopSPEAKER DIARIZATION:
+ABOUT WHOM THE SPEAKER IS TALKING ?
+J Mauclair, S. Meignier, Y Esteve
+LIUM, Universite du Maine
+Le Mans, France
+{julie.mauclair,sylvain.meignier,yannick.esteve} glium.univ-lemans.fr
+ABSTRACT
+The automatic speaker diarization consists in splitting the signal into
+homogeneous segments and clustering them by speakers. However
+the speaker segments are specified with anonymous labels. This pa-
+per suggests a solution to identify those speakers by extracting their Ir Other \
+full names pronounced in French broadcast news. A semantic classi-
+fication tree is automatically built on a training corpus and associate - Another speaker ofthe show
+the full names detected in the transcription of a segment to this seg- - A person that does not speak in the show
+ment or to one of its neighbors. Then, a merging method permits to
+associate a full name to a speaker cluster instead of an anonymous Fig. 1. Tags on full names: about whom the speaker is talking ?
+label provided by the diarization.
+The experiments are carried out over French broadcast news
+records from the ESTER 2005 evaluation campaign. About 70%
+show duration is correctly processed for both development and eval- * Acoustic based systems generally rely on automatic speaker
+uation corpora. On the evaluation corpus, 18.2% show duration is recognition methods needing additional samples of the voice
+wrongly named and no decision is taken for 11.9% show duration. of speakers in order to learn acoustic models [5].
+* Linguistic based systems extract speaker identities directly
+from the speech. Speakers often introduce themselves or the
+1 Introduction
+next speaker, greet the next or the previous speaker, sign off at
+the end of their report... The true name of the speaker and his
+Large collections of speech data are now available but unfortunately, localization are generally present in the pronounced words
+for most of them, without rich transcription. Manual rich transcrip- and can be used to identify speakers with their full name.
+tions of audio recordings are high-cost, especially for indexing appli- Compared to the previous method, no speaker voice sample
+cations based on specific information like the main topic, keywords, is needed but transcription is necessary.
+the name of the speaker... Only automatic methods produces rich Recent work carried out on English broadcast news [6,7], show
+transcriptions with a reasonable cost, but the error rate due to the that a speaker full name occurring in a linguistic context can be used
+performances ofthe systems must be sufficiently low to be exploited. to identify the speaker of the segment with his true name. The lin-
+In this article, the indexing key is the speaker identity. guistic patterns are manually defined in order to tag one of the cur-
+The first step to automatically get rich transcriptions consists in rent, next or previous segment associated to the detected speaker
+finding the beginning and the end of each homogeneous audio seg- name: "such situations mainly correspond to announcements of who
+ment which contains the voice of only one speaker, the resulting seg- is speaking, who will speak or who just spoke" (sic) [7]. They show
+ments are then clustered by speaker. This step is called diarization that the error rate of their tagging process based on manual rules is
+in the NIST terminology; it is also known as speaker segmentation. about 13% and 18% respectively for manual transcriptions and for
+The diarization is performed without any prior information: neither automatic transcriptions.
+the number of speakers, nor the identities of speakers nor samples We have designed an automatic speaker naming system based on
+of their voice are needed. In the literature, the main recent methods the use of a semantic classification tree which automatically learns
+are only based on acoustic features [1-4]. The next step consists in such patterns. However, those patterns only provide a local decision
+transcribing automatically the resulting segments in order to get the for the current segment and the contiguous segments. Then, the sys-
+pronounced words. Other information can be added as the channel tem spreads the speaker identity on the entire show. The conflicts
+type, the gender of the speaker or the nature of the background. are taken into account thanks to the scores provided by the semantic
+However, speaker diarization only attributes anonymous labels classification tree.
+to segments, whereas the speaker identity is an important criterion This preliminary study presented in this paper is made to evalu-
+for multimedia audio indexing. Speaker identification should be ate the relevance of the proposed method. Consequently, only man-
+done after the diarization and transcription processes. They are two ual diarization and manual transcription references are used here as
+methods that associate the true identity (full name) of a speaker to an input of the system, as it is known that errors coming from au-
+the diarization segments: tomatic diarization and transcription processes reduce the perfor-
+1-4244-0472-X/06/$20.00 (®) 2006 IEEEB speaking
+A speaking B speaking
+<ADV>
+spkl is called
+IB speaking
+A, B, or C
+C speaking spkl is A |C speaking
+I_ spk2 is B |<MUSIC>
+spk2 is called
+A or B spk3s |SPK4
+B speaking BB speaking
+spk4 ?
+spk3 is called spk5 ?
+| B speaking
+C
+A or C |A speaking
+ispeaking
+SPK4
+SPK5
+Segmentation with Local decisions Global decisions Spreading
+-
+anonymous speaker labels (using semantic (merging local (replacing local
+- Transcription classification trees) decisions) decisions)
+Name detection
+-
+Fig. 2. Speaker identification process
+mances of speaker identification based upon a lexical stream (see 2.2 Tags on full name occurrences
+results of [7]).
+Data used for training, development and evaluation are com- Full name located in a show and its context give information to iden-
+posed by French broadcast news coming from the French 2005 ES- tify the speaker or its neighbor speakers. In fact, a full name in a
+TER evaluation campaign [8,9]. However, the proposed method can segment can be associated to one of the following four tags: current,
+next, previous and other. Those tags determine if the detected full
+easily be applied to English corpora thanks to the full automatic pro-
+cess used for tagging the segments and for speaker naming. name refers to the speaker of the previous speech segment, of the
+current one, of the next one, or if this full name does not refer to
+This paper is organized as follows. Section 2 presents the such speakers (see figure 1). In fact, the other tag corresponds to
+speaker information used in the study. Section 3 describes the
+the default tag when the full name cannot be attributed to one of the
+method and section 4 the experiments carried out on ESTER cor- three first tags.
+pora.
+3 Method
+2 Speaker information
+Given a set of segments and their transcriptions, we suggests two
+2.1 Client identity main processing steps to associate a full name to an anonymous
+speaker label provided by the diarization process (figure 2, part lQ):
+Broadcast news speakers are mainly composed ofpublic persons like
+1. Lexical context analysis into each speech segment contain-
+journalists, politicians, artists or sportsmen. This population is easily
+recognizable: their full names are well known, they are present in ing a full name (figure 2, part ®): this first step processes
+several broadcast news, and they correspond to the main speakers each full name detected in the transcription of a speech seg-
+(in terms of speech duration). These speakers are identified by their ment. It determines if this full name refers to the previous,
+full names in the ESTER or LDC transcription conventions and they current, next or another speaker. Only the segments very
+are the speakers to identify in the proposed task. close to a full name detected in the transcription can be as-
+sociated to this full name. Moreover, some segments can be
+A list of speaker identities is extracted from the reference tran-
+associated to different full names: processes on detected full
+scriptions. Only the names of well-known persons are kept, others names are made without cooperation and can provide antag-
+are removed. 1007 different full names were extracted from the cor- onistic results for the same segment.
+pora used in our experiments.
+The speaker name detection process relies on this closed list. 2. Speaker naming (figure 2, part (0)): the second step consists
+We have chosen to use the full name instead of the last name to in merging previous hypotheses to assign a full name to an
+avoid the false detections introduced by the speaker name detection anonymous speaker label. This step spread this assignment to
+method. Moreover, ambiguity introduced by the use of the partial all the segments tagged with this same anonymous speaker la-
+names (only forename or family name) leads to problems which we bel: new results replace first hypotheses obtained at segment
+will not resolve in this paper. level from the previous step (figure 2, part ®).
+2 2006 IEEE Odyssey - The Speaker and Language Recognition Workshop3.1 Lexical context analysis
+When a full name is detected, the lexical context of the transcription
+is analyzed to take a decision about a possible tag of this full name.
+This tag helps for naming speaker of contiguous speech segments.
+This analysis is made by using a binary decision tree based on the <+ from+ >
+principles of semantic classification trees (SCTs) [10].
+ye \fl....o
+Semantic Classification Tree <+Ilive +from + > X,
+< , 9 ~~~~sub-tree
+SCTs can be very useful to process natural language. For exam- yes ~no
+ple, they were used for dialog systems [10], for hierarchical n-gram
+language models estimation [11], or for unknown proper names tag-
+P(previous)=0. 18 P(previous)=0. 12
+ging [12]. SCTs are based on the use of regular expressions. Pairs
+P(current)=0. 72 P(current)= 0.30
+composed of a full name occurrence and its lexical context are clas- P(next)=0. 15 P(next)=0. 18
+sified according to the comparison between this context and regular P(other)=0.05 P(other)=0.50
+expressions. Our aim is to classify these pairs into four tags: previ-
+ous, current, next and other (see leaves in figure 3).
+Fig. 3. Example of branch and leaves of a semantic classification
+SCT training tree: for each leaf, a probability value is associated to each tag.
+During the SCT building process, each node is associated to a regular
+expression containing words and special characters (<, > and +). <
+(resp. > ) refers to the begin (resp. the end) of a sentence while + 3.2 Speaker naming
+refers to any sequence of words. For example, the regular expression
+< + from + > matches every sentence containing the word from, The goal of this work is to bind a full name with an anonymous
+while < + live +from + > matches every sentence containing the speaker label when it is possible. We note an anonymous speaker:
+words live andfrom appearing in this order. Figure 3 shows a very we want to find the real full name N(i) of this speaker.
+Each segment of speech is associated to its speaker represented
+little part of such classification tree.
+The SCT building process has to choose for each node the regu- by an anonymous speaker label (for example in figure 2, segment 1
+lar expression which minimizes an impurity criterion. For each level is associated to SPK 1, as well as segments 9 and 11; segment 2,
+in the tree, this building process can only add one word to the cur- 4, 8, 10 are associated to SPK2, ...). Moreover, using a semantic
+rent regular expression. The impurity criterion permits to evaluate classification tree on full names detected in transcriptions of speech
+the degree of determinism associated to a node: lower this impurity segments, a list of full names corresponding to possible speakers for
+criterion is, more the classification should be reliable. some segments is available (figure 2, part ®).
+At the end, each leaf is able to give a probability to each possible
+tag (here: previous, current, next and other) for a full name accord- Merging SCT decisions
+ing to the lexical context of the segment where it was detected.
+Let be K the set of all the full names of the client speakers.
+Let be vp the set of the different full names associated by local
+Local decisions SCT decisions to at least one segment pronounced by i: vp is the
+list of full name candidates for X and vp C K.
+For a given full name occurrence o detected into a lexical context Let us define the function v(o) which associates an occurrence
+W, (o) associated to the speech segment s, SCT is able to give the o of the full name n to this full name n. In this case, we have:
+probability P(tlW (o)) for each possible tag t from tag set T v(o) = n.
+{previous, current, next, other}. At last, let us define the set Qp of occurrences o which refer by
+Let us define the tag d(o) e T associated to the full name occur- local SCT decisions to segments pronounced by
+rence o in the speech segment s. This tag is given by the formula: We propose to find the full name N(O) of the speaker X using
+the following formula:
+d(o) = argmax P(tI W, (o)) (1) S r(o)
+t
+In our actual approach, beyond the four possible tags for W, (o), N(0) = argmax 5o=n (O) (3)
+nEK E r(o)
+only tag d(o) is taken into account for the process continuation. Fur-
+thermore, if more than one tag have a probability value equals to
+max P(tI W, (o)), no local decision is retained. = argmax 5 I1(o) (4)
+nEK (v(o)=n)A(oEQp)
+Let us define the value F (o) as:
+So, the full name associated to a speaker label is the full name
+F(o) = P(6(o) IW, (o)) (2) whose occurrences maximize the sum of values given by the SCT
+about these occurrences referring to segments associated to this
+2006 IEEE Odyssey - The Speaker and Language Recognition Workshop 3Train Dev Eva Train Dev Eva
+# Shows 150 26 18 # detected Full name (*) 3297 920 507
+# Channels 5 5 6 Previous 14.3% 12.6% 18.6%
+duration (h) 86 12.5 10 Current 7.2% 7.1% 5.3%
+# Segments 8547 2294 1417 Next 46.0% 45.3% 49.3%
+Other 32.5% 35.0% 26.8%
+Table 1. Corpus information: Train, Development & Evaluation
+from French broadcast news ESTER evaluation campaign. Table 2. Statistics of full name tags on training, development &
+evaluation corpora computed over the manual reference.
+- (*): the number of speaker full name detected in the corpus.
+speaker label. Notice that as explained in section 3.1, only values
+associated to valid local decisions are kept. This simple formula
+permits to take into account the number of occurrences observed for Preparing the corpora
+a full name candidate, weighted by the SCT scores.
+Transcriptions provided by the corpora are designed for diarization
+or transcription tasks. References (rich transcriptions) have to be
+transformed and adapted to be used with a semantic classification
+4 Experiments and results
+tree and to evaluate experiment results. These adaptations are:
+* The definition of the four full name tags supposes that the
+4.1 Data
+previous and the next speakers are different from the current
+Corpora one. The segmentation must rely on speaker turns and does
+not rely on sentences (mostly separated by breath and silence)
+The methods are trained and evaluated with data from the ESTER as it was done in the manual transcription. So, the contigu-
+evaluation campaign. ESTER is an evaluation campaign of French ous segments from the same speaker are merged to obtain a
+broadcast news transcription systems which started in 2003 and com- segmentation based on speaker turns.
+pleted in January 2005 [8, 9]. This evaluation campaign was or- * The information about the four tags are needed during train-
+ganized within the framework of the TECHNOLANGUE project
+ing and scoring phases. We tagged the reference corpus au-
+funded by the french government under the scientific supervision of
+tomatically by extracting speaker full names in the speech.
+the AFCP' with the DGA2 and ELDA.
+Each full name is compared to the speaker full names attached
+The data were recorded from six radios: France Inter, France to the segment and its contiguous neighbors. Thus, this au-
+Info, RFI, RTM, France Culture and Radio Classique. The data are tomatic task is not checked manually and we suppose that all
+divided into three sets; only the two first ones are annotated3. Shows speaker identifications are correct.
+(10 minutes up to 60 minutes) from those two first sets contain few
+silence, music and advertisements comparing to the LDC English * In the reference transcription, sentences contain more infor-
+broadcast news corpus [13]. The majority of the shows contains mation than those produced by an automatic system. Tran-
+prepared speech like news and few conversational speech like inter- scriptions are then normalized to be as close as possible to
+views. Only 15% of the corpus is narrow band speech. Those data the ones made by an automatic transcription system. For ex-
+are split in three corpora (described on table 1): ample, all the punctuations are removed, the upper case are
+removed, and so on.
+* The training corpus called Train corresponds to 81h (150
+shows) composed of 8547 segments in which 3297 full names * In the same manner, the definite articles (le, la, les) and the
+are detected. indefinite articles (un, une, des) are removed from the sen-
+tences. We believe that they are not informative.
+* A development corpus4, denoted Dev, corresponds to 12.5h
+(26 shows) split into 2294 segments containing 920 full * To generalize the training examples during the building ofthe
+names. tree, each speaker full name is replaced by a generic label.
+* An evaluation corpus, denoted Eva, contains 1 Oh (18 shows) * The semantic classification tree learns the regular expressions
+split into 1417 segments in which 507 full names are de- according to the words in the left and right contexts of a
+tected. Eva corresponds to the official ESTER evaluation cor- speaker full name occurrence. No more than only 40 words
+pus. This corpus contains two radios which are not present in around the speaker full name are kept: at most 20 words on
+the training corpus. It was also recorded 15 months after the the left and at most 20 words on the right. The number of
+previous data. words on the left and on the right was fixed over the Dev cor-
+pus in order to maximize the number of true local detection
+Table 2 shows the a priori probabilities of the four full names of the four tags.
+tags computed on the reference manual transcriptions. In both cases,
+the next tag is the most frequent one (between 45% and 49%) and
+the current tag is the least frequent one (between 5% and 7%). SCT training parameters
+The semantic classification tree is tuned on the development corpus.
+1AFCP: Association Francophone de la Communication Parlee
+2DGA: Delegation Generale de l'Armement The main parameters for the training are the Gini criterion [14] as
+3they are officially denoted Phase I and Phase II the impurity criterion and the size of the leaves. The expansion of
+4it is the official ESTER phase I development corpus merged with the the branches stops when the Gini criterion is not reduced or when
+official ESTER phase II development corpus the current node is associated to less than five sequences of words.
+4 2006 IEEE Odyssey - The Speaker and Language Recognition Workshop4.2 Segment speaker tagging Speakers Naming T Train Dev Eva
+Client Correct 63.68% 64.82% 66.35%
+Client Wrong 3.19% 5.48% 14.36%
+Train Dev Eva Client Unnamed 15.68% 18.19% 11.91%
+# detected full name 3297 920 507 Not client Correct (unnamed) 15.50% 7.54% 3.59%
+Tagged 94.51% 94.78% 97.23% Not client Wrong 1.95% 3.98% 3.79%
+Correctly tagged 88.25% 76.49% 68.76%
+Total T 100%% 100% 100%
+Previous 88.98% 71.67% 82.98%
+Current 94.76% 90.14% 85.71%
+Next 89.32% 80.67% 75.29% Table 4. Speaker naming: detailed results on training, development
+Other 84.87% 68.94% 50.32% & evaluation corpora (all the rates are computed in terms of dura-
+tion).
+- Speakers: This defines the two categories ofspeakers in the reference, those
+Table 3. Scores of local decisions using the semantic classification which are the clients of the application (public speakers with a full name) and
+tree on training, development & evaluation corpora. the others.
+- Tagged: rate of detected full names for which a full name tag is proposed c- aNsaemwihnegr:e cthoerrpersopcoensdssistonottheabcloerrteocptroapnodsewraofnugllnnaammien.g. Unnamed is the
+using the local decision rule.
+- Correctly tagged: rate of detected full names that are correctly tagged.
+- Previous (resp. for the other tags): rate of detected full names that are
+correctly tagged by previous tag. speech/non speech and transcriptions errors cannot exist. The refer-
+ence and hypotheses segment boundaries are equal, only the speaker
+The semantic classification tree which provides the results on names differ.
+table 3 was built with the training corpus. The table shows the results In the framework of speaker identification, the errors consist
+of the local decisions taken over each segment containing a detected in identifying the speaker with a wrong identity chosen in a set
+full name on the Train, Dev and Eva corpora. The first column shows of known speaker identities. In the presented task, only the pub-
+the scores ofthe train data used as a test corpus. The second and third lic speaker names, those with a full name in the reference, are the
+column report the results on Dev and Eva. clients. The identities of the others cannot be found.
+94% detected full names on Dev and 97% on Eva are tagged by There are errors when the process gives a non-client speaker a
+one of the four full name tags. The correct tagging rate is above full name and when the process does not give a client speaker (a
+76.4% on Dev and only 68.7% on Eva: these values can be consid- public speaker) a full name (Table 4 lines 2 & 5).
+ered as the precision of the local decision method on each corpus. Moreover, the process cannot propose a name to a client speaker
+The lowest result for Eva (808% less) can be explained by the in some circumstances:
+presence of two new stations and which are not present in the train-
+ing and development corpora. The Eva data were also recorded 15 * no local decision affects a segment of this client speaker. Ei-
+months later. About 6% detected speaker full names are untagged as ther no local decision is taken for the detected occurrences of
+well as in the training corpus. the full name of this client speaker, or all the existing local
+The results for the other tag are the weakest. This tags seems decisions are wrong;
+to be associated to more various lexical contexts than the others. In
+* the full name of this speaker is not detected in the transcrip-
+this case, the names can be associated to distant (not contiguous)
+tions.
+segments or even to people not intervening in the show. Neverthe-
+less, the impact of this results is low as this tag is not taken directly For client speakers, when the hypothesis full name and the ref-
+into account in the naming process.
+erence full name are the same, this is considered as a correct naming
+By always simply choosing the tag having the strongest prior (Table 4 line 1). For non-client speakers, it seems reasonable to con-
+probability (see table 2), we will only reach a score of -45.3% on sider correct not to assign a full name of a client speaker to speech
+Dev corpus (respectively -49.3% for Eva). With the method pro- pronounced by a non-public person.(Table 4 line 4).
+posed above, -76% correct tagging rate for Dev is observed (-68%
+All the proposed results are computed in terms of segment du-
+for Eva). These results show that the semantic classification tree is
+ration as it is done in the NIST evaluations of the speaker diariza-
+well adapted to this task, permitting to exploit them in the speaker
+tion [15].
+naming process, as shown below.
+Comments
+4.3 Speaker naming
+The speaker naming process gives a correct decision up to 72%
+Local decisions on the segments are merged to associate one full speech duration (64.82% + 7.54%) over Dev corpus and about 70%
+name to all the segments pronounced by the same speaker (see sec- (66.35% + 3.59%) over the Eva corpus as shown in table 4.
+tion 3.2). The detailed results of this second step are reported in
+The difference on correct naming rate between the Dev corpus
+table 4.
+and the Eva corpus is about 2%, less than the 8% observed for the
+local decisions in table 3. Even if there are less local decisions in
+Evaluation method the Eva corpus, those decisions are relevant for finding the true full
+name of a client speaker.
+The input ofthe system is based upon the manual transcription refer-
+ences: the diarization (anonymous speaker labels), segmentation in
+2006 IEEE Odyssey - The Speaker and Language Recognition Workshop 55 Conclusion
+[8] G. Gravier, J.-F. Bonastre, S. Galliano, E. Geoffrois,
+K. Mc Tait, and K. Choukri, "The ESTER evaluation campaign
+In the framework of rich transcription, we propose a full automatic of rich transcription of french broadcast news," in Language
+method to identify the speakers by their full names extracted from Evaluation and Resources Conference (LREC 2004), Lisbon,
+the transcription. Portugal, May 2004.
+The process is firstly based upon the use of a semantic classifi-
+[9] S. Galliano, E. Geoffrois, D. Mostefa, K. Choukri, J.-F. Bonas-
+cation tree which permits to qualify the detected occurrences of full
+tre, and G. Gravier, "The ESTER phase II evaluation campaign
+names: this first step consists in local decisions binding each ofthese
+for the rich transcription of french broadcast news," Lisboa,
+occurrences to a speech segment. Then, the local results are merged
+Sep 2005, pp. 1149-1152.
+to associate a full name to all the segments of a given speaker.
+The experiments are carried out over French broadcast news [10] R. Kuhn and R. De Mori, "The application of semantic classif-
+records from the ESTER 2005 evaluation campaign. About 70% ciation trees to natural language understanding," IEEE Trans-
+show duration is correctly processed for both development and eval- actions on Pattern Analysis and Machine Intelligence, vol. 17,
+uation corpora. On the evaluation corpus, 18.2% show is wrongly no. 5, pp. 449-460, 1995.
+named and no decision is taken for 1H.9% show. [11] Y. Esteve, F. Bechet, A. Nasr, and R. De Mori, "Stochas-
+The main goal is reached: the results validate the proposed tic finite state automata language model triggered by dialogue
+method of speaker naming processed on manual diarization and states," in Proceedings of European Conference on Speech
+manual transcription. Further work will focus on the use of auto- Communication and Technology (ISCA, Eurospeech 2001),
+matic diarization and transcription in which errors are present. Aalborg, Denmark, 2001, vol. 1, pp. 725-728.
+[12] F. Bechet, A. Nasr, and F. Genet, "Tagging unknown proper
+names using decision trees," in 38th Annual Meeting ofthe As-
+6 Acknowledgements
+sociation for Computational Linguistics, Hong Kong, China,
+October 2000, pp. 77-84.
+The authors would like to thank Frederic Bechet from LIA (Com-
+[13] S. E. Tranter and D. A. Reynolds, "Speaker diarisation for
+puter Science Lab of the University of Avignon, France) for making
+broadcast news," in 2004: A Speaker Odyssey. The Speaker
+LIA_SCT tool available as an open source project.
+Recognition Workshop (ISCA, Odyssey 2004), Toledo, Spain,
+May 2004.
+7 References [14] L. Breiman, J. Friedman, R. Olshen, and C. Stone, Classifica-
+tion and Regression Trees, Wadsworth, 1984.
+[1] J. Ajmera and C. Wooters, "A robust speaker clustering algo- [15] NIST, "Fall 2004 rich transcription (RT-04F) evaluation
+rithm," in Automatic Speech Recognition and Understanding plan," http://www.nist.gov/speech/tests/rt/
+(IEEE, ASRU2003), St. Thomas, U.S. Virgin Islands, Novem- rt2OO4/fall/docs/rtO4f-eval-plan-v%14.
+ber 2003, pp. 411-416. pdf, August 2004.
+[2] M. Ben, M. Betser, F. Bimbot, and G. Gravier, "Speaker
+diarization using bottom-up clustering based on a parameter-
+derived distance between GMMs," in Proceedings of Inter-
+national Conference on Spoken Language Processing (ISCA,
+ICSLP 2004), Jeju, Korea, October 2004.
+[3] C. Barras, X. Zhu, S. Meignier, and J.-L. Gauvain, "Improv-
+ing speaker diarization," in DARPA RT04 Fall, Palisades, NY,
+USA, 2004.
+[4] S. Meignier, D. Moraru, C. Fredouille, J.-F. Bonastre, and
+L. Besacier, "Step-by-step and integrated approaches in broad-
+cast news speaker diarization," Computer Speech and Lan-
+guage, 2005.
+[5] F. Bimbot, J.-F. Bonastre, C. Fredouille, G. Gravier, I. Magrin-
+Chagnolleau, S. Meignier, T. Merlin, J. Ortega-Garcia,
+D. Petrovska, and D. A. Reynolds, "A tutorial on text-
+independent speaker verification," EURASIP Journal on Ap-
+plied Signal Processing, Special issue on biometric signalpro-
+cessing, vol. 4, pp. 430-451, 2004.
+[6] L. Canseco-Rodriguez, L. Lamel, and J.-L. Gauvain, "Speaker
+diarization from speech transcripts," in Proceedings ofInter-
+national Conference on Spoken Language Processing (ISCA,
+ICSLP 2004), Jeju, Oct 2004.
+[7] L. Canseco-Rodriguez, L. Lamel, and J.-L. Gauvain, "A com-
+parative study using manual and automatic transcriptions for
+diarization," Jeju, Oct 2005.
+6 2006 IEEE Odyssey - The Speaker and Language Recognition WorkshopSPEAKER DIARIZATION:
+ABOUT WHOM THE SPEAKER IS TALKING ?
+J Mauclair, S. Meignier, Y Esteve
+LIUM, Universite du Maine
+Le Mans, France
+{julie.mauclair,sylvain.meignier,yannick.esteve} glium.univ-lemans.fr
+ABSTRACT
+The automatic speaker diarization consists in splitting the signal into
+homogeneous segments and clustering them by speakers. However
+the speaker segments are specified with anonymous labels. This pa-
+per suggests a solution to identify those speakers by extracting their Ir Other \
+full names pronounced in French broadcast news. A semantic classi-
+fication tree is automatically built on a training corpus and associate - Another speaker ofthe show
+the full names detected in the transcription of a segment to this seg- - A person that does not speak in the show
+ment or to one of its neighbors. Then, a merging method permits to
+associate a full name to a speaker cluster instead of an anonymous Fig. 1. Tags on full names: about whom the speaker is talking ?
+label provided by the diarization.
+The experiments are carried out over French broadcast news
+records from the ESTER 2005 evaluation campaign. About 70%
+show duration is correctly processed for both development and eval- * Acoustic based systems generally rely on automatic speaker
+uation corpora. On the evaluation corpus, 18.2% show duration is recognition methods needing additional samples of the voice
+wrongly named and no decision is taken for 11.9% show duration. of speakers in order to learn acoustic models [5].
+* Linguistic based systems extract speaker identities directly
+from the speech. Speakers often introduce themselves or the
+1 Introduction
+next speaker, greet the next or the previous speaker, sign off at
+the end of their report... The true name of the speaker and his
+Large collections of speech data are now available but unfortunately, localization are generally present in the pronounced words
+for most of them, without rich transcription. Manual rich transcrip- and can be used to identify speakers with their full name.
+tions of audio recordings are high-cost, especially for indexing appli- Compared to the previous method, no speaker voice sample
+cations based on specific information like the main topic, keywords, is needed but transcription is necessary.
+the name of the speaker... Only automatic methods produces rich Recent work carried out on English broadcast news [6,7], show
+transcriptions with a reasonable cost, but the error rate due to the that a speaker full name occurring in a linguistic context can be used
+performances ofthe systems must be sufficiently low to be exploited. to identify the speaker of the segment with his true name. The lin-
+In this article, the indexing key is the speaker identity. guistic patterns are manually defined in order to tag one of the cur-
+The first step to automatically get rich transcriptions consists in rent, next or previous segment associated to the detected speaker
+finding the beginning and the end of each homogeneous audio seg- name: "such situations mainly correspond to announcements of who
+ment which contains the voice of only one speaker, the resulting seg- is speaking, who will speak or who just spoke" (sic) [7]. They show
+ments are then clustered by speaker. This step is called diarization that the error rate of their tagging process based on manual rules is
+in the NIST terminology; it is also known as speaker segmentation. about 13% and 18% respectively for manual transcriptions and for
+The diarization is performed without any prior information: neither automatic transcriptions.
+the number of speakers, nor the identities of speakers nor samples We have designed an automatic speaker naming system based on
+of their voice are needed. In the literature, the main recent methods the use of a semantic classification tree which automatically learns
+are only based on acoustic features [1-4]. The next step consists in such patterns. However, those patterns only provide a local decision
+transcribing automatically the resulting segments in order to get the for the current segment and the contiguous segments. Then, the sys-
+pronounced words. Other information can be added as the channel tem spreads the speaker identity on the entire show. The conflicts
+type, the gender of the speaker or the nature of the background. are taken into account thanks to the scores provided by the semantic
+However, speaker diarization only attributes anonymous labels classification tree.
+to segments, whereas the speaker identity is an important criterion This preliminary study presented in this paper is made to evalu-
+for multimedia audio indexing. Speaker identification should be ate the relevance of the proposed method. Consequently, only man-
+done after the diarization and transcription processes. They are two ual diarization and manual transcription references are used here as
+methods that associate the true identity (full name) of a speaker to an input of the system, as it is known that errors coming from au-
+the diarization segments: tomatic diarization and transcription processes reduce the perfor-
+1-4244-0472-X/06/$20.00 (®) 2006 IEEEB speaking
+A speaking B speaking
+<ADV>
+spkl is called
+IB speaking
+A, B, or C
+C speaking spkl is A |C speaking
+I_ spk2 is B |<MUSIC>
+spk2 is called
+A or B spk3s |SPK4
+B speaking BB speaking
+spk4 ?
+spk3 is called spk5 ?
+| B speaking
+C
+A or C |A speaking
+ispeaking
+SPK4
+SPK5
+Segmentation with Local decisions Global decisions Spreading
+-
+anonymous speaker labels (using semantic (merging local (replacing local
+- Transcription classification trees) decisions) decisions)
+Name detection
+-
+Fig. 2. Speaker identification process
+mances of speaker identification based upon a lexical stream (see 2.2 Tags on full name occurrences
+results of [7]).
+Data used for training, development and evaluation are com- Full name located in a show and its context give information to iden-
+posed by French broadcast news coming from the French 2005 ES- tify the speaker or its neighbor speakers. In fact, a full name in a
+TER evaluation campaign [8,9]. However, the proposed method can segment can be associated to one of the following four tags: current,
+next, previous and other. Those tags determine if the detected full
+easily be applied to English corpora thanks to the full automatic pro-
+cess used for tagging the segments and for speaker naming. name refers to the speaker of the previous speech segment, of the
+current one, of the next one, or if this full name does not refer to
+This paper is organized as follows. Section 2 presents the such speakers (see figure 1). In fact, the other tag corresponds to
+speaker information used in the study. Section 3 describes the
+the default tag when the full name cannot be attributed to one of the
+method and section 4 the experiments carried out on ESTER cor- three first tags.
+pora.
+3 Method
+2 Speaker information
+Given a set of segments and their transcriptions, we suggests two
+2.1 Client identity main processing steps to associate a full name to an anonymous
+speaker label provided by the diarization process (figure 2, part lQ):
+Broadcast news speakers are mainly composed ofpublic persons like
+1. Lexical context analysis into each speech segment contain-
+journalists, politicians, artists or sportsmen. This population is easily
+recognizable: their full names are well known, they are present in ing a full name (figure 2, part ®): this first step processes
+several broadcast news, and they correspond to the main speakers each full name detected in the transcription of a speech seg-
+(in terms of speech duration). These speakers are identified by their ment. It determines if this full name refers to the previous,
+full names in the ESTER or LDC transcription conventions and they current, next or another speaker. Only the segments very
+are the speakers to identify in the proposed task. close to a full name detected in the transcription can be as-
+sociated to this full name. Moreover, some segments can be
+A list of speaker identities is extracted from the reference tran-
+associated to different full names: processes on detected full
+scriptions. Only the names of well-known persons are kept, others names are made without cooperation and can provide antag-
+are removed. 1007 different full names were extracted from the cor- onistic results for the same segment.
+pora used in our experiments.
+The speaker name detection process relies on this closed list. 2. Speaker naming (figure 2, part (0)): the second step consists
+We have chosen to use the full name instead of the last name to in merging previous hypotheses to assign a full name to an
+avoid the false detections introduced by the speaker name detection anonymous speaker label. This step spread this assignment to
+method. Moreover, ambiguity introduced by the use of the partial all the segments tagged with this same anonymous speaker la-
+names (only forename or family name) leads to problems which we bel: new results replace first hypotheses obtained at segment
+will not resolve in this paper. level from the previous step (figure 2, part ®).
+2 2006 IEEE Odyssey - The Speaker and Language Recognition Workshop3.1 Lexical context analysis
+When a full name is detected, the lexical context of the transcription
+is analyzed to take a decision about a possible tag of this full name.
+This tag helps for naming speaker of contiguous speech segments.
+This analysis is made by using a binary decision tree based on the <+ from+ >
+principles of semantic classification trees (SCTs) [10].
+ye \fl....o
+Semantic Classification Tree <+Ilive +from + > X,
+< , 9 ~~~~sub-tree
+SCTs can be very useful to process natural language. For exam- yes ~no
+ple, they were used for dialog systems [10], for hierarchical n-gram
+language models estimation [11], or for unknown proper names tag-
+P(previous)=0. 18 P(previous)=0. 12
+ging [12]. SCTs are based on the use of regular expressions. Pairs
+P(current)=0. 72 P(current)= 0.30
+composed of a full name occurrence and its lexical context are clas- P(next)=0. 15 P(next)=0. 18
+sified according to the comparison between this context and regular P(other)=0.05 P(other)=0.50
+expressions. Our aim is to classify these pairs into four tags: previ-
+ous, current, next and other (see leaves in figure 3).
+Fig. 3. Example of branch and leaves of a semantic classification
+SCT training tree: for each leaf, a probability value is associated to each tag.
+During the SCT building process, each node is associated to a regular
+expression containing words and special characters (<, > and +). <
+(resp. > ) refers to the begin (resp. the end) of a sentence while + 3.2 Speaker naming
+refers to any sequence of words. For example, the regular expression
+< + from + > matches every sentence containing the word from, The goal of this work is to bind a full name with an anonymous
+while < + live +from + > matches every sentence containing the speaker label when it is possible. We note an anonymous speaker:
+words live andfrom appearing in this order. Figure 3 shows a very we want to find the real full name N(i) of this speaker.
+Each segment of speech is associated to its speaker represented
+little part of such classification tree.
+The SCT building process has to choose for each node the regu- by an anonymous speaker label (for example in figure 2, segment 1
+lar expression which minimizes an impurity criterion. For each level is associated to SPK 1, as well as segments 9 and 11; segment 2,
+in the tree, this building process can only add one word to the cur- 4, 8, 10 are associated to SPK2, ...). Moreover, using a semantic
+rent regular expression. The impurity criterion permits to evaluate classification tree on full names detected in transcriptions of speech
+the degree of determinism associated to a node: lower this impurity segments, a list of full names corresponding to possible speakers for
+criterion is, more the classification should be reliable. some segments is available (figure 2, part ®).
+At the end, each leaf is able to give a probability to each possible
+tag (here: previous, current, next and other) for a full name accord- Merging SCT decisions
+ing to the lexical context of the segment where it was detected.
+Let be K the set of all the full names of the client speakers.
+Let be vp the set of the different full names associated by local
+Local decisions SCT decisions to at least one segment pronounced by i: vp is the
+list of full name candidates for X and vp C K.
+For a given full name occurrence o detected into a lexical context Let us define the function v(o) which associates an occurrence
+W, (o) associated to the speech segment s, SCT is able to give the o of the full name n to this full name n. In this case, we have:
+probability P(tlW (o)) for each possible tag t from tag set T v(o) = n.
+{previous, current, next, other}. At last, let us define the set Qp of occurrences o which refer by
+Let us define the tag d(o) e T associated to the full name occur- local SCT decisions to segments pronounced by
+rence o in the speech segment s. This tag is given by the formula: We propose to find the full name N(O) of the speaker X using
+the following formula:
+d(o) = argmax P(tI W, (o)) (1) S r(o)
+t
+In our actual approach, beyond the four possible tags for W, (o), N(0) = argmax 5o=n (O) (3)
+nEK E r(o)
+only tag d(o) is taken into account for the process continuation. Fur-
+thermore, if more than one tag have a probability value equals to
+max P(tI W, (o)), no local decision is retained. = argmax 5 I1(o) (4)
+nEK (v(o)=n)A(oEQp)
+Let us define the value F (o) as:
+So, the full name associated to a speaker label is the full name
+F(o) = P(6(o) IW, (o)) (2) whose occurrences maximize the sum of values given by the SCT
+about these occurrences referring to segments associated to this
+2006 IEEE Odyssey - The Speaker and Language Recognition Workshop 3Train Dev Eva Train Dev Eva
+# Shows 150 26 18 # detected Full name (*) 3297 920 507
+# Channels 5 5 6 Previous 14.3% 12.6% 18.6%
+duration (h) 86 12.5 10 Current 7.2% 7.1% 5.3%
+# Segments 8547 2294 1417 Next 46.0% 45.3% 49.3%
+Other 32.5% 35.0% 26.8%
+Table 1. Corpus information: Train, Development & Evaluation
+from French broadcast news ESTER evaluation campaign. Table 2. Statistics of full name tags on training, development &
+evaluation corpora computed over the manual reference.
+- (*): the number of speaker full name detected in the corpus.
+speaker label. Notice that as explained in section 3.1, only values
+associated to valid local decisions are kept. This simple formula
+permits to take into account the number of occurrences observed for Preparing the corpora
+a full name candidate, weighted by the SCT scores.
+Transcriptions provided by the corpora are designed for diarization
+or transcription tasks. References (rich transcriptions) have to be
+transformed and adapted to be used with a semantic classification
+4 Experiments and results
+tree and to evaluate experiment results. These adaptations are:
+* The definition of the four full name tags supposes that the
+4.1 Data
+previous and the next speakers are different from the current
+Corpora one. The segmentation must rely on speaker turns and does
+not rely on sentences (mostly separated by breath and silence)
+The methods are trained and evaluated with data from the ESTER as it was done in the manual transcription. So, the contigu-
+evaluation campaign. ESTER is an evaluation campaign of French ous segments from the same speaker are merged to obtain a
+broadcast news transcription systems which started in 2003 and com- segmentation based on speaker turns.
+pleted in January 2005 [8, 9]. This evaluation campaign was or- * The information about the four tags are needed during train-
+ganized within the framework of the TECHNOLANGUE project
+ing and scoring phases. We tagged the reference corpus au-
+funded by the french government under the scientific supervision of
+tomatically by extracting speaker full names in the speech.
+the AFCP' with the DGA2 and ELDA.
+Each full name is compared to the speaker full names attached
+The data were recorded from six radios: France Inter, France to the segment and its contiguous neighbors. Thus, this au-
+Info, RFI, RTM, France Culture and Radio Classique. The data are tomatic task is not checked manually and we suppose that all
+divided into three sets; only the two first ones are annotated3. Shows speaker identifications are correct.
+(10 minutes up to 60 minutes) from those two first sets contain few
+silence, music and advertisements comparing to the LDC English * In the reference transcription, sentences contain more infor-
+broadcast news corpus [13]. The majority of the shows contains mation than those produced by an automatic system. Tran-
+prepared speech like news and few conversational speech like inter- scriptions are then normalized to be as close as possible to
+views. Only 15% of the corpus is narrow band speech. Those data the ones made by an automatic transcription system. For ex-
+are split in three corpora (described on table 1): ample, all the punctuations are removed, the upper case are
+removed, and so on.
+* The training corpus called Train corresponds to 81h (150
+shows) composed of 8547 segments in which 3297 full names * In the same manner, the definite articles (le, la, les) and the
+are detected. indefinite articles (un, une, des) are removed from the sen-
+tences. We believe that they are not informative.
+* A development corpus4, denoted Dev, corresponds to 12.5h
+(26 shows) split into 2294 segments containing 920 full * To generalize the training examples during the building ofthe
+names. tree, each speaker full name is replaced by a generic label.
+* An evaluation corpus, denoted Eva, contains 1 Oh (18 shows) * The semantic classification tree learns the regular expressions
+split into 1417 segments in which 507 full names are de- according to the words in the left and right contexts of a
+tected. Eva corresponds to the official ESTER evaluation cor- speaker full name occurrence. No more than only 40 words
+pus. This corpus contains two radios which are not present in around the speaker full name are kept: at most 20 words on
+the training corpus. It was also recorded 15 months after the the left and at most 20 words on the right. The number of
+previous data. words on the left and on the right was fixed over the Dev cor-
+pus in order to maximize the number of true local detection
+Table 2 shows the a priori probabilities of the four full names of the four tags.
+tags computed on the reference manual transcriptions. In both cases,
+the next tag is the most frequent one (between 45% and 49%) and
+the current tag is the least frequent one (between 5% and 7%). SCT training parameters
+The semantic classification tree is tuned on the development corpus.
+1AFCP: Association Francophone de la Communication Parlee
+2DGA: Delegation Generale de l'Armement The main parameters for the training are the Gini criterion [14] as
+3they are officially denoted Phase I and Phase II the impurity criterion and the size of the leaves. The expansion of
+4it is the official ESTER phase I development corpus merged with the the branches stops when the Gini criterion is not reduced or when
+official ESTER phase II development corpus the current node is associated to less than five sequences of words.
+4 2006 IEEE Odyssey - The Speaker and Language Recognition Workshop4.2 Segment speaker tagging Speakers Naming T Train Dev Eva
+Client Correct 63.68% 64.82% 66.35%
+Client Wrong 3.19% 5.48% 14.36%
+Train Dev Eva Client Unnamed 15.68% 18.19% 11.91%
+# detected full name 3297 920 507 Not client Correct (unnamed) 15.50% 7.54% 3.59%
+Tagged 94.51% 94.78% 97.23% Not client Wrong 1.95% 3.98% 3.79%
+Correctly tagged 88.25% 76.49% 68.76%
+Total T 100%% 100% 100%
+Previous 88.98% 71.67% 82.98%
+Current 94.76% 90.14% 85.71%
+Next 89.32% 80.67% 75.29% Table 4. Speaker naming: detailed results on training, development
+Other 84.87% 68.94% 50.32% & evaluation corpora (all the rates are computed in terms of dura-
+tion).
+- Speakers: This defines the two categories ofspeakers in the reference, those
+Table 3. Scores of local decisions using the semantic classification which are the clients of the application (public speakers with a full name) and
+tree on training, development & evaluation corpora. the others.
+- Tagged: rate of detected full names for which a full name tag is proposed c- aNsaemwihnegr:e cthoerrpersopcoensdssistonottheabcloerrteocptroapnodsewraofnugllnnaammien.g. Unnamed is the
+using the local decision rule.
+- Correctly tagged: rate of detected full names that are correctly tagged.
+- Previous (resp. for the other tags): rate of detected full names that are
+correctly tagged by previous tag. speech/non speech and transcriptions errors cannot exist. The refer-
+ence and hypotheses segment boundaries are equal, only the speaker
+The semantic classification tree which provides the results on names differ.
+table 3 was built with the training corpus. The table shows the results In the framework of speaker identification, the errors consist
+of the local decisions taken over each segment containing a detected in identifying the speaker with a wrong identity chosen in a set
+full name on the Train, Dev and Eva corpora. The first column shows of known speaker identities. In the presented task, only the pub-
+the scores ofthe train data used as a test corpus. The second and third lic speaker names, those with a full name in the reference, are the
+column report the results on Dev and Eva. clients. The identities of the others cannot be found.
+94% detected full names on Dev and 97% on Eva are tagged by There are errors when the process gives a non-client speaker a
+one of the four full name tags. The correct tagging rate is above full name and when the process does not give a client speaker (a
+76.4% on Dev and only 68.7% on Eva: these values can be consid- public speaker) a full name (Table 4 lines 2 & 5).
+ered as the precision of the local decision method on each corpus. Moreover, the process cannot propose a name to a client speaker
+The lowest result for Eva (808% less) can be explained by the in some circumstances:
+presence of two new stations and which are not present in the train-
+ing and development corpora. The Eva data were also recorded 15 * no local decision affects a segment of this client speaker. Ei-
+months later. About 6% detected speaker full names are untagged as ther no local decision is taken for the detected occurrences of
+well as in the training corpus. the full name of this client speaker, or all the existing local
+The results for the other tag are the weakest. This tags seems decisions are wrong;
+to be associated to more various lexical contexts than the others. In
+* the full name of this speaker is not detected in the transcrip-
+this case, the names can be associated to distant (not contiguous)
+tions.
+segments or even to people not intervening in the show. Neverthe-
+less, the impact of this results is low as this tag is not taken directly For client speakers, when the hypothesis full name and the ref-
+into account in the naming process.
+erence full name are the same, this is considered as a correct naming
+By always simply choosing the tag having the strongest prior (Table 4 line 1). For non-client speakers, it seems reasonable to con-
+probability (see table 2), we will only reach a score of -45.3% on sider correct not to assign a full name of a client speaker to speech
+Dev corpus (respectively -49.3% for Eva). With the method pro- pronounced by a non-public person.(Table 4 line 4).
+posed above, -76% correct tagging rate for Dev is observed (-68%
+All the proposed results are computed in terms of segment du-
+for Eva). These results show that the semantic classification tree is
+ration as it is done in the NIST evaluations of the speaker diariza-
+well adapted to this task, permitting to exploit them in the speaker
+tion [15].
+naming process, as shown below.
+Comments
+4.3 Speaker naming
+The speaker naming process gives a correct decision up to 72%
+Local decisions on the segments are merged to associate one full speech duration (64.82% + 7.54%) over Dev corpus and about 70%
+name to all the segments pronounced by the same speaker (see sec- (66.35% + 3.59%) over the Eva corpus as shown in table 4.
+tion 3.2). The detailed results of this second step are reported in
+The difference on correct naming rate between the Dev corpus
+table 4.
+and the Eva corpus is about 2%, less than the 8% observed for the
+local decisions in table 3. Even if there are less local decisions in
+Evaluation method the Eva corpus, those decisions are relevant for finding the true full
+name of a client speaker.
+The input ofthe system is based upon the manual transcription refer-
+ences: the diarization (anonymous speaker labels), segmentation in
+2006 IEEE Odyssey - The Speaker and Language Recognition Workshop 55 Conclusion
+[8] G. Gravier, J.-F. Bonastre, S. Galliano, E. Geoffrois,
+K. Mc Tait, and K. Choukri, "The ESTER evaluation campaign
+In the framework of rich transcription, we propose a full automatic of rich transcription of french broadcast news," in Language
+method to identify the speakers by their full names extracted from Evaluation and Resources Conference (LREC 2004), Lisbon,
+the transcription. Portugal, May 2004.
+The process is firstly based upon the use of a semantic classifi-
+[9] S. Galliano, E. Geoffrois, D. Mostefa, K. Choukri, J.-F. Bonas-
+cation tree which permits to qualify the detected occurrences of full
+tre, and G. Gravier, "The ESTER phase II evaluation campaign
+names: this first step consists in local decisions binding each ofthese
+for the rich transcription of french broadcast news," Lisboa,
+occurrences to a speech segment. Then, the local results are merged
+Sep 2005, pp. 1149-1152.
+to associate a full name to all the segments of a given speaker.
+The experiments are carried out over French broadcast news [10] R. Kuhn and R. De Mori, "The application of semantic classif-
+records from the ESTER 2005 evaluation campaign. About 70% ciation trees to natural language understanding," IEEE Trans-
+show duration is correctly processed for both development and eval- actions on Pattern Analysis and Machine Intelligence, vol. 17,
+uation corpora. On the evaluation corpus, 18.2% show is wrongly no. 5, pp. 449-460, 1995.
+named and no decision is taken for 1H.9% show. [11] Y. Esteve, F. Bechet, A. Nasr, and R. De Mori, "Stochas-
+The main goal is reached: the results validate the proposed tic finite state automata language model triggered by dialogue
+method of speaker naming processed on manual diarization and states," in Proceedings of European Conference on Speech
+manual transcription. Further work will focus on the use of auto- Communication and Technology (ISCA, Eurospeech 2001),
+matic diarization and transcription in which errors are present. Aalborg, Denmark, 2001, vol. 1, pp. 725-728.
+[12] F. Bechet, A. Nasr, and F. Genet, "Tagging unknown proper
+names using decision trees," in 38th Annual Meeting ofthe As-
+6 Acknowledgements
+sociation for Computational Linguistics, Hong Kong, China,
+October 2000, pp. 77-84.
+The authors would like to thank Frederic Bechet from LIA (Com-
+[13] S. E. Tranter and D. A. Reynolds, "Speaker diarisation for
+puter Science Lab of the University of Avignon, France) for making
+broadcast news," in 2004: A Speaker Odyssey. The Speaker
+LIA_SCT tool available as an open source project.
+Recognition Workshop (ISCA, Odyssey 2004), Toledo, Spain,
+May 2004.
+7 References [14] L. Breiman, J. Friedman, R. Olshen, and C. Stone, Classifica-
+tion and Regression Trees, Wadsworth, 1984.
+[1] J. Ajmera and C. Wooters, "A robust speaker clustering algo- [15] NIST, "Fall 2004 rich transcription (RT-04F) evaluation
+rithm," in Automatic Speech Recognition and Understanding plan," http://www.nist.gov/speech/tests/rt/
+(IEEE, ASRU2003), St. Thomas, U.S. Virgin Islands, Novem- rt2OO4/fall/docs/rtO4f-eval-plan-v%14.
+ber 2003, pp. 411-416. pdf, August 2004.
+[2] M. Ben, M. Betser, F. Bimbot, and G. Gravier, "Speaker
+diarization using bottom-up clustering based on a parameter-
+derived distance between GMMs," in Proceedings of Inter-
+national Conference on Spoken Language Processing (ISCA,
+ICSLP 2004), Jeju, Korea, October 2004.
+[3] C. Barras, X. Zhu, S. Meignier, and J.-L. Gauvain, "Improv-
+ing speaker diarization," in DARPA RT04 Fall, Palisades, NY,
+USA, 2004.
+[4] S. Meignier, D. Moraru, C. Fredouille, J.-F. Bonastre, and
+L. Besacier, "Step-by-step and integrated approaches in broad-
+cast news speaker diarization," Computer Speech and Lan-
+guage, 2005.
+[5] F. Bimbot, J.-F. Bonastre, C. Fredouille, G. Gravier, I. Magrin-
+Chagnolleau, S. Meignier, T. Merlin, J. Ortega-Garcia,
+D. Petrovska, and D. A. Reynolds, "A tutorial on text-
+independent speaker verification," EURASIP Journal on Ap-
+plied Signal Processing, Special issue on biometric signalpro-
+cessing, vol. 4, pp. 430-451, 2004.
+[6] L. Canseco-Rodriguez, L. Lamel, and J.-L. Gauvain, "Speaker
+diarization from speech transcripts," in Proceedings ofInter-
+national Conference on Spoken Language Processing (ISCA,
+ICSLP 2004), Jeju, Oct 2004.
+[7] L. Canseco-Rodriguez, L. Lamel, and J.-L. Gauvain, "A com-
+parative study using manual and automatic transcriptions for
+diarization," Jeju, Oct 2005.
 6 2006 IEEE Odyssey - The Speaker and Language Recognition Workshop
