@@ -25,9 +25,9 @@ nlp = spacy.load("en_core_web_sm")
 # To convert all test data into txt, uncomment the following line
 #pdftotxt.convert(r'articles/pdf/test/*')
 # To preprocess all train data, uncomment the following line
-#preprocessing.preprocess(True)
+preprocessing.preprocess(True)
 # To tag the train data with IOB, uncomment the following line
-#iob_tagging.tag_files(True)
+iob_tagging.tag_files(True)
 
 # To re-train the model, uncomment the line 27 in sequence_tagger.py
-sequence_tagger.prepare_data()
+#sequence_tagger.prepare_data()
