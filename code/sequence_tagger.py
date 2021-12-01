@@ -1,8 +1,8 @@
 import pandas as pd
 import numpy as np
 import pycrfsuite
+import random
 from sklearn.metrics import classification_report
-from sklearn.model_selection import train_test_split
 
 def get(data: list):
     sentences = []
@@ -16,24 +16,24 @@ def get(data: list):
             sentence.append(text)
     return sentences
 
-def prepare_data(is_test: bool):
+def prepare_data():
     # Load the data
-    if is_test:
-        data = pd.read_csv("output/iob_format_test.csv")
-        print('Test')
-    else:
-        data = pd.read_csv("output/iob_format.csv")
-        print('Train')
-    # Collect all IOB tags
-    labels = get(list(data["IOB"].values))
+    data_test = pd.read_csv("output/iob_format_test.csv")
+    data_train = pd.read_csv("output/iob_format.csv")
     # Collect all sentences
-    texts = get(list(data["Token"].values))
-    X_train, X_test, y_train, y_test = train_test_split(texts, labels, test_size=0.2, random_state=36)
-    #train(X_train, y_train)
-    if is_test:
-        test(texts, labels)
-    else:
-        test(X_test, y_test)
+    texts = get(list(data_train["Token"].values))
+    # Collect all IOB tags
+    labels = get(list(data_train["IOB"].values))
+
+    c = list(zip(texts, labels))
+    random.shuffle(c)
+    X_train, y_train = zip(*c)
+    train(X_train, y_train)
+
+    X_test = get(list(data_test["Token"].values))
+    y_test = get(list(data_test["IOB"].values))
+
+    test(X_test, y_test)
 
 def train(X_train, y_train):
     trainer = pycrfsuite.Trainer()
@@ -56,4 +56,4 @@ def evaluate(y_pred, y_test):
     # Convert the sequences of tags into a 1-dimensional array
     predictions = np.array([label2int[tag] for sentence in y_pred for tag in sentence])
     truths = np.array([label2int[tag] for sentence in y_test for tag in sentence])
-    print(classification_report(truths, predictions,target_names=["b", "i", 'o']))
+    print(classification_report(truths, predictions, target_names=["b", "i", "o"]))

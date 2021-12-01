@@ -11,3 +11,4 @@ Created by Justine Diliberto and Cindy Pereira
 - extraction.py: Create a TXT file with all the term candidates
 - sort_terms.py: Sort the terms by length (3-words terms, then 2-words terms, then 1-word terms)
 - iob_tagging.py: Tag the terms with IOB
+- sequence_tagger.py: Training and testing of a CRF tagger

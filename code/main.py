@@ -3,7 +3,7 @@ import preprocessing
 import extraction
 import sort_terms
 import iob_tagging
-import sequence_tagger_all_training
+import sequence_tagger
 
 import spacy
 
@@ -30,4 +30,4 @@ nlp = spacy.load("en_core_web_sm")
 #iob_tagging.tag_files(True)
 
 # To re-train the model, uncomment the line 27 in sequence_tagger.py
-sequence_tagger_all_training.prepare_data()
+sequence_tagger.prepare_data()
