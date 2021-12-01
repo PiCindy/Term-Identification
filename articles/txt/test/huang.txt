@@ -1,0 +1,1529 @@
+SPEAKER DIARIZATION WITH REGION PROPOSAL NETWORK
+Zili Huang1, Shinji Watanabe1, Yusuke Fujita2, Paola Garc´ıa1, Yiwen Shao1,
+Daniel Povey1, Sanjeev Khudanpur1
+1 Center for Language and Speech Processing, Johns Hopkins University, USA
+2 Hitachi, Ltd. Research & Development Group, Japan
+0
+2 ABSTRACT [9–12] and deep speaker embeddings [5, 13–22]. (3) Clustering:
+0 after the speaker embedding is extracted for each short segment,
+Speaker diarization is an important pre-processing step for many
+2 the segments are grouped into different clusters. Each cluster cor-
+speech applications, and it aims to solve the “who spoke when” prob-
+  responds to one speaker identity. (4) Re-segmentation: this is an
+b lem. Although the standard diarization systems can achieve satis-
+optional step that further reﬁnes the diarization prediction. Among
+e factory results in various scenarios, they are composed of several
+F the re-segmentation methods, VB re-segmentation [12, 23, 24] is the
+independently-optimized modules and cannot deal with the over-
+most famous one.
+ 
+4 lapped speech. In this paper, we propose a novel speaker diariza-
+Despite the successful applications in many scenarios, standard
+1 tion method: Region Proposal Network based Speaker Diarization
+diarization systems have two major problems. (1) Many indi-
+  (RPNSD). In this method, a neural network generates overlapped
+  vidual modules: to build a diarization system, you need a SAD
+] speech segment proposals, and compute their speaker embeddings
+S model, a speaker embedding extractor, a clustering module and a
+at the same time. Compared with standard diarization systems, RP-
+re-segmentation module, all of which are optimized individually.
+A NSD has a shorter pipeline and can handle the overlapped speech.
+(2) Overlap: the standard diarization system cannot handle the
+. Experimental results on three diarization datasets reveal that RPNSD
+s overlapped speech. To deal with the overlapped speech, some new
+achieves remarkable improvements over the state-of-the-art x-vector
+s modules are needed to detect and classify the overlaps, which makes
+e baseline.
+the procedure even more complicated. The overlapped speech will
+e
+Index Terms— speaker diarization, neural network, end-to-end, also hurt the performance of clustering, which is the main reason
+[
+  region proposal network, Faster R-CNN standard diarization systems cannot perform well in highly over-
+ 
+1 lapped scenarios [25] [26].
+v Inspired by Faster R-CNN [27], one of the best-known frame-
+1. INTRODUCTION
+0 works in object detection, we propose Region Proposal Network
+2 based Speaker Diarization (RPNSD). As shown in Figure 1 right,
+Speaker diarization, the process of partitioning an input audio stream
+2 in this method, we combine the segmentation, embedding extrac-
+into homogeneous segments according to the speaker identity [1–4]
+6 tion and re-segmentation into one stage. The segment boundaries
+(often referred as “who spoke when”), is an important pre-processing
+0
+and speaker embeddings are jointly optimized in one neural net-
+. step for many speech applications.
+2 work. After the speech segments and corresponding speaker embed-
+0 dings are extracted, we only need to cluster the segments and apply
+0 non-maximum suppression (NMS) to get the diarization prediction,
+2 which is much more convenient than the standard diarization system.
+: In addition to that, since the speech segment proposals overlap with
+v
+each other, our framework solves the overlap problem in a natural
+i
+X and elegant way.
+The experimental results on Switchboard, CALLHOME and
+r
+a simulated mixtures reveal that our framework achieves signiﬁcant
+and consistent improvements over the state-of-the-art x-vector base-
+line, and a great portion of the improvements come from successfully
+detecting the overlapped speech regions. Our code is available at
+https://github.com/HuangZiliAndy/RPNSD.
+Fig. 1: Pipelines of the standard diarization system (left) and the
+2. METHODOLOGY
+RPNSD system (right)
+In this section, we will introduce our framework in details. Our
+As shown in Figure 1 left, a standard diarization system [5–8] framework aims to solve the speaker diarization problem and it con-
+consists of four steps. (1) Segmentation: this step removes the non- sists of two steps. (1) Joint speech segment proposal and speaker em-
+speech portion of the audio with speech activity detection (SAD), bedding extraction. (2) Post-processing. In the ﬁrst step, we predict
+and the speech regions are further cut into short segments. (2) Em- the boundary of speech segments and extract speaker embeddings
+bedding extraction: in this step, a speaker embedding is extracted for with one neural network. In the second step, we perform clustering
+each short segment. Typical speaker embeddings include i-vector and apply NMS to get diarization predictions.2.1. Joint Speech Segment Proposal and Embedding Extraction 2.1.3. Loss Function
+The training loss consists of ﬁve parts and is formulated as
+L = L + L + L + L + α · L (1)
+rpn cls rpn reg rcnn cls rcnn reg spk cls
+In equation 1, L and L are binary cross-entropy loss to
+rpn cls rcnn cls
+classify foreground/background (fg/bg), which is formulated as
+L (p , p∗) = −(p∗ log(p ) + (1 − p∗) log(1 − p )) (2)
+cls i i i i i i
+where p is the probability that the speech segment i is foreground
+i
+Fig. 2: Procedure of the ﬁrst step: joint speech segment proposal and and p∗i is the ground truth label. Whether a segment is fg or bg is
+speaker embedding extraction determined by the Intersection-over-Union (IoU) overlap with the
+ground-truth segments. L and L are regression loss to
+rpn reg rcnn reg
+reﬁne the speech segment boundaries, which are formulated as
+The overall procedure of the ﬁrst step is shown in Figure 2.
+Given an audio input, we ﬁrst extract acoustic features1 and feed L (t , t∗) = R(t − t∗) (3)
+them into convolution layers to obtain the feature maps. Then a Re- reg i i i i
+gion Proposal Network (RPN) will generate many overlapped speech where t and t∗ are the coordinates of predicted segments and
+i i
+segment proposals [28] and predict their conﬁdence scores. After ground truth segments respectively, and R is the smooth L1 loss
+that, the deep features corresponding to the speech segment propos- function in [30]. The coordinates t and t∗ are deﬁned as follows.
+i i
+als are pooled into ﬁxed-size representations. Finally, we perform
+speaker classiﬁcation and boundary reﬁnement on the top of the rep-
+resentations. ti = [(x − xa)/wa, log(w/wa)] (4)
+t∗ = [(x∗ − x )/w , log(w∗/w )] (5)
+i a a a
+2.1.1. Region Proposal Network (RPN)
+where x and w denote the center position and length of the seg-
+The RPN [27] is the key component of our framework. It takes the ment. x, xa and x∗ represent the center positions for the predicted
+feature maps as the input and outputs the region proposals. The segment, anchor and ground truth segment respectively (likewise for
+original RPN generates 2-d region proposals while our RPN gen- w). Lspk cls is the cross-entropy loss to classify the segments speaker
+erates 1-d speech segment proposals. In our framework, the RPN identity, which is deﬁned as
+takes the feature maps as the input2 and predicts speech segment
+L (s , s∗) = −s∗ · log (s ) (6)
+proposals. Similar to brute-force search, the RPN will consider ev- spk cls i i i i
+ery timestep as a possible center and expand several anchors with where s is the predicted probability distribution over all speakers
+i
+pre-deﬁned sizes from it. In our system, we use 9 anchors with the in the training set and s∗ is the ground truth one-hot speaker label.
+i
+size of {1, 2, 4, 8, 16, 24, 32, 48, 64}, which covers the speech seg- L is scaled with a weight factor α.
+spk cls
+ments from 16 to 1024 frames. Meanwhile, the RPN will also predict Among the loss components, L and L are used
+rpn cls rpn reg
+scores and reﬁne boundaries for each speech segment proposal with to train the RPN. We adopt the same strategy as [27], and sample
+convolution layers. Among the 63×9 = 567 (63 timesteps and 9 an- 128 from 567 initial speech segment proposals to compute L
+rpn cls
+chors per timestep) speech segment proposals, we ﬁrst ﬁlter out the and L . The segment proposals having an IoU overlap higher
+rpn reg
+speech segment proposals with low conﬁdence scores and then fur- than 0.7 with any ground-truth segments are labeled as fg while
+ther remove highly overlapped segments with NMS. In the end, we the segment proposals with an IoU overlap lower than 0.3 for all
+keep 100 high-quality speech segment proposals after NMS during ground-truth segments are labeled as bg. L is calculated only
+rpn reg
+training and 50 during evaluation. for the fg. L and L have the exactly same form but
+rcnn cls rcnn reg
+are calculated with different samples. We sample 64 from the 100
+2.1.2. RoIAlign high-quality speech segments mentioned in section 2.1.1 to compute
+L and L . L is also calculated with the 64 sam-
+After the RPN predicts the speech segment proposals, we extract rcnn cls rcnn reg spk cls
+ples, and it ensures that we extract discriminative embeddings from
+corresponding regions from the feature maps as the deep features for
+the model.
+each segment. Since the sizes of speech segment proposals vary a
+lot, we need RoIAlign [29] to pool the features into ﬁxed dimension.
+2.2. Post-processing
+Suppose we want to pool the D × T speech segment proposal (D
+is the feature dimension and T is the unﬁxed timestep) into a ﬁxed In RPNSD, the input of the ﬁrst step is an audio and the output in-
+representation, the proposed region is ﬁrst divided into N ×N (N = cludes: (1) the speech segment proposals, (2) the probability of fg/bg
+7) RoI bins. Then we uniformly sample four locations in each RoI and (3) the speaker embedding for each segment proposal. In the
+bin and use bilinear interpolation to compute the values of them. second step, we perform post-processing to get the diarization pre-
+The result is aggregated using average pooling. With the pooled diction. The whole process contains three steps.
+feature of ﬁxed dimension, we can perform speaker classiﬁcation
+1. Remove the speech segment proposals whose fg probability
+and boundary reﬁnement for each speech segment proposal.
+is lower than a threshold γ. (γ = 0.5 in our experiment)
+1We experiment on 8kHz telephone data and we choose the STFT feature 2. Clustering: Group the remaining speech segment proposals
+with frame size 512 and frame shift 80. During training we segment the into clusters. (We use K-means in our experiment)
+audios into 10s chunks, so the feature shape of each chunk is (257, 1000).
+2The size of the feature maps is (1024, 16, 63). There are 63 timesteps 3. Apply NMS (NMS threshold = 0.3) for segments in the same
+and each timestep corresponds 16 frames of speech. cluster to remove the highly overlapped segment proposals.3. EXPERIMENTS single audio ﬁle. The human voices are taken from SRE and SWBD,
+and we use the same data augmentation technique as [21]. The pa-
+3.1. Datasets and Evaluation Metrics rameter β is the average length of silence intervals between segments
+of a single speaker, and a larger β results in less overlap. In our ex-
+3.1.1. Datasets
+periment, we generate a large dataset with β = 2 for training and
+We train our systems on two datasets (Mixer 6 + SRE + SWBD three datasets with β = 2, 3, 5 for evaluation. The training set and
+and Simulated TRAIN) and evaluate on three datasets (Switchboard, test set share no common speaker.
+CALLHOME and Simulated DEV) to verify the effectiveness of our
+framework. The dataset statistics are shown in Table 1. The over- 3.1.2. Evaluation Metrics
+lap ratio is deﬁned as overlap ratio = tspk≥2 , where t de-
+tspk≥1 spk≥n We evaluate different systems with Diarization Error Rate (DER).
+notes the total time of speech regions with more than n speakers.
+The DER includes Miss Error (speech predicted as non-speech or
+Since end-to-end systems are usually data hungry and require mas-
+two speaker mixture predicted as one speaker etc.), False Alarm Er-
+sive training data to generalize better, we come up with two methods
+ror (non-speech predicted as speech or single speaker speech pre-
+to create huge amount of diarization data. (1) Use public telephone
+dicted as multiple speaker etc.) and Confusion Error (one speaker
+conversation datasets (Mixer 6 + SRE + SWBD). (2) Use speech data
+predicted as another). Many previous studies [20, 33] ignore the
+of different speakers to create synthetic diarization datasets (Simu-
+overlapped regions and use 0.25s collar for evaluation. While in
+lated TRAIN). Detailed introductions for each dataset are as follows.
+our study, we score the overlapped regions and report the DER with
+different collars.
+# utts avg. dur overlap ratio
+(sec) (%)
+3.2. Baseline
+Train sets
+Mixer 6 + SRE + SWBD 29,697 348.1 5.0 We follow Kaldi’s CALLHOME diarization V2 recipe [34] to build
+Simulated TRAIN(β = 2) 100,000 87.6 34.4 baselines. The recipe uses oracle SAD labels which are not available
+Test sets in real situations, so we ﬁrst use a TDNN SAD model to detect the
+CALLHOME 499 124.5 16.9 speech segments. Then the speech segments are cut into 1.5s chunks
+SWBD DEV 99 304.6 5.2 with 0.75s overlap, and x-vectors are extracted for each segment.
+SWBD TEST 100 312.0 5.8 After that, we apply Agglomerative Hierarchical Clustering (AHC)
+Simulated DEV(β = 2) 500 87.3 34.4 to group segments into different clusters, and the similarity matrix is
+Simulated DEV(β = 3) 500 103.8 27.2 based on PLDA [35] scoring. We also apply VB re-segmentation for
+Simulated DEV(β = 5) 500 137.1 19.5 CALLHOME experiments.
+Table 1: Dataset statistics
+3.3. Experimental Settings
+We use ResNet-101 as the network architecture and Stochastic Gra-
+The Mixer 6 + SRE + SWBD dataset includes Mixer 6, SRE04-
+dient Descent (SGD) as the optimizer 4. We start training with a
+10, Switchboard-2 Phase I-III and Switchboard Cellular Part 1, 2,
+learning rate of 0.01 and it decays twice to 0.0001. The batch size is
+and the majority of the dataset are 8kHz telephone conversations.
+set as 8 and we train our model on NVidia GTX 1080 Ti for around
+For speaker recognition, we usually use single channel audios that
+4 days. The scaling factor α in equation 1 is set to 1.0 for training.
+contain only one person. While in our experiment, we sum up both
+During adaptation, we use a learning rate of 4 · 10−5 and α is set to
+channels to create a large diarization dataset. The ground truth di-
+arization label is generated by applying SAD on single channels.3 0.1. The speaker embedding dimension is 128.
+We also used the same data augmentation technique as [21] and the
+train sets are augmented with music, noise and reverberation from 3.4. Experimental Results
+the MUSAN [31] and the RIR [32] dataset. The augmented train set
+3.4.1. Experiments on Switchboard
+contains 10,574 hours of speech.
+SWBD DEV and SWBD TEST are sampled from the SWBD
+dataset (We exclude these audios from Mixer6 + SRE + SWBD). DER(%) DER(%) DER(%)
+Dataset System
+They contain around 100 5-minute audios and share no common c=0s c=0.1s c=0.25s
+speaker with the train set. Like Mixer 6 + SRE + SWBD, the overlap SWBD x-vector 15.39 9.51 4.66
+ratio of SWBD DEV and SWBD TEST is quite low. We create these DEV RPNSD 9.18 4.09 2.50
+two datasets to evaluate the system performance on similar data.
+SWBD x-vector 15.08 9.36 4.42
+The CALLHOME dataset is one of the best-known benchmarks
+TEST RPNSD 9.09 4.14 2.55
+for speaker diarization. As one part of 2000 NIST Speaker Recogni-
+tion Evaluation (LDC2001S97), the CALLHOME dataset contains
+Table 2: DERs (%) on SWBD DEV and SWBD TEST with different
+500 audios in 6 languages including Arabic, English, German,
+collars, the overlapped speech is also scored.
+Japanese, Mandarin, and Spanish. The number of speakers in each
+audio ranges from 2 to 7.
+In this experiment, we train RPNSD on Mixer 6 + SRE + SWBD
+We also use synthetic datasets (same as [25,26]) to evaluate RP-
+and use Kaldi’s x-vector model for CALLHOME as the baseline.5
+NSD’s performance on highly overlapped speech. The simulated
+mixtures are made by placing two speakers’ speech segments in a 4We refer the PyTorch implementation of Faster R-CNN in [36].
+5We also train a x-vector model on single channel data of Mixer 6 + SRE
+3In all experiments of this paper, we use the TDNN SAD model (http: + SWBD as a fair comparison but the performance is slightly worse than
+//kaldi-asr.org/models/m4) trained on the Fisher corpus. Kaldi’s diarization model (http://kaldi-asr.org/models/m6).DER(%) Score Overlap DER(%) Not Score Overlap
+System SAD Cluster
+c=0s c=0.1s c=0.25s c=0s c=0.1s c=0.25s
+x-vector oracle AHC with threshold 25.07 21.75 17.57 12.88 10.60 8.02
+x-vector oracle AHC with oracle # spk 24.13 20.76 16.54 11.63 9.33 6.73
+x-vector (+VB) oracle AHC with threshold 23.47 19.89 16.38 10.68 8.15 6.51
+x-vector (+VB) oracle AHC with oracle # spk 22.12 18.47 14.91 9.11 6.53 4.90
+x-vector TDNN SAD AHC with threshold 32.63 26.62 20.71 23.23 16.85 11.70
+x-vector TDNN SAD AHC with oracle # spk 32.20 26.13 20.14 22.53 16.10 10.90
+x-vector (+VB) TDNN SAD AHC with threshold 30.44 24.69 19.51 20.06 14.17 10.09
+x-vector (+VB) TDNN SAD AHC with oracle # spk 29.54 23.77 18.61 19.06 13.18 9.14
+RPNSD / K-means with oracle # spk 25.46 20.41 17.06 21.39 15.35 11.81
+Table 3: DERs (%) on CALLHOME with different scoring options
+As shown in Table 2, RPNSD signiﬁcantly reduces the DER from DER breakdown SAD error
+15.39% to 9.18% on SWBD DEV and 15.08% to 9.09% on SWBD System DER MI FA CF MI FA
+TEST. On SWBD TEST, the DER composition of the x-vector base- x-vector 32.20 18.6 5.1 8.6 4.2 5.3
+line is 8.9% (Miss) + 1.1% (False Alarm) + 5.0% (Speaker Confu- x-vector (+VB) 29.54 18.6 5.1 5.9 4.2 5.3
+sion) = 15.08% (with 2.8% Miss and 0.9% False Alarm for SAD). RPNSD 25.46 12.8 7.5 5.2 5.2 3.2
+For RPNSD, the DER composition is 4.0% (Miss) + 4.8% (False
+Alarm) + 0.3% (Speaker Confusion) = 9.09% (with 2.0% Miss and Table 4: The DER composition of different diarization systems on
+2.2% False Alarm for SAD). CALLHOME dataset. The DER includes Miss Error (MI), False
+Since RPNSD can handle the overlapped speech, the miss er- Alarm Error (FA), and Confusion Error (CF). The SAD error in-
+ror decreases from 8.9% to 4.0%. As a cost, the false alarm error cludes Miss (MI) and False Alarm (FA).
+increases from 1.1% to 4.8%. Surprisingly, the speaker confusion
+decreases largely from 5.0% to 0.3%. There might be two reasons
+for this. (1) Instead of making decisions on short segments, RP- 3.4.3. Experiments on Simulated Mixtures
+NSD makes use of longer context and extracts more discriminative
+According to our experience, standard diarization systems fail to per-
+speaker embeddings. (2) The training and testing condition are more
+form well on highly overlapped speech. Therefore we design exper-
+matched for RPNSD. Instead of training on single speaker data, we
+iments on simulated mixtures to evaluate the system performance
+are training on “diarization data” and testing on “diarization data”.
+on overlapped scenarios. As shown in Table 5, RPNSD achieves
+much lower DER than i-vector and x-vector systems. Compared
+with permutation-free loss based end-to-end systems [25, 26], the
+3.4.2. Experiments on CALLHOME
+performance of RPNSD is better than BLSTM-EEND but worse than
+SA-EEND. However, unlike these two systems, RPNSD does not
+The CALLHOME corpus is one of the best-known benchmarks for
+have any constraint on the number of speakers.
+speaker diarization. Since the CALLHOME corpus is quite small
+(with 17 hours of speech) and doesn’t specify dev/test splits, we fol-
+Simulated
+low the “pre-train and adapt” procedure and perform a 5-fold cross System
+β = 2 β = 3 β = 5
+validation on this dataset. We use the model in section 3.4.1 as the
+pre-trained model, adapt it on 4/5 of CALLHOME data and evaluate i-vector 33.74 30.93 25.96
+on the rest 1/5. Since our model does not use any segment boundary x-vector 28.77 24.46 19.78
+information, it is unfair to compare it with x-vector systems using the BLSTM-EEND 12.28 14.36 19.69
+oracle SAD label. Therefore we compare it with x-vector systems SA-EEND 7.91 8.51 9.51
+using TDNN SAD. As shown in Table 3, our system achieves bet- RPNSD 9.30 11.57 14.55
+ter results than x-vector systems with and w/o VB re-segmentation.
+It largely reduces the DER from 32.30% (or 29.54% after VB re- Table 5: DERs (%) on simulated mixtures with 0.25s collar, the
+segmentation) to 25.46%. The detailed DER breakdown is shown overlapped speech is also scored.
+in Table 4. Due to the ability to handle overlapped speech, RPNSD
+largely reduces the Miss Error from 18.6% to 12.8%. As a cost,
+the False Alarm Error increases from 5.1% to 7.5%. The Confusion 4. CONCLUSION
+Error of RPNSD is also lower than x-vector and x-vector (+VB).
+The DER result of RPNSD (25.46%) is even close to the x- In this paper, we propose a novel speaker diarization system RPNSD.
+vector system using the oracle SAD label (24.13%). If the oracle Taken an audio as the input, the model predicts speech segment pro-
+SAD label is used, the DER of RPNSD system must be lower than posals and speaker embeddings at the same time. With some simple
+25.46 − 3.2 = 22.26%6, which is better than the x-vector system post-processing (clustering and NMS), we can get the diarization
+(24.13%) and quite close to x-vector (+VB) (22.12%). prediction, which is much more convenient than the standard pro-
+cess. In addition to that, the RPNSD system solves the overlapping
+6This is because we can easily remove the False Alarm SAD error by problem in an elegant way. Our experimental results on Switch-
+labeling them as silence. It is more difﬁcult to handle the Miss SAD error in board, CALLHOME and synthetic mixtures reveal that the improve-
+this framework, but we can further reduce the DER for sure. ments of the RPNSD system are obvious and consistent.5. REFERENCES [18] Arsha Nagrani, Joon Son Chung, and Andrew Zisserman,
+“Voxceleb: A large-scale speaker identiﬁcation dataset,” Proc.
+[1] Douglas A Reynolds and P Torres-Carrasquillo, “Approaches Interspeech 2017, pp. 2616–2620, 2017.
+and applications of audio diarization,” in ICASSP. IEEE, 2005,
+[19] Joon Son Chung, Arsha Nagrani, and Andrew Zisserman,
+vol. 5, pp. v–953.
+“Voxceleb2: Deep speaker recognition,” Proc. Interspeech
+[2] Sue E Tranter and Douglas A Reynolds, “An overview of au- 2018, pp. 1086–1090, 2018.
+tomatic speaker diarization systems,” IEEE Transactions on
+[20] David Snyder et al., “Deep neural network embeddings for
+audio, speech, and language processing, vol. 14, no. 5, pp. text-independent speaker veriﬁcation.,” in Interspeech, 2017,
+1557–1565, 2006.
+pp. 999–1003.
+[3] Chuck Wooters and Marijn Huijbregts, “The ICSI RT07s [21] David Snyder et al., “X-vectors: Robust dnn embeddings for
+speaker diarization system,” in Multimodal Technologies for speaker recognition,” in ICASSP. IEEE, 2018, pp. 5329–5333.
+Perception of Humans, pp. 509–519. Springer, 2007.
+[22] Daniel Garcia-Romero, David Snyder, Gregory Sell, Daniel
+[4] Xavier Anguera, Simon Bozonnet, Nicholas Evans, Corinne Povey, and Alan McCree, “Speaker diarization using deep neu-
+Fredouille, Gerald Friedland, and Oriol Vinyals, “Speaker di- ral network embeddings,” in ICASSP. IEEE, 2017, pp. 4930–
+arization: A review of recent research,” IEEE Transactions on 4934.
+Audio, Speech, and Language Processing, vol. 20, no. 2, pp.
+[23] Patrick Kenny, “Bayesian analysis of speaker diarization with
+356–370, 2012.
+eigenvoice priors,” CRIM, Montreal, Technical Report, 2008.
+[5] Gregory Sell et al., “Diarization is hard: Some experiences
+[24] Mireia Diez, Luka´s Burget, and Pavel Matejka, “Speaker di-
+and lessons learned for the jhu team in the inaugural dihard
+arization based on bayesian HMM with eigenvoice priors.,” in
+challenge.,” in Interspeech, 2018, pp. 2808–2812.
+Odyssey, 2018, pp. 147–154.
+[6] Mireia D´ıez et al., “BUT System for DIHARD Speech Diariza- [25] Yusuke Fujita et al., “End-to-end neural speaker diarization
+tion Challenge 2018.,” in Interspeech, 2018, pp. 2798–2802. with permutation-free objectives,” in Proc. Interspeech, 2019.
+[7] Lei Sun et al., “Speaker diarization with enhancing speech for [26] Yusuke Fujita et al., “End-to-end neural speaker diarization
+the ﬁrst dihard challenge.,” in Interspeech, 2018, pp. 2793– with self-attention,” in Proc. ASRU, 2019 (to appear).
+2797.
+[27] Shaoqing Ren, Kaiming He, Ross Girshick, and Jian Sun,
+[8] Ignacio Vin˜als et al., “Estimation of the Number of Speakers “Faster r-cnn: Towards real-time object detection with region
+with Variational Bayesian PLDA in the DIHARD Diarization proposal networks,” in Advances in neural information pro-
+Challenge.,” in Interspeech, 2018, pp. 2803–2807. cessing systems, 2015, pp. 91–99.
+[9] Patrick Kenny, Gilles Boulianne, Pierre Ouellet, and Pierre [28] Chieh-Chi Kao, Weiran Wang, Ming Sun, and Chao Wang,
+Dumouchel, “Joint factor analysis versus eigenchannels in “R-crnn: Region-based convolutional recurrent neural network
+speaker recognition,” IEEE Transactions on Audio, Speech, for audio event detection,” Proc. Interspeech 2018, pp. 1358–
+and Language Processing, vol. 15, no. 4, pp. 1435–1447, 2007. 1362, 2018.
+[10] Najim Dehak, Patrick J Kenny, Re´da Dehak, Pierre Du- [29] Kaiming He, Georgia Gkioxari, Piotr Dolla´r, and Ross Gir-
+mouchel, and Pierre Ouellet, “Front-end factor analysis for shick, “Mask r-cnn,” in Proceedings of the IEEE international
+speaker veriﬁcation,” IEEE Transactions on Audio, Speech, conference on computer vision, 2017, pp. 2961–2969.
+and Language Processing, vol. 19, no. 4, pp. 788–798, 2010. [30] Ross Girshick, “Fast r-cnn,” in Proceedings of the IEEE inter-
+[11] Gregory Sell and Daniel Garcia-Romero, “Speaker diariza- national conference on computer vision, 2015, pp. 1440–1448.
+tion with plda i-vector scoring and unsupervised calibration,” [31] David Snyder, Guoguo Chen, and Daniel Povey, “Mu-
+in 2014 IEEE Spoken Language Technology Workshop (SLT). san: A music, speech, and noise corpus,” arXiv preprint
+IEEE, 2014, pp. 413–417. arXiv:1510.08484, 2015.
+[12] Gregory Sell and Daniel Garcia-Romero, “Diarization reseg- [32] Tom Ko et al., “A study on data augmentation of reverberant
+mentation in the factor analysis subspace,” in ICASSP. IEEE, speech for robust speech recognition,” in ICASSP. IEEE, 2017,
+2015, pp. 4794–4798. pp. 5220–5224.
+[13] Ehsan Variani, Xin Lei, Erik McDermott, Ignacio Lopez [33] Aonan Zhang, Quan Wang, Zhenyao Zhu, John Paisley, and
+Moreno, and Javier Gonzalez-Dominguez, “Deep neural net- Chong Wang, “Fully supervised speaker diarization,” in
+works for small footprint text-dependent speaker veriﬁcation,” ICASSP. IEEE, 2019, pp. 6301–6305.
+in ICASSP. IEEE, 2014, pp. 4052–4056. [34] Daniel Povey et al., “The kaldi speech recognition toolkit,”
+[14] Georg Heigold, Ignacio Moreno, Samy Bengio, and Noam in IEEE 2011 workshop on automatic speech recognition and
+Shazeer, “End-to-end text-dependent speaker veriﬁcation,” in understanding. IEEE Signal Processing Society, 2011, number
+ICASSP. IEEE, 2016, pp. 5115–5119. CONF.
+[15] Li Wan, Quan Wang, Alan Papir, and Ignacio Lopez Moreno, [35] Simon JD Prince and James H Elder, “Probabilistic lin-
+“Generalized end-to-end loss for speaker veriﬁcation,” in ear discriminant analysis for inferences about identity,” in
+ICASSP. IEEE, 2018, pp. 4879–4883. 2007 IEEE 11th International Conference on Computer Vision.
+IEEE, 2007, pp. 1–8.
+[16] Quan Wang et al., “Speaker diarization with lstm,” in ICASSP.
+IEEE, 2018, pp. 5239–5243. [36] Jianwei Yang, Jiasen Lu, Dhruv Batra, and Devi Parikh,
+“A faster pytorch implementation of faster r-cnn,”
+[17] Chao Li et al., “Deep speaker: an end-to-end neural speaker
+https://github.com/jwyang/faster-rcnn.pytorch, 2017.
+embedding system,” arXiv preprint arXiv:1705.02304, 2017.SPEAKER DIARIZATION WITH REGION PROPOSAL NETWORK
+Zili Huang1, Shinji Watanabe1, Yusuke Fujita2, Paola Garc´ıa1, Yiwen Shao1,
+Daniel Povey1, Sanjeev Khudanpur1
+1 Center for Language and Speech Processing, Johns Hopkins University, USA
+2 Hitachi, Ltd. Research & Development Group, Japan
+0
+2 ABSTRACT [9–12] and deep speaker embeddings [5, 13–22]. (3) Clustering:
+0 after the speaker embedding is extracted for each short segment,
+Speaker diarization is an important pre-processing step for many
+2 the segments are grouped into different clusters. Each cluster cor-
+speech applications, and it aims to solve the “who spoke when” prob-
+  responds to one speaker identity. (4) Re-segmentation: this is an
+b lem. Although the standard diarization systems can achieve satis-
+optional step that further reﬁnes the diarization prediction. Among
+e factory results in various scenarios, they are composed of several
+F the re-segmentation methods, VB re-segmentation [12, 23, 24] is the
+independently-optimized modules and cannot deal with the over-
+most famous one.
+ 
+4 lapped speech. In this paper, we propose a novel speaker diariza-
+Despite the successful applications in many scenarios, standard
+1 tion method: Region Proposal Network based Speaker Diarization
+diarization systems have two major problems. (1) Many indi-
+  (RPNSD). In this method, a neural network generates overlapped
+  vidual modules: to build a diarization system, you need a SAD
+] speech segment proposals, and compute their speaker embeddings
+S model, a speaker embedding extractor, a clustering module and a
+at the same time. Compared with standard diarization systems, RP-
+re-segmentation module, all of which are optimized individually.
+A NSD has a shorter pipeline and can handle the overlapped speech.
+(2) Overlap: the standard diarization system cannot handle the
+. Experimental results on three diarization datasets reveal that RPNSD
+s overlapped speech. To deal with the overlapped speech, some new
+achieves remarkable improvements over the state-of-the-art x-vector
+s modules are needed to detect and classify the overlaps, which makes
+e baseline.
+the procedure even more complicated. The overlapped speech will
+e
+Index Terms— speaker diarization, neural network, end-to-end, also hurt the performance of clustering, which is the main reason
+[
+  region proposal network, Faster R-CNN standard diarization systems cannot perform well in highly over-
+ 
+1 lapped scenarios [25] [26].
+v Inspired by Faster R-CNN [27], one of the best-known frame-
+1. INTRODUCTION
+0 works in object detection, we propose Region Proposal Network
+2 based Speaker Diarization (RPNSD). As shown in Figure 1 right,
+Speaker diarization, the process of partitioning an input audio stream
+2 in this method, we combine the segmentation, embedding extrac-
+into homogeneous segments according to the speaker identity [1–4]
+6 tion and re-segmentation into one stage. The segment boundaries
+(often referred as “who spoke when”), is an important pre-processing
+0
+and speaker embeddings are jointly optimized in one neural net-
+. step for many speech applications.
+2 work. After the speech segments and corresponding speaker embed-
+0 dings are extracted, we only need to cluster the segments and apply
+0 non-maximum suppression (NMS) to get the diarization prediction,
+2 which is much more convenient than the standard diarization system.
+: In addition to that, since the speech segment proposals overlap with
+v
+each other, our framework solves the overlap problem in a natural
+i
+X and elegant way.
+The experimental results on Switchboard, CALLHOME and
+r
+a simulated mixtures reveal that our framework achieves signiﬁcant
+and consistent improvements over the state-of-the-art x-vector base-
+line, and a great portion of the improvements come from successfully
+detecting the overlapped speech regions. Our code is available at
+https://github.com/HuangZiliAndy/RPNSD.
+Fig. 1: Pipelines of the standard diarization system (left) and the
+2. METHODOLOGY
+RPNSD system (right)
+In this section, we will introduce our framework in details. Our
+As shown in Figure 1 left, a standard diarization system [5–8] framework aims to solve the speaker diarization problem and it con-
+consists of four steps. (1) Segmentation: this step removes the non- sists of two steps. (1) Joint speech segment proposal and speaker em-
+speech portion of the audio with speech activity detection (SAD), bedding extraction. (2) Post-processing. In the ﬁrst step, we predict
+and the speech regions are further cut into short segments. (2) Em- the boundary of speech segments and extract speaker embeddings
+bedding extraction: in this step, a speaker embedding is extracted for with one neural network. In the second step, we perform clustering
+each short segment. Typical speaker embeddings include i-vector and apply NMS to get diarization predictions.2.1. Joint Speech Segment Proposal and Embedding Extraction 2.1.3. Loss Function
+The training loss consists of ﬁve parts and is formulated as
+L = L + L + L + L + α · L (1)
+rpn cls rpn reg rcnn cls rcnn reg spk cls
+In equation 1, L and L are binary cross-entropy loss to
+rpn cls rcnn cls
+classify foreground/background (fg/bg), which is formulated as
+L (p , p∗) = −(p∗ log(p ) + (1 − p∗) log(1 − p )) (2)
+cls i i i i i i
+where p is the probability that the speech segment i is foreground
+i
+Fig. 2: Procedure of the ﬁrst step: joint speech segment proposal and and p∗i is the ground truth label. Whether a segment is fg or bg is
+speaker embedding extraction determined by the Intersection-over-Union (IoU) overlap with the
+ground-truth segments. L and L are regression loss to
+rpn reg rcnn reg
+reﬁne the speech segment boundaries, which are formulated as
+The overall procedure of the ﬁrst step is shown in Figure 2.
+Given an audio input, we ﬁrst extract acoustic features1 and feed L (t , t∗) = R(t − t∗) (3)
+them into convolution layers to obtain the feature maps. Then a Re- reg i i i i
+gion Proposal Network (RPN) will generate many overlapped speech where t and t∗ are the coordinates of predicted segments and
+i i
+segment proposals [28] and predict their conﬁdence scores. After ground truth segments respectively, and R is the smooth L1 loss
+that, the deep features corresponding to the speech segment propos- function in [30]. The coordinates t and t∗ are deﬁned as follows.
+i i
+als are pooled into ﬁxed-size representations. Finally, we perform
+speaker classiﬁcation and boundary reﬁnement on the top of the rep-
+resentations. ti = [(x − xa)/wa, log(w/wa)] (4)
+t∗ = [(x∗ − x )/w , log(w∗/w )] (5)
+i a a a
+2.1.1. Region Proposal Network (RPN)
+where x and w denote the center position and length of the seg-
+The RPN [27] is the key component of our framework. It takes the ment. x, xa and x∗ represent the center positions for the predicted
+feature maps as the input and outputs the region proposals. The segment, anchor and ground truth segment respectively (likewise for
+original RPN generates 2-d region proposals while our RPN gen- w). Lspk cls is the cross-entropy loss to classify the segments speaker
+erates 1-d speech segment proposals. In our framework, the RPN identity, which is deﬁned as
+takes the feature maps as the input2 and predicts speech segment
+L (s , s∗) = −s∗ · log (s ) (6)
+proposals. Similar to brute-force search, the RPN will consider ev- spk cls i i i i
+ery timestep as a possible center and expand several anchors with where s is the predicted probability distribution over all speakers
+i
+pre-deﬁned sizes from it. In our system, we use 9 anchors with the in the training set and s∗ is the ground truth one-hot speaker label.
+i
+size of {1, 2, 4, 8, 16, 24, 32, 48, 64}, which covers the speech seg- L is scaled with a weight factor α.
+spk cls
+ments from 16 to 1024 frames. Meanwhile, the RPN will also predict Among the loss components, L and L are used
+rpn cls rpn reg
+scores and reﬁne boundaries for each speech segment proposal with to train the RPN. We adopt the same strategy as [27], and sample
+convolution layers. Among the 63×9 = 567 (63 timesteps and 9 an- 128 from 567 initial speech segment proposals to compute L
+rpn cls
+chors per timestep) speech segment proposals, we ﬁrst ﬁlter out the and L . The segment proposals having an IoU overlap higher
+rpn reg
+speech segment proposals with low conﬁdence scores and then fur- than 0.7 with any ground-truth segments are labeled as fg while
+ther remove highly overlapped segments with NMS. In the end, we the segment proposals with an IoU overlap lower than 0.3 for all
+keep 100 high-quality speech segment proposals after NMS during ground-truth segments are labeled as bg. L is calculated only
+rpn reg
+training and 50 during evaluation. for the fg. L and L have the exactly same form but
+rcnn cls rcnn reg
+are calculated with different samples. We sample 64 from the 100
+2.1.2. RoIAlign high-quality speech segments mentioned in section 2.1.1 to compute
+L and L . L is also calculated with the 64 sam-
+After the RPN predicts the speech segment proposals, we extract rcnn cls rcnn reg spk cls
+ples, and it ensures that we extract discriminative embeddings from
+corresponding regions from the feature maps as the deep features for
+the model.
+each segment. Since the sizes of speech segment proposals vary a
+lot, we need RoIAlign [29] to pool the features into ﬁxed dimension.
+2.2. Post-processing
+Suppose we want to pool the D × T speech segment proposal (D
+is the feature dimension and T is the unﬁxed timestep) into a ﬁxed In RPNSD, the input of the ﬁrst step is an audio and the output in-
+representation, the proposed region is ﬁrst divided into N ×N (N = cludes: (1) the speech segment proposals, (2) the probability of fg/bg
+7) RoI bins. Then we uniformly sample four locations in each RoI and (3) the speaker embedding for each segment proposal. In the
+bin and use bilinear interpolation to compute the values of them. second step, we perform post-processing to get the diarization pre-
+The result is aggregated using average pooling. With the pooled diction. The whole process contains three steps.
+feature of ﬁxed dimension, we can perform speaker classiﬁcation
+1. Remove the speech segment proposals whose fg probability
+and boundary reﬁnement for each speech segment proposal.
+is lower than a threshold γ. (γ = 0.5 in our experiment)
+1We experiment on 8kHz telephone data and we choose the STFT feature 2. Clustering: Group the remaining speech segment proposals
+with frame size 512 and frame shift 80. During training we segment the into clusters. (We use K-means in our experiment)
+audios into 10s chunks, so the feature shape of each chunk is (257, 1000).
+2The size of the feature maps is (1024, 16, 63). There are 63 timesteps 3. Apply NMS (NMS threshold = 0.3) for segments in the same
+and each timestep corresponds 16 frames of speech. cluster to remove the highly overlapped segment proposals.3. EXPERIMENTS single audio ﬁle. The human voices are taken from SRE and SWBD,
+and we use the same data augmentation technique as [21]. The pa-
+3.1. Datasets and Evaluation Metrics rameter β is the average length of silence intervals between segments
+of a single speaker, and a larger β results in less overlap. In our ex-
+3.1.1. Datasets
+periment, we generate a large dataset with β = 2 for training and
+We train our systems on two datasets (Mixer 6 + SRE + SWBD three datasets with β = 2, 3, 5 for evaluation. The training set and
+and Simulated TRAIN) and evaluate on three datasets (Switchboard, test set share no common speaker.
+CALLHOME and Simulated DEV) to verify the effectiveness of our
+framework. The dataset statistics are shown in Table 1. The over- 3.1.2. Evaluation Metrics
+lap ratio is deﬁned as overlap ratio = tspk≥2 , where t de-
+tspk≥1 spk≥n We evaluate different systems with Diarization Error Rate (DER).
+notes the total time of speech regions with more than n speakers.
+The DER includes Miss Error (speech predicted as non-speech or
+Since end-to-end systems are usually data hungry and require mas-
+two speaker mixture predicted as one speaker etc.), False Alarm Er-
+sive training data to generalize better, we come up with two methods
+ror (non-speech predicted as speech or single speaker speech pre-
+to create huge amount of diarization data. (1) Use public telephone
+dicted as multiple speaker etc.) and Confusion Error (one speaker
+conversation datasets (Mixer 6 + SRE + SWBD). (2) Use speech data
+predicted as another). Many previous studies [20, 33] ignore the
+of different speakers to create synthetic diarization datasets (Simu-
+overlapped regions and use 0.25s collar for evaluation. While in
+lated TRAIN). Detailed introductions for each dataset are as follows.
+our study, we score the overlapped regions and report the DER with
+different collars.
+# utts avg. dur overlap ratio
+(sec) (%)
+3.2. Baseline
+Train sets
+Mixer 6 + SRE + SWBD 29,697 348.1 5.0 We follow Kaldi’s CALLHOME diarization V2 recipe [34] to build
+Simulated TRAIN(β = 2) 100,000 87.6 34.4 baselines. The recipe uses oracle SAD labels which are not available
+Test sets in real situations, so we ﬁrst use a TDNN SAD model to detect the
+CALLHOME 499 124.5 16.9 speech segments. Then the speech segments are cut into 1.5s chunks
+SWBD DEV 99 304.6 5.2 with 0.75s overlap, and x-vectors are extracted for each segment.
+SWBD TEST 100 312.0 5.8 After that, we apply Agglomerative Hierarchical Clustering (AHC)
+Simulated DEV(β = 2) 500 87.3 34.4 to group segments into different clusters, and the similarity matrix is
+Simulated DEV(β = 3) 500 103.8 27.2 based on PLDA [35] scoring. We also apply VB re-segmentation for
+Simulated DEV(β = 5) 500 137.1 19.5 CALLHOME experiments.
+Table 1: Dataset statistics
+3.3. Experimental Settings
+We use ResNet-101 as the network architecture and Stochastic Gra-
+The Mixer 6 + SRE + SWBD dataset includes Mixer 6, SRE04-
+dient Descent (SGD) as the optimizer 4. We start training with a
+10, Switchboard-2 Phase I-III and Switchboard Cellular Part 1, 2,
+learning rate of 0.01 and it decays twice to 0.0001. The batch size is
+and the majority of the dataset are 8kHz telephone conversations.
+set as 8 and we train our model on NVidia GTX 1080 Ti for around
+For speaker recognition, we usually use single channel audios that
+4 days. The scaling factor α in equation 1 is set to 1.0 for training.
+contain only one person. While in our experiment, we sum up both
+During adaptation, we use a learning rate of 4 · 10−5 and α is set to
+channels to create a large diarization dataset. The ground truth di-
+arization label is generated by applying SAD on single channels.3 0.1. The speaker embedding dimension is 128.
+We also used the same data augmentation technique as [21] and the
+train sets are augmented with music, noise and reverberation from 3.4. Experimental Results
+the MUSAN [31] and the RIR [32] dataset. The augmented train set
+3.4.1. Experiments on Switchboard
+contains 10,574 hours of speech.
+SWBD DEV and SWBD TEST are sampled from the SWBD
+dataset (We exclude these audios from Mixer6 + SRE + SWBD). DER(%) DER(%) DER(%)
+Dataset System
+They contain around 100 5-minute audios and share no common c=0s c=0.1s c=0.25s
+speaker with the train set. Like Mixer 6 + SRE + SWBD, the overlap SWBD x-vector 15.39 9.51 4.66
+ratio of SWBD DEV and SWBD TEST is quite low. We create these DEV RPNSD 9.18 4.09 2.50
+two datasets to evaluate the system performance on similar data.
+SWBD x-vector 15.08 9.36 4.42
+The CALLHOME dataset is one of the best-known benchmarks
+TEST RPNSD 9.09 4.14 2.55
+for speaker diarization. As one part of 2000 NIST Speaker Recogni-
+tion Evaluation (LDC2001S97), the CALLHOME dataset contains
+Table 2: DERs (%) on SWBD DEV and SWBD TEST with different
+500 audios in 6 languages including Arabic, English, German,
+collars, the overlapped speech is also scored.
+Japanese, Mandarin, and Spanish. The number of speakers in each
+audio ranges from 2 to 7.
+In this experiment, we train RPNSD on Mixer 6 + SRE + SWBD
+We also use synthetic datasets (same as [25,26]) to evaluate RP-
+and use Kaldi’s x-vector model for CALLHOME as the baseline.5
+NSD’s performance on highly overlapped speech. The simulated
+mixtures are made by placing two speakers’ speech segments in a 4We refer the PyTorch implementation of Faster R-CNN in [36].
+5We also train a x-vector model on single channel data of Mixer 6 + SRE
+3In all experiments of this paper, we use the TDNN SAD model (http: + SWBD as a fair comparison but the performance is slightly worse than
+//kaldi-asr.org/models/m4) trained on the Fisher corpus. Kaldi’s diarization model (http://kaldi-asr.org/models/m6).DER(%) Score Overlap DER(%) Not Score Overlap
+System SAD Cluster
+c=0s c=0.1s c=0.25s c=0s c=0.1s c=0.25s
+x-vector oracle AHC with threshold 25.07 21.75 17.57 12.88 10.60 8.02
+x-vector oracle AHC with oracle # spk 24.13 20.76 16.54 11.63 9.33 6.73
+x-vector (+VB) oracle AHC with threshold 23.47 19.89 16.38 10.68 8.15 6.51
+x-vector (+VB) oracle AHC with oracle # spk 22.12 18.47 14.91 9.11 6.53 4.90
+x-vector TDNN SAD AHC with threshold 32.63 26.62 20.71 23.23 16.85 11.70
+x-vector TDNN SAD AHC with oracle # spk 32.20 26.13 20.14 22.53 16.10 10.90
+x-vector (+VB) TDNN SAD AHC with threshold 30.44 24.69 19.51 20.06 14.17 10.09
+x-vector (+VB) TDNN SAD AHC with oracle # spk 29.54 23.77 18.61 19.06 13.18 9.14
+RPNSD / K-means with oracle # spk 25.46 20.41 17.06 21.39 15.35 11.81
+Table 3: DERs (%) on CALLHOME with different scoring options
+As shown in Table 2, RPNSD signiﬁcantly reduces the DER from DER breakdown SAD error
+15.39% to 9.18% on SWBD DEV and 15.08% to 9.09% on SWBD System DER MI FA CF MI FA
+TEST. On SWBD TEST, the DER composition of the x-vector base- x-vector 32.20 18.6 5.1 8.6 4.2 5.3
+line is 8.9% (Miss) + 1.1% (False Alarm) + 5.0% (Speaker Confu- x-vector (+VB) 29.54 18.6 5.1 5.9 4.2 5.3
+sion) = 15.08% (with 2.8% Miss and 0.9% False Alarm for SAD). RPNSD 25.46 12.8 7.5 5.2 5.2 3.2
+For RPNSD, the DER composition is 4.0% (Miss) + 4.8% (False
+Alarm) + 0.3% (Speaker Confusion) = 9.09% (with 2.0% Miss and Table 4: The DER composition of different diarization systems on
+2.2% False Alarm for SAD). CALLHOME dataset. The DER includes Miss Error (MI), False
+Since RPNSD can handle the overlapped speech, the miss er- Alarm Error (FA), and Confusion Error (CF). The SAD error in-
+ror decreases from 8.9% to 4.0%. As a cost, the false alarm error cludes Miss (MI) and False Alarm (FA).
+increases from 1.1% to 4.8%. Surprisingly, the speaker confusion
+decreases largely from 5.0% to 0.3%. There might be two reasons
+for this. (1) Instead of making decisions on short segments, RP- 3.4.3. Experiments on Simulated Mixtures
+NSD makes use of longer context and extracts more discriminative
+According to our experience, standard diarization systems fail to per-
+speaker embeddings. (2) The training and testing condition are more
+form well on highly overlapped speech. Therefore we design exper-
+matched for RPNSD. Instead of training on single speaker data, we
+iments on simulated mixtures to evaluate the system performance
+are training on “diarization data” and testing on “diarization data”.
+on overlapped scenarios. As shown in Table 5, RPNSD achieves
+much lower DER than i-vector and x-vector systems. Compared
+with permutation-free loss based end-to-end systems [25, 26], the
+3.4.2. Experiments on CALLHOME
+performance of RPNSD is better than BLSTM-EEND but worse than
+SA-EEND. However, unlike these two systems, RPNSD does not
+The CALLHOME corpus is one of the best-known benchmarks for
+have any constraint on the number of speakers.
+speaker diarization. Since the CALLHOME corpus is quite small
+(with 17 hours of speech) and doesn’t specify dev/test splits, we fol-
+Simulated
+low the “pre-train and adapt” procedure and perform a 5-fold cross System
+β = 2 β = 3 β = 5
+validation on this dataset. We use the model in section 3.4.1 as the
+pre-trained model, adapt it on 4/5 of CALLHOME data and evaluate i-vector 33.74 30.93 25.96
+on the rest 1/5. Since our model does not use any segment boundary x-vector 28.77 24.46 19.78
+information, it is unfair to compare it with x-vector systems using the BLSTM-EEND 12.28 14.36 19.69
+oracle SAD label. Therefore we compare it with x-vector systems SA-EEND 7.91 8.51 9.51
+using TDNN SAD. As shown in Table 3, our system achieves bet- RPNSD 9.30 11.57 14.55
+ter results than x-vector systems with and w/o VB re-segmentation.
+It largely reduces the DER from 32.30% (or 29.54% after VB re- Table 5: DERs (%) on simulated mixtures with 0.25s collar, the
+segmentation) to 25.46%. The detailed DER breakdown is shown overlapped speech is also scored.
+in Table 4. Due to the ability to handle overlapped speech, RPNSD
+largely reduces the Miss Error from 18.6% to 12.8%. As a cost,
+the False Alarm Error increases from 5.1% to 7.5%. The Confusion 4. CONCLUSION
+Error of RPNSD is also lower than x-vector and x-vector (+VB).
+The DER result of RPNSD (25.46%) is even close to the x- In this paper, we propose a novel speaker diarization system RPNSD.
+vector system using the oracle SAD label (24.13%). If the oracle Taken an audio as the input, the model predicts speech segment pro-
+SAD label is used, the DER of RPNSD system must be lower than posals and speaker embeddings at the same time. With some simple
+25.46 − 3.2 = 22.26%6, which is better than the x-vector system post-processing (clustering and NMS), we can get the diarization
+(24.13%) and quite close to x-vector (+VB) (22.12%). prediction, which is much more convenient than the standard pro-
+cess. In addition to that, the RPNSD system solves the overlapping
+6This is because we can easily remove the False Alarm SAD error by problem in an elegant way. Our experimental results on Switch-
+labeling them as silence. It is more difﬁcult to handle the Miss SAD error in board, CALLHOME and synthetic mixtures reveal that the improve-
+this framework, but we can further reduce the DER for sure. ments of the RPNSD system are obvious and consistent.5. REFERENCES [18] Arsha Nagrani, Joon Son Chung, and Andrew Zisserman,
+“Voxceleb: A large-scale speaker identiﬁcation dataset,” Proc.
+[1] Douglas A Reynolds and P Torres-Carrasquillo, “Approaches Interspeech 2017, pp. 2616–2620, 2017.
+and applications of audio diarization,” in ICASSP. IEEE, 2005,
+[19] Joon Son Chung, Arsha Nagrani, and Andrew Zisserman,
+vol. 5, pp. v–953.
+“Voxceleb2: Deep speaker recognition,” Proc. Interspeech
+[2] Sue E Tranter and Douglas A Reynolds, “An overview of au- 2018, pp. 1086–1090, 2018.
+tomatic speaker diarization systems,” IEEE Transactions on
+[20] David Snyder et al., “Deep neural network embeddings for
+audio, speech, and language processing, vol. 14, no. 5, pp. text-independent speaker veriﬁcation.,” in Interspeech, 2017,
+1557–1565, 2006.
+pp. 999–1003.
+[3] Chuck Wooters and Marijn Huijbregts, “The ICSI RT07s [21] David Snyder et al., “X-vectors: Robust dnn embeddings for
+speaker diarization system,” in Multimodal Technologies for speaker recognition,” in ICASSP. IEEE, 2018, pp. 5329–5333.
+Perception of Humans, pp. 509–519. Springer, 2007.
+[22] Daniel Garcia-Romero, David Snyder, Gregory Sell, Daniel
+[4] Xavier Anguera, Simon Bozonnet, Nicholas Evans, Corinne Povey, and Alan McCree, “Speaker diarization using deep neu-
+Fredouille, Gerald Friedland, and Oriol Vinyals, “Speaker di- ral network embeddings,” in ICASSP. IEEE, 2017, pp. 4930–
+arization: A review of recent research,” IEEE Transactions on 4934.
+Audio, Speech, and Language Processing, vol. 20, no. 2, pp.
+[23] Patrick Kenny, “Bayesian analysis of speaker diarization with
+356–370, 2012.
+eigenvoice priors,” CRIM, Montreal, Technical Report, 2008.
+[5] Gregory Sell et al., “Diarization is hard: Some experiences
+[24] Mireia Diez, Luka´s Burget, and Pavel Matejka, “Speaker di-
+and lessons learned for the jhu team in the inaugural dihard
+arization based on bayesian HMM with eigenvoice priors.,” in
+challenge.,” in Interspeech, 2018, pp. 2808–2812.
+Odyssey, 2018, pp. 147–154.
+[6] Mireia D´ıez et al., “BUT System for DIHARD Speech Diariza- [25] Yusuke Fujita et al., “End-to-end neural speaker diarization
+tion Challenge 2018.,” in Interspeech, 2018, pp. 2798–2802. with permutation-free objectives,” in Proc. Interspeech, 2019.
+[7] Lei Sun et al., “Speaker diarization with enhancing speech for [26] Yusuke Fujita et al., “End-to-end neural speaker diarization
+the ﬁrst dihard challenge.,” in Interspeech, 2018, pp. 2793– with self-attention,” in Proc. ASRU, 2019 (to appear).
+2797.
+[27] Shaoqing Ren, Kaiming He, Ross Girshick, and Jian Sun,
+[8] Ignacio Vin˜als et al., “Estimation of the Number of Speakers “Faster r-cnn: Towards real-time object detection with region
+with Variational Bayesian PLDA in the DIHARD Diarization proposal networks,” in Advances in neural information pro-
+Challenge.,” in Interspeech, 2018, pp. 2803–2807. cessing systems, 2015, pp. 91–99.
+[9] Patrick Kenny, Gilles Boulianne, Pierre Ouellet, and Pierre [28] Chieh-Chi Kao, Weiran Wang, Ming Sun, and Chao Wang,
+Dumouchel, “Joint factor analysis versus eigenchannels in “R-crnn: Region-based convolutional recurrent neural network
+speaker recognition,” IEEE Transactions on Audio, Speech, for audio event detection,” Proc. Interspeech 2018, pp. 1358–
+and Language Processing, vol. 15, no. 4, pp. 1435–1447, 2007. 1362, 2018.
+[10] Najim Dehak, Patrick J Kenny, Re´da Dehak, Pierre Du- [29] Kaiming He, Georgia Gkioxari, Piotr Dolla´r, and Ross Gir-
+mouchel, and Pierre Ouellet, “Front-end factor analysis for shick, “Mask r-cnn,” in Proceedings of the IEEE international
+speaker veriﬁcation,” IEEE Transactions on Audio, Speech, conference on computer vision, 2017, pp. 2961–2969.
+and Language Processing, vol. 19, no. 4, pp. 788–798, 2010. [30] Ross Girshick, “Fast r-cnn,” in Proceedings of the IEEE inter-
+[11] Gregory Sell and Daniel Garcia-Romero, “Speaker diariza- national conference on computer vision, 2015, pp. 1440–1448.
+tion with plda i-vector scoring and unsupervised calibration,” [31] David Snyder, Guoguo Chen, and Daniel Povey, “Mu-
+in 2014 IEEE Spoken Language Technology Workshop (SLT). san: A music, speech, and noise corpus,” arXiv preprint
+IEEE, 2014, pp. 413–417. arXiv:1510.08484, 2015.
+[12] Gregory Sell and Daniel Garcia-Romero, “Diarization reseg- [32] Tom Ko et al., “A study on data augmentation of reverberant
+mentation in the factor analysis subspace,” in ICASSP. IEEE, speech for robust speech recognition,” in ICASSP. IEEE, 2017,
+2015, pp. 4794–4798. pp. 5220–5224.
+[13] Ehsan Variani, Xin Lei, Erik McDermott, Ignacio Lopez [33] Aonan Zhang, Quan Wang, Zhenyao Zhu, John Paisley, and
+Moreno, and Javier Gonzalez-Dominguez, “Deep neural net- Chong Wang, “Fully supervised speaker diarization,” in
+works for small footprint text-dependent speaker veriﬁcation,” ICASSP. IEEE, 2019, pp. 6301–6305.
+in ICASSP. IEEE, 2014, pp. 4052–4056. [34] Daniel Povey et al., “The kaldi speech recognition toolkit,”
+[14] Georg Heigold, Ignacio Moreno, Samy Bengio, and Noam in IEEE 2011 workshop on automatic speech recognition and
+Shazeer, “End-to-end text-dependent speaker veriﬁcation,” in understanding. IEEE Signal Processing Society, 2011, number
+ICASSP. IEEE, 2016, pp. 5115–5119. CONF.
+[15] Li Wan, Quan Wang, Alan Papir, and Ignacio Lopez Moreno, [35] Simon JD Prince and James H Elder, “Probabilistic lin-
+“Generalized end-to-end loss for speaker veriﬁcation,” in ear discriminant analysis for inferences about identity,” in
+ICASSP. IEEE, 2018, pp. 4879–4883. 2007 IEEE 11th International Conference on Computer Vision.
+IEEE, 2007, pp. 1–8.
+[16] Quan Wang et al., “Speaker diarization with lstm,” in ICASSP.
+IEEE, 2018, pp. 5239–5243. [36] Jianwei Yang, Jiasen Lu, Dhruv Batra, and Devi Parikh,
+“A faster pytorch implementation of faster r-cnn,”
+[17] Chao Li et al., “Deep speaker: an end-to-end neural speaker
+https://github.com/jwyang/faster-rcnn.pytorch, 2017.
+embedding system,” arXiv preprint arXiv:1705.02304, 2017.SPEAKER DIARIZATION WITH REGION PROPOSAL NETWORK
+Zili Huang1, Shinji Watanabe1, Yusuke Fujita2, Paola Garc´ıa1, Yiwen Shao1,
+Daniel Povey1, Sanjeev Khudanpur1
+1 Center for Language and Speech Processing, Johns Hopkins University, USA
+2 Hitachi, Ltd. Research & Development Group, Japan
+0
+2 ABSTRACT [9–12] and deep speaker embeddings [5, 13–22]. (3) Clustering:
+0 after the speaker embedding is extracted for each short segment,
+Speaker diarization is an important pre-processing step for many
+2 the segments are grouped into different clusters. Each cluster cor-
+speech applications, and it aims to solve the “who spoke when” prob-
+  responds to one speaker identity. (4) Re-segmentation: this is an
+b lem. Although the standard diarization systems can achieve satis-
+optional step that further reﬁnes the diarization prediction. Among
+e factory results in various scenarios, they are composed of several
+F the re-segmentation methods, VB re-segmentation [12, 23, 24] is the
+independently-optimized modules and cannot deal with the over-
+most famous one.
+ 
+4 lapped speech. In this paper, we propose a novel speaker diariza-
+Despite the successful applications in many scenarios, standard
+1 tion method: Region Proposal Network based Speaker Diarization
+diarization systems have two major problems. (1) Many indi-
+  (RPNSD). In this method, a neural network generates overlapped
+  vidual modules: to build a diarization system, you need a SAD
+] speech segment proposals, and compute their speaker embeddings
+S model, a speaker embedding extractor, a clustering module and a
+at the same time. Compared with standard diarization systems, RP-
+re-segmentation module, all of which are optimized individually.
+A NSD has a shorter pipeline and can handle the overlapped speech.
+(2) Overlap: the standard diarization system cannot handle the
+. Experimental results on three diarization datasets reveal that RPNSD
+s overlapped speech. To deal with the overlapped speech, some new
+achieves remarkable improvements over the state-of-the-art x-vector
+s modules are needed to detect and classify the overlaps, which makes
+e baseline.
+the procedure even more complicated. The overlapped speech will
+e
+Index Terms— speaker diarization, neural network, end-to-end, also hurt the performance of clustering, which is the main reason
+[
+  region proposal network, Faster R-CNN standard diarization systems cannot perform well in highly over-
+ 
+1 lapped scenarios [25] [26].
+v Inspired by Faster R-CNN [27], one of the best-known frame-
+1. INTRODUCTION
+0 works in object detection, we propose Region Proposal Network
+2 based Speaker Diarization (RPNSD). As shown in Figure 1 right,
+Speaker diarization, the process of partitioning an input audio stream
+2 in this method, we combine the segmentation, embedding extrac-
+into homogeneous segments according to the speaker identity [1–4]
+6 tion and re-segmentation into one stage. The segment boundaries
+(often referred as “who spoke when”), is an important pre-processing
+0
+and speaker embeddings are jointly optimized in one neural net-
+. step for many speech applications.
+2 work. After the speech segments and corresponding speaker embed-
+0 dings are extracted, we only need to cluster the segments and apply
+0 non-maximum suppression (NMS) to get the diarization prediction,
+2 which is much more convenient than the standard diarization system.
+: In addition to that, since the speech segment proposals overlap with
+v
+each other, our framework solves the overlap problem in a natural
+i
+X and elegant way.
+The experimental results on Switchboard, CALLHOME and
+r
+a simulated mixtures reveal that our framework achieves signiﬁcant
+and consistent improvements over the state-of-the-art x-vector base-
+line, and a great portion of the improvements come from successfully
+detecting the overlapped speech regions. Our code is available at
+https://github.com/HuangZiliAndy/RPNSD.
+Fig. 1: Pipelines of the standard diarization system (left) and the
+2. METHODOLOGY
+RPNSD system (right)
+In this section, we will introduce our framework in details. Our
+As shown in Figure 1 left, a standard diarization system [5–8] framework aims to solve the speaker diarization problem and it con-
+consists of four steps. (1) Segmentation: this step removes the non- sists of two steps. (1) Joint speech segment proposal and speaker em-
+speech portion of the audio with speech activity detection (SAD), bedding extraction. (2) Post-processing. In the ﬁrst step, we predict
+and the speech regions are further cut into short segments. (2) Em- the boundary of speech segments and extract speaker embeddings
+bedding extraction: in this step, a speaker embedding is extracted for with one neural network. In the second step, we perform clustering
+each short segment. Typical speaker embeddings include i-vector and apply NMS to get diarization predictions.2.1. Joint Speech Segment Proposal and Embedding Extraction 2.1.3. Loss Function
+The training loss consists of ﬁve parts and is formulated as
+L = L + L + L + L + α · L (1)
+rpn cls rpn reg rcnn cls rcnn reg spk cls
+In equation 1, L and L are binary cross-entropy loss to
+rpn cls rcnn cls
+classify foreground/background (fg/bg), which is formulated as
+L (p , p∗) = −(p∗ log(p ) + (1 − p∗) log(1 − p )) (2)
+cls i i i i i i
+where p is the probability that the speech segment i is foreground
+i
+Fig. 2: Procedure of the ﬁrst step: joint speech segment proposal and and p∗i is the ground truth label. Whether a segment is fg or bg is
+speaker embedding extraction determined by the Intersection-over-Union (IoU) overlap with the
+ground-truth segments. L and L are regression loss to
+rpn reg rcnn reg
+reﬁne the speech segment boundaries, which are formulated as
+The overall procedure of the ﬁrst step is shown in Figure 2.
+Given an audio input, we ﬁrst extract acoustic features1 and feed L (t , t∗) = R(t − t∗) (3)
+them into convolution layers to obtain the feature maps. Then a Re- reg i i i i
+gion Proposal Network (RPN) will generate many overlapped speech where t and t∗ are the coordinates of predicted segments and
+i i
+segment proposals [28] and predict their conﬁdence scores. After ground truth segments respectively, and R is the smooth L1 loss
+that, the deep features corresponding to the speech segment propos- function in [30]. The coordinates t and t∗ are deﬁned as follows.
+i i
+als are pooled into ﬁxed-size representations. Finally, we perform
+speaker classiﬁcation and boundary reﬁnement on the top of the rep-
+resentations. ti = [(x − xa)/wa, log(w/wa)] (4)
+t∗ = [(x∗ − x )/w , log(w∗/w )] (5)
+i a a a
+2.1.1. Region Proposal Network (RPN)
+where x and w denote the center position and length of the seg-
+The RPN [27] is the key component of our framework. It takes the ment. x, xa and x∗ represent the center positions for the predicted
+feature maps as the input and outputs the region proposals. The segment, anchor and ground truth segment respectively (likewise for
+original RPN generates 2-d region proposals while our RPN gen- w). Lspk cls is the cross-entropy loss to classify the segments speaker
+erates 1-d speech segment proposals. In our framework, the RPN identity, which is deﬁned as
+takes the feature maps as the input2 and predicts speech segment
+L (s , s∗) = −s∗ · log (s ) (6)
+proposals. Similar to brute-force search, the RPN will consider ev- spk cls i i i i
+ery timestep as a possible center and expand several anchors with where s is the predicted probability distribution over all speakers
+i
+pre-deﬁned sizes from it. In our system, we use 9 anchors with the in the training set and s∗ is the ground truth one-hot speaker label.
+i
+size of {1, 2, 4, 8, 16, 24, 32, 48, 64}, which covers the speech seg- L is scaled with a weight factor α.
+spk cls
+ments from 16 to 1024 frames. Meanwhile, the RPN will also predict Among the loss components, L and L are used
+rpn cls rpn reg
+scores and reﬁne boundaries for each speech segment proposal with to train the RPN. We adopt the same strategy as [27], and sample
+convolution layers. Among the 63×9 = 567 (63 timesteps and 9 an- 128 from 567 initial speech segment proposals to compute L
+rpn cls
+chors per timestep) speech segment proposals, we ﬁrst ﬁlter out the and L . The segment proposals having an IoU overlap higher
+rpn reg
+speech segment proposals with low conﬁdence scores and then fur- than 0.7 with any ground-truth segments are labeled as fg while
+ther remove highly overlapped segments with NMS. In the end, we the segment proposals with an IoU overlap lower than 0.3 for all
+keep 100 high-quality speech segment proposals after NMS during ground-truth segments are labeled as bg. L is calculated only
+rpn reg
+training and 50 during evaluation. for the fg. L and L have the exactly same form but
+rcnn cls rcnn reg
+are calculated with different samples. We sample 64 from the 100
+2.1.2. RoIAlign high-quality speech segments mentioned in section 2.1.1 to compute
+L and L . L is also calculated with the 64 sam-
+After the RPN predicts the speech segment proposals, we extract rcnn cls rcnn reg spk cls
+ples, and it ensures that we extract discriminative embeddings from
+corresponding regions from the feature maps as the deep features for
+the model.
+each segment. Since the sizes of speech segment proposals vary a
+lot, we need RoIAlign [29] to pool the features into ﬁxed dimension.
+2.2. Post-processing
+Suppose we want to pool the D × T speech segment proposal (D
+is the feature dimension and T is the unﬁxed timestep) into a ﬁxed In RPNSD, the input of the ﬁrst step is an audio and the output in-
+representation, the proposed region is ﬁrst divided into N ×N (N = cludes: (1) the speech segment proposals, (2) the probability of fg/bg
+7) RoI bins. Then we uniformly sample four locations in each RoI and (3) the speaker embedding for each segment proposal. In the
+bin and use bilinear interpolation to compute the values of them. second step, we perform post-processing to get the diarization pre-
+The result is aggregated using average pooling. With the pooled diction. The whole process contains three steps.
+feature of ﬁxed dimension, we can perform speaker classiﬁcation
+1. Remove the speech segment proposals whose fg probability
+and boundary reﬁnement for each speech segment proposal.
+is lower than a threshold γ. (γ = 0.5 in our experiment)
+1We experiment on 8kHz telephone data and we choose the STFT feature 2. Clustering: Group the remaining speech segment proposals
+with frame size 512 and frame shift 80. During training we segment the into clusters. (We use K-means in our experiment)
+audios into 10s chunks, so the feature shape of each chunk is (257, 1000).
+2The size of the feature maps is (1024, 16, 63). There are 63 timesteps 3. Apply NMS (NMS threshold = 0.3) for segments in the same
+and each timestep corresponds 16 frames of speech. cluster to remove the highly overlapped segment proposals.3. EXPERIMENTS single audio ﬁle. The human voices are taken from SRE and SWBD,
+and we use the same data augmentation technique as [21]. The pa-
+3.1. Datasets and Evaluation Metrics rameter β is the average length of silence intervals between segments
+of a single speaker, and a larger β results in less overlap. In our ex-
+3.1.1. Datasets
+periment, we generate a large dataset with β = 2 for training and
+We train our systems on two datasets (Mixer 6 + SRE + SWBD three datasets with β = 2, 3, 5 for evaluation. The training set and
+and Simulated TRAIN) and evaluate on three datasets (Switchboard, test set share no common speaker.
+CALLHOME and Simulated DEV) to verify the effectiveness of our
+framework. The dataset statistics are shown in Table 1. The over- 3.1.2. Evaluation Metrics
+lap ratio is deﬁned as overlap ratio = tspk≥2 , where t de-
+tspk≥1 spk≥n We evaluate different systems with Diarization Error Rate (DER).
+notes the total time of speech regions with more than n speakers.
+The DER includes Miss Error (speech predicted as non-speech or
+Since end-to-end systems are usually data hungry and require mas-
+two speaker mixture predicted as one speaker etc.), False Alarm Er-
+sive training data to generalize better, we come up with two methods
+ror (non-speech predicted as speech or single speaker speech pre-
+to create huge amount of diarization data. (1) Use public telephone
+dicted as multiple speaker etc.) and Confusion Error (one speaker
+conversation datasets (Mixer 6 + SRE + SWBD). (2) Use speech data
+predicted as another). Many previous studies [20, 33] ignore the
+of different speakers to create synthetic diarization datasets (Simu-
+overlapped regions and use 0.25s collar for evaluation. While in
+lated TRAIN). Detailed introductions for each dataset are as follows.
+our study, we score the overlapped regions and report the DER with
+different collars.
+# utts avg. dur overlap ratio
+(sec) (%)
+3.2. Baseline
+Train sets
+Mixer 6 + SRE + SWBD 29,697 348.1 5.0 We follow Kaldi’s CALLHOME diarization V2 recipe [34] to build
+Simulated TRAIN(β = 2) 100,000 87.6 34.4 baselines. The recipe uses oracle SAD labels which are not available
+Test sets in real situations, so we ﬁrst use a TDNN SAD model to detect the
+CALLHOME 499 124.5 16.9 speech segments. Then the speech segments are cut into 1.5s chunks
+SWBD DEV 99 304.6 5.2 with 0.75s overlap, and x-vectors are extracted for each segment.
+SWBD TEST 100 312.0 5.8 After that, we apply Agglomerative Hierarchical Clustering (AHC)
+Simulated DEV(β = 2) 500 87.3 34.4 to group segments into different clusters, and the similarity matrix is
+Simulated DEV(β = 3) 500 103.8 27.2 based on PLDA [35] scoring. We also apply VB re-segmentation for
+Simulated DEV(β = 5) 500 137.1 19.5 CALLHOME experiments.
+Table 1: Dataset statistics
+3.3. Experimental Settings
+We use ResNet-101 as the network architecture and Stochastic Gra-
+The Mixer 6 + SRE + SWBD dataset includes Mixer 6, SRE04-
+dient Descent (SGD) as the optimizer 4. We start training with a
+10, Switchboard-2 Phase I-III and Switchboard Cellular Part 1, 2,
+learning rate of 0.01 and it decays twice to 0.0001. The batch size is
+and the majority of the dataset are 8kHz telephone conversations.
+set as 8 and we train our model on NVidia GTX 1080 Ti for around
+For speaker recognition, we usually use single channel audios that
+4 days. The scaling factor α in equation 1 is set to 1.0 for training.
+contain only one person. While in our experiment, we sum up both
+During adaptation, we use a learning rate of 4 · 10−5 and α is set to
+channels to create a large diarization dataset. The ground truth di-
+arization label is generated by applying SAD on single channels.3 0.1. The speaker embedding dimension is 128.
+We also used the same data augmentation technique as [21] and the
+train sets are augmented with music, noise and reverberation from 3.4. Experimental Results
+the MUSAN [31] and the RIR [32] dataset. The augmented train set
+3.4.1. Experiments on Switchboard
+contains 10,574 hours of speech.
+SWBD DEV and SWBD TEST are sampled from the SWBD
+dataset (We exclude these audios from Mixer6 + SRE + SWBD). DER(%) DER(%) DER(%)
+Dataset System
+They contain around 100 5-minute audios and share no common c=0s c=0.1s c=0.25s
+speaker with the train set. Like Mixer 6 + SRE + SWBD, the overlap SWBD x-vector 15.39 9.51 4.66
+ratio of SWBD DEV and SWBD TEST is quite low. We create these DEV RPNSD 9.18 4.09 2.50
+two datasets to evaluate the system performance on similar data.
+SWBD x-vector 15.08 9.36 4.42
+The CALLHOME dataset is one of the best-known benchmarks
+TEST RPNSD 9.09 4.14 2.55
+for speaker diarization. As one part of 2000 NIST Speaker Recogni-
+tion Evaluation (LDC2001S97), the CALLHOME dataset contains
+Table 2: DERs (%) on SWBD DEV and SWBD TEST with different
+500 audios in 6 languages including Arabic, English, German,
+collars, the overlapped speech is also scored.
+Japanese, Mandarin, and Spanish. The number of speakers in each
+audio ranges from 2 to 7.
+In this experiment, we train RPNSD on Mixer 6 + SRE + SWBD
+We also use synthetic datasets (same as [25,26]) to evaluate RP-
+and use Kaldi’s x-vector model for CALLHOME as the baseline.5
+NSD’s performance on highly overlapped speech. The simulated
+mixtures are made by placing two speakers’ speech segments in a 4We refer the PyTorch implementation of Faster R-CNN in [36].
+5We also train a x-vector model on single channel data of Mixer 6 + SRE
+3In all experiments of this paper, we use the TDNN SAD model (http: + SWBD as a fair comparison but the performance is slightly worse than
+//kaldi-asr.org/models/m4) trained on the Fisher corpus. Kaldi’s diarization model (http://kaldi-asr.org/models/m6).DER(%) Score Overlap DER(%) Not Score Overlap
+System SAD Cluster
+c=0s c=0.1s c=0.25s c=0s c=0.1s c=0.25s
+x-vector oracle AHC with threshold 25.07 21.75 17.57 12.88 10.60 8.02
+x-vector oracle AHC with oracle # spk 24.13 20.76 16.54 11.63 9.33 6.73
+x-vector (+VB) oracle AHC with threshold 23.47 19.89 16.38 10.68 8.15 6.51
+x-vector (+VB) oracle AHC with oracle # spk 22.12 18.47 14.91 9.11 6.53 4.90
+x-vector TDNN SAD AHC with threshold 32.63 26.62 20.71 23.23 16.85 11.70
+x-vector TDNN SAD AHC with oracle # spk 32.20 26.13 20.14 22.53 16.10 10.90
+x-vector (+VB) TDNN SAD AHC with threshold 30.44 24.69 19.51 20.06 14.17 10.09
+x-vector (+VB) TDNN SAD AHC with oracle # spk 29.54 23.77 18.61 19.06 13.18 9.14
+RPNSD / K-means with oracle # spk 25.46 20.41 17.06 21.39 15.35 11.81
+Table 3: DERs (%) on CALLHOME with different scoring options
+As shown in Table 2, RPNSD signiﬁcantly reduces the DER from DER breakdown SAD error
+15.39% to 9.18% on SWBD DEV and 15.08% to 9.09% on SWBD System DER MI FA CF MI FA
+TEST. On SWBD TEST, the DER composition of the x-vector base- x-vector 32.20 18.6 5.1 8.6 4.2 5.3
+line is 8.9% (Miss) + 1.1% (False Alarm) + 5.0% (Speaker Confu- x-vector (+VB) 29.54 18.6 5.1 5.9 4.2 5.3
+sion) = 15.08% (with 2.8% Miss and 0.9% False Alarm for SAD). RPNSD 25.46 12.8 7.5 5.2 5.2 3.2
+For RPNSD, the DER composition is 4.0% (Miss) + 4.8% (False
+Alarm) + 0.3% (Speaker Confusion) = 9.09% (with 2.0% Miss and Table 4: The DER composition of different diarization systems on
+2.2% False Alarm for SAD). CALLHOME dataset. The DER includes Miss Error (MI), False
+Since RPNSD can handle the overlapped speech, the miss er- Alarm Error (FA), and Confusion Error (CF). The SAD error in-
+ror decreases from 8.9% to 4.0%. As a cost, the false alarm error cludes Miss (MI) and False Alarm (FA).
+increases from 1.1% to 4.8%. Surprisingly, the speaker confusion
+decreases largely from 5.0% to 0.3%. There might be two reasons
+for this. (1) Instead of making decisions on short segments, RP- 3.4.3. Experiments on Simulated Mixtures
+NSD makes use of longer context and extracts more discriminative
+According to our experience, standard diarization systems fail to per-
+speaker embeddings. (2) The training and testing condition are more
+form well on highly overlapped speech. Therefore we design exper-
+matched for RPNSD. Instead of training on single speaker data, we
+iments on simulated mixtures to evaluate the system performance
+are training on “diarization data” and testing on “diarization data”.
+on overlapped scenarios. As shown in Table 5, RPNSD achieves
+much lower DER than i-vector and x-vector systems. Compared
+with permutation-free loss based end-to-end systems [25, 26], the
+3.4.2. Experiments on CALLHOME
+performance of RPNSD is better than BLSTM-EEND but worse than
+SA-EEND. However, unlike these two systems, RPNSD does not
+The CALLHOME corpus is one of the best-known benchmarks for
+have any constraint on the number of speakers.
+speaker diarization. Since the CALLHOME corpus is quite small
+(with 17 hours of speech) and doesn’t specify dev/test splits, we fol-
+Simulated
+low the “pre-train and adapt” procedure and perform a 5-fold cross System
+β = 2 β = 3 β = 5
+validation on this dataset. We use the model in section 3.4.1 as the
+pre-trained model, adapt it on 4/5 of CALLHOME data and evaluate i-vector 33.74 30.93 25.96
+on the rest 1/5. Since our model does not use any segment boundary x-vector 28.77 24.46 19.78
+information, it is unfair to compare it with x-vector systems using the BLSTM-EEND 12.28 14.36 19.69
+oracle SAD label. Therefore we compare it with x-vector systems SA-EEND 7.91 8.51 9.51
+using TDNN SAD. As shown in Table 3, our system achieves bet- RPNSD 9.30 11.57 14.55
+ter results than x-vector systems with and w/o VB re-segmentation.
+It largely reduces the DER from 32.30% (or 29.54% after VB re- Table 5: DERs (%) on simulated mixtures with 0.25s collar, the
+segmentation) to 25.46%. The detailed DER breakdown is shown overlapped speech is also scored.
+in Table 4. Due to the ability to handle overlapped speech, RPNSD
+largely reduces the Miss Error from 18.6% to 12.8%. As a cost,
+the False Alarm Error increases from 5.1% to 7.5%. The Confusion 4. CONCLUSION
+Error of RPNSD is also lower than x-vector and x-vector (+VB).
+The DER result of RPNSD (25.46%) is even close to the x- In this paper, we propose a novel speaker diarization system RPNSD.
+vector system using the oracle SAD label (24.13%). If the oracle Taken an audio as the input, the model predicts speech segment pro-
+SAD label is used, the DER of RPNSD system must be lower than posals and speaker embeddings at the same time. With some simple
+25.46 − 3.2 = 22.26%6, which is better than the x-vector system post-processing (clustering and NMS), we can get the diarization
+(24.13%) and quite close to x-vector (+VB) (22.12%). prediction, which is much more convenient than the standard pro-
+cess. In addition to that, the RPNSD system solves the overlapping
+6This is because we can easily remove the False Alarm SAD error by problem in an elegant way. Our experimental results on Switch-
+labeling them as silence. It is more difﬁcult to handle the Miss SAD error in board, CALLHOME and synthetic mixtures reveal that the improve-
+this framework, but we can further reduce the DER for sure. ments of the RPNSD system are obvious and consistent.5. REFERENCES [18] Arsha Nagrani, Joon Son Chung, and Andrew Zisserman,
+“Voxceleb: A large-scale speaker identiﬁcation dataset,” Proc.
+[1] Douglas A Reynolds and P Torres-Carrasquillo, “Approaches Interspeech 2017, pp. 2616–2620, 2017.
+and applications of audio diarization,” in ICASSP. IEEE, 2005,
+[19] Joon Son Chung, Arsha Nagrani, and Andrew Zisserman,
+vol. 5, pp. v–953.
+“Voxceleb2: Deep speaker recognition,” Proc. Interspeech
+[2] Sue E Tranter and Douglas A Reynolds, “An overview of au- 2018, pp. 1086–1090, 2018.
+tomatic speaker diarization systems,” IEEE Transactions on
+[20] David Snyder et al., “Deep neural network embeddings for
+audio, speech, and language processing, vol. 14, no. 5, pp. text-independent speaker veriﬁcation.,” in Interspeech, 2017,
+1557–1565, 2006.
+pp. 999–1003.
+[3] Chuck Wooters and Marijn Huijbregts, “The ICSI RT07s [21] David Snyder et al., “X-vectors: Robust dnn embeddings for
+speaker diarization system,” in Multimodal Technologies for speaker recognition,” in ICASSP. IEEE, 2018, pp. 5329–5333.
+Perception of Humans, pp. 509–519. Springer, 2007.
+[22] Daniel Garcia-Romero, David Snyder, Gregory Sell, Daniel
+[4] Xavier Anguera, Simon Bozonnet, Nicholas Evans, Corinne Povey, and Alan McCree, “Speaker diarization using deep neu-
+Fredouille, Gerald Friedland, and Oriol Vinyals, “Speaker di- ral network embeddings,” in ICASSP. IEEE, 2017, pp. 4930–
+arization: A review of recent research,” IEEE Transactions on 4934.
+Audio, Speech, and Language Processing, vol. 20, no. 2, pp.
+[23] Patrick Kenny, “Bayesian analysis of speaker diarization with
+356–370, 2012.
+eigenvoice priors,” CRIM, Montreal, Technical Report, 2008.
+[5] Gregory Sell et al., “Diarization is hard: Some experiences
+[24] Mireia Diez, Luka´s Burget, and Pavel Matejka, “Speaker di-
+and lessons learned for the jhu team in the inaugural dihard
+arization based on bayesian HMM with eigenvoice priors.,” in
+challenge.,” in Interspeech, 2018, pp. 2808–2812.
+Odyssey, 2018, pp. 147–154.
+[6] Mireia D´ıez et al., “BUT System for DIHARD Speech Diariza- [25] Yusuke Fujita et al., “End-to-end neural speaker diarization
+tion Challenge 2018.,” in Interspeech, 2018, pp. 2798–2802. with permutation-free objectives,” in Proc. Interspeech, 2019.
+[7] Lei Sun et al., “Speaker diarization with enhancing speech for [26] Yusuke Fujita et al., “End-to-end neural speaker diarization
+the ﬁrst dihard challenge.,” in Interspeech, 2018, pp. 2793– with self-attention,” in Proc. ASRU, 2019 (to appear).
+2797.
+[27] Shaoqing Ren, Kaiming He, Ross Girshick, and Jian Sun,
+[8] Ignacio Vin˜als et al., “Estimation of the Number of Speakers “Faster r-cnn: Towards real-time object detection with region
+with Variational Bayesian PLDA in the DIHARD Diarization proposal networks,” in Advances in neural information pro-
+Challenge.,” in Interspeech, 2018, pp. 2803–2807. cessing systems, 2015, pp. 91–99.
+[9] Patrick Kenny, Gilles Boulianne, Pierre Ouellet, and Pierre [28] Chieh-Chi Kao, Weiran Wang, Ming Sun, and Chao Wang,
+Dumouchel, “Joint factor analysis versus eigenchannels in “R-crnn: Region-based convolutional recurrent neural network
+speaker recognition,” IEEE Transactions on Audio, Speech, for audio event detection,” Proc. Interspeech 2018, pp. 1358–
+and Language Processing, vol. 15, no. 4, pp. 1435–1447, 2007. 1362, 2018.
+[10] Najim Dehak, Patrick J Kenny, Re´da Dehak, Pierre Du- [29] Kaiming He, Georgia Gkioxari, Piotr Dolla´r, and Ross Gir-
+mouchel, and Pierre Ouellet, “Front-end factor analysis for shick, “Mask r-cnn,” in Proceedings of the IEEE international
+speaker veriﬁcation,” IEEE Transactions on Audio, Speech, conference on computer vision, 2017, pp. 2961–2969.
+and Language Processing, vol. 19, no. 4, pp. 788–798, 2010. [30] Ross Girshick, “Fast r-cnn,” in Proceedings of the IEEE inter-
+[11] Gregory Sell and Daniel Garcia-Romero, “Speaker diariza- national conference on computer vision, 2015, pp. 1440–1448.
+tion with plda i-vector scoring and unsupervised calibration,” [31] David Snyder, Guoguo Chen, and Daniel Povey, “Mu-
+in 2014 IEEE Spoken Language Technology Workshop (SLT). san: A music, speech, and noise corpus,” arXiv preprint
+IEEE, 2014, pp. 413–417. arXiv:1510.08484, 2015.
+[12] Gregory Sell and Daniel Garcia-Romero, “Diarization reseg- [32] Tom Ko et al., “A study on data augmentation of reverberant
+mentation in the factor analysis subspace,” in ICASSP. IEEE, speech for robust speech recognition,” in ICASSP. IEEE, 2017,
+2015, pp. 4794–4798. pp. 5220–5224.
+[13] Ehsan Variani, Xin Lei, Erik McDermott, Ignacio Lopez [33] Aonan Zhang, Quan Wang, Zhenyao Zhu, John Paisley, and
+Moreno, and Javier Gonzalez-Dominguez, “Deep neural net- Chong Wang, “Fully supervised speaker diarization,” in
+works for small footprint text-dependent speaker veriﬁcation,” ICASSP. IEEE, 2019, pp. 6301–6305.
+in ICASSP. IEEE, 2014, pp. 4052–4056. [34] Daniel Povey et al., “The kaldi speech recognition toolkit,”
+[14] Georg Heigold, Ignacio Moreno, Samy Bengio, and Noam in IEEE 2011 workshop on automatic speech recognition and
+Shazeer, “End-to-end text-dependent speaker veriﬁcation,” in understanding. IEEE Signal Processing Society, 2011, number
+ICASSP. IEEE, 2016, pp. 5115–5119. CONF.
+[15] Li Wan, Quan Wang, Alan Papir, and Ignacio Lopez Moreno, [35] Simon JD Prince and James H Elder, “Probabilistic lin-
+“Generalized end-to-end loss for speaker veriﬁcation,” in ear discriminant analysis for inferences about identity,” in
+ICASSP. IEEE, 2018, pp. 4879–4883. 2007 IEEE 11th International Conference on Computer Vision.
+IEEE, 2007, pp. 1–8.
+[16] Quan Wang et al., “Speaker diarization with lstm,” in ICASSP.
+IEEE, 2018, pp. 5239–5243. [36] Jianwei Yang, Jiasen Lu, Dhruv Batra, and Devi Parikh,
+“A faster pytorch implementation of faster r-cnn,”
+[17] Chao Li et al., “Deep speaker: an end-to-end neural speaker
+https://github.com/jwyang/faster-rcnn.pytorch, 2017.
+embedding system,” arXiv preprint arXiv:1705.02304, 2017.SPEAKER DIARIZATION WITH REGION PROPOSAL NETWORK
+Zili Huang1, Shinji Watanabe1, Yusuke Fujita2, Paola Garc´ıa1, Yiwen Shao1,
+Daniel Povey1, Sanjeev Khudanpur1
+1 Center for Language and Speech Processing, Johns Hopkins University, USA
+2 Hitachi, Ltd. Research & Development Group, Japan
+0
+2 ABSTRACT [9–12] and deep speaker embeddings [5, 13–22]. (3) Clustering:
+0 after the speaker embedding is extracted for each short segment,
+Speaker diarization is an important pre-processing step for many
+2 the segments are grouped into different clusters. Each cluster cor-
+speech applications, and it aims to solve the “who spoke when” prob-
+  responds to one speaker identity. (4) Re-segmentation: this is an
+b lem. Although the standard diarization systems can achieve satis-
+optional step that further reﬁnes the diarization prediction. Among
+e factory results in various scenarios, they are composed of several
+F the re-segmentation methods, VB re-segmentation [12, 23, 24] is the
+independently-optimized modules and cannot deal with the over-
+most famous one.
+ 
+4 lapped speech. In this paper, we propose a novel speaker diariza-
+Despite the successful applications in many scenarios, standard
+1 tion method: Region Proposal Network based Speaker Diarization
+diarization systems have two major problems. (1) Many indi-
+  (RPNSD). In this method, a neural network generates overlapped
+  vidual modules: to build a diarization system, you need a SAD
+] speech segment proposals, and compute their speaker embeddings
+S model, a speaker embedding extractor, a clustering module and a
+at the same time. Compared with standard diarization systems, RP-
+re-segmentation module, all of which are optimized individually.
+A NSD has a shorter pipeline and can handle the overlapped speech.
+(2) Overlap: the standard diarization system cannot handle the
+. Experimental results on three diarization datasets reveal that RPNSD
+s overlapped speech. To deal with the overlapped speech, some new
+achieves remarkable improvements over the state-of-the-art x-vector
+s modules are needed to detect and classify the overlaps, which makes
+e baseline.
+the procedure even more complicated. The overlapped speech will
+e
+Index Terms— speaker diarization, neural network, end-to-end, also hurt the performance of clustering, which is the main reason
+[
+  region proposal network, Faster R-CNN standard diarization systems cannot perform well in highly over-
+ 
+1 lapped scenarios [25] [26].
+v Inspired by Faster R-CNN [27], one of the best-known frame-
+1. INTRODUCTION
+0 works in object detection, we propose Region Proposal Network
+2 based Speaker Diarization (RPNSD). As shown in Figure 1 right,
+Speaker diarization, the process of partitioning an input audio stream
+2 in this method, we combine the segmentation, embedding extrac-
+into homogeneous segments according to the speaker identity [1–4]
+6 tion and re-segmentation into one stage. The segment boundaries
+(often referred as “who spoke when”), is an important pre-processing
+0
+and speaker embeddings are jointly optimized in one neural net-
+. step for many speech applications.
+2 work. After the speech segments and corresponding speaker embed-
+0 dings are extracted, we only need to cluster the segments and apply
+0 non-maximum suppression (NMS) to get the diarization prediction,
+2 which is much more convenient than the standard diarization system.
+: In addition to that, since the speech segment proposals overlap with
+v
+each other, our framework solves the overlap problem in a natural
+i
+X and elegant way.
+The experimental results on Switchboard, CALLHOME and
+r
+a simulated mixtures reveal that our framework achieves signiﬁcant
+and consistent improvements over the state-of-the-art x-vector base-
+line, and a great portion of the improvements come from successfully
+detecting the overlapped speech regions. Our code is available at
+https://github.com/HuangZiliAndy/RPNSD.
+Fig. 1: Pipelines of the standard diarization system (left) and the
+2. METHODOLOGY
+RPNSD system (right)
+In this section, we will introduce our framework in details. Our
+As shown in Figure 1 left, a standard diarization system [5–8] framework aims to solve the speaker diarization problem and it con-
+consists of four steps. (1) Segmentation: this step removes the non- sists of two steps. (1) Joint speech segment proposal and speaker em-
+speech portion of the audio with speech activity detection (SAD), bedding extraction. (2) Post-processing. In the ﬁrst step, we predict
+and the speech regions are further cut into short segments. (2) Em- the boundary of speech segments and extract speaker embeddings
+bedding extraction: in this step, a speaker embedding is extracted for with one neural network. In the second step, we perform clustering
+each short segment. Typical speaker embeddings include i-vector and apply NMS to get diarization predictions.2.1. Joint Speech Segment Proposal and Embedding Extraction 2.1.3. Loss Function
+The training loss consists of ﬁve parts and is formulated as
+L = L + L + L + L + α · L (1)
+rpn cls rpn reg rcnn cls rcnn reg spk cls
+In equation 1, L and L are binary cross-entropy loss to
+rpn cls rcnn cls
+classify foreground/background (fg/bg), which is formulated as
+L (p , p∗) = −(p∗ log(p ) + (1 − p∗) log(1 − p )) (2)
+cls i i i i i i
+where p is the probability that the speech segment i is foreground
+i
+Fig. 2: Procedure of the ﬁrst step: joint speech segment proposal and and p∗i is the ground truth label. Whether a segment is fg or bg is
+speaker embedding extraction determined by the Intersection-over-Union (IoU) overlap with the
+ground-truth segments. L and L are regression loss to
+rpn reg rcnn reg
+reﬁne the speech segment boundaries, which are formulated as
+The overall procedure of the ﬁrst step is shown in Figure 2.
+Given an audio input, we ﬁrst extract acoustic features1 and feed L (t , t∗) = R(t − t∗) (3)
+them into convolution layers to obtain the feature maps. Then a Re- reg i i i i
+gion Proposal Network (RPN) will generate many overlapped speech where t and t∗ are the coordinates of predicted segments and
+i i
+segment proposals [28] and predict their conﬁdence scores. After ground truth segments respectively, and R is the smooth L1 loss
+that, the deep features corresponding to the speech segment propos- function in [30]. The coordinates t and t∗ are deﬁned as follows.
+i i
+als are pooled into ﬁxed-size representations. Finally, we perform
+speaker classiﬁcation and boundary reﬁnement on the top of the rep-
+resentations. ti = [(x − xa)/wa, log(w/wa)] (4)
+t∗ = [(x∗ − x )/w , log(w∗/w )] (5)
+i a a a
+2.1.1. Region Proposal Network (RPN)
+where x and w denote the center position and length of the seg-
+The RPN [27] is the key component of our framework. It takes the ment. x, xa and x∗ represent the center positions for the predicted
+feature maps as the input and outputs the region proposals. The segment, anchor and ground truth segment respectively (likewise for
+original RPN generates 2-d region proposals while our RPN gen- w). Lspk cls is the cross-entropy loss to classify the segments speaker
+erates 1-d speech segment proposals. In our framework, the RPN identity, which is deﬁned as
+takes the feature maps as the input2 and predicts speech segment
+L (s , s∗) = −s∗ · log (s ) (6)
+proposals. Similar to brute-force search, the RPN will consider ev- spk cls i i i i
+ery timestep as a possible center and expand several anchors with where s is the predicted probability distribution over all speakers
+i
+pre-deﬁned sizes from it. In our system, we use 9 anchors with the in the training set and s∗ is the ground truth one-hot speaker label.
+i
+size of {1, 2, 4, 8, 16, 24, 32, 48, 64}, which covers the speech seg- L is scaled with a weight factor α.
+spk cls
+ments from 16 to 1024 frames. Meanwhile, the RPN will also predict Among the loss components, L and L are used
+rpn cls rpn reg
+scores and reﬁne boundaries for each speech segment proposal with to train the RPN. We adopt the same strategy as [27], and sample
+convolution layers. Among the 63×9 = 567 (63 timesteps and 9 an- 128 from 567 initial speech segment proposals to compute L
+rpn cls
+chors per timestep) speech segment proposals, we ﬁrst ﬁlter out the and L . The segment proposals having an IoU overlap higher
+rpn reg
+speech segment proposals with low conﬁdence scores and then fur- than 0.7 with any ground-truth segments are labeled as fg while
+ther remove highly overlapped segments with NMS. In the end, we the segment proposals with an IoU overlap lower than 0.3 for all
+keep 100 high-quality speech segment proposals after NMS during ground-truth segments are labeled as bg. L is calculated only
+rpn reg
+training and 50 during evaluation. for the fg. L and L have the exactly same form but
+rcnn cls rcnn reg
+are calculated with different samples. We sample 64 from the 100
+2.1.2. RoIAlign high-quality speech segments mentioned in section 2.1.1 to compute
+L and L . L is also calculated with the 64 sam-
+After the RPN predicts the speech segment proposals, we extract rcnn cls rcnn reg spk cls
+ples, and it ensures that we extract discriminative embeddings from
+corresponding regions from the feature maps as the deep features for
+the model.
+each segment. Since the sizes of speech segment proposals vary a
+lot, we need RoIAlign [29] to pool the features into ﬁxed dimension.
+2.2. Post-processing
+Suppose we want to pool the D × T speech segment proposal (D
+is the feature dimension and T is the unﬁxed timestep) into a ﬁxed In RPNSD, the input of the ﬁrst step is an audio and the output in-
+representation, the proposed region is ﬁrst divided into N ×N (N = cludes: (1) the speech segment proposals, (2) the probability of fg/bg
+7) RoI bins. Then we uniformly sample four locations in each RoI and (3) the speaker embedding for each segment proposal. In the
+bin and use bilinear interpolation to compute the values of them. second step, we perform post-processing to get the diarization pre-
+The result is aggregated using average pooling. With the pooled diction. The whole process contains three steps.
+feature of ﬁxed dimension, we can perform speaker classiﬁcation
+1. Remove the speech segment proposals whose fg probability
+and boundary reﬁnement for each speech segment proposal.
+is lower than a threshold γ. (γ = 0.5 in our experiment)
+1We experiment on 8kHz telephone data and we choose the STFT feature 2. Clustering: Group the remaining speech segment proposals
+with frame size 512 and frame shift 80. During training we segment the into clusters. (We use K-means in our experiment)
+audios into 10s chunks, so the feature shape of each chunk is (257, 1000).
+2The size of the feature maps is (1024, 16, 63). There are 63 timesteps 3. Apply NMS (NMS threshold = 0.3) for segments in the same
+and each timestep corresponds 16 frames of speech. cluster to remove the highly overlapped segment proposals.3. EXPERIMENTS single audio ﬁle. The human voices are taken from SRE and SWBD,
+and we use the same data augmentation technique as [21]. The pa-
+3.1. Datasets and Evaluation Metrics rameter β is the average length of silence intervals between segments
+of a single speaker, and a larger β results in less overlap. In our ex-
+3.1.1. Datasets
+periment, we generate a large dataset with β = 2 for training and
+We train our systems on two datasets (Mixer 6 + SRE + SWBD three datasets with β = 2, 3, 5 for evaluation. The training set and
+and Simulated TRAIN) and evaluate on three datasets (Switchboard, test set share no common speaker.
+CALLHOME and Simulated DEV) to verify the effectiveness of our
+framework. The dataset statistics are shown in Table 1. The over- 3.1.2. Evaluation Metrics
+lap ratio is deﬁned as overlap ratio = tspk≥2 , where t de-
+tspk≥1 spk≥n We evaluate different systems with Diarization Error Rate (DER).
+notes the total time of speech regions with more than n speakers.
+The DER includes Miss Error (speech predicted as non-speech or
+Since end-to-end systems are usually data hungry and require mas-
+two speaker mixture predicted as one speaker etc.), False Alarm Er-
+sive training data to generalize better, we come up with two methods
+ror (non-speech predicted as speech or single speaker speech pre-
+to create huge amount of diarization data. (1) Use public telephone
+dicted as multiple speaker etc.) and Confusion Error (one speaker
+conversation datasets (Mixer 6 + SRE + SWBD). (2) Use speech data
+predicted as another). Many previous studies [20, 33] ignore the
+of different speakers to create synthetic diarization datasets (Simu-
+overlapped regions and use 0.25s collar for evaluation. While in
+lated TRAIN). Detailed introductions for each dataset are as follows.
+our study, we score the overlapped regions and report the DER with
+different collars.
+# utts avg. dur overlap ratio
+(sec) (%)
+3.2. Baseline
+Train sets
+Mixer 6 + SRE + SWBD 29,697 348.1 5.0 We follow Kaldi’s CALLHOME diarization V2 recipe [34] to build
+Simulated TRAIN(β = 2) 100,000 87.6 34.4 baselines. The recipe uses oracle SAD labels which are not available
+Test sets in real situations, so we ﬁrst use a TDNN SAD model to detect the
+CALLHOME 499 124.5 16.9 speech segments. Then the speech segments are cut into 1.5s chunks
+SWBD DEV 99 304.6 5.2 with 0.75s overlap, and x-vectors are extracted for each segment.
+SWBD TEST 100 312.0 5.8 After that, we apply Agglomerative Hierarchical Clustering (AHC)
+Simulated DEV(β = 2) 500 87.3 34.4 to group segments into different clusters, and the similarity matrix is
+Simulated DEV(β = 3) 500 103.8 27.2 based on PLDA [35] scoring. We also apply VB re-segmentation for
+Simulated DEV(β = 5) 500 137.1 19.5 CALLHOME experiments.
+Table 1: Dataset statistics
+3.3. Experimental Settings
+We use ResNet-101 as the network architecture and Stochastic Gra-
+The Mixer 6 + SRE + SWBD dataset includes Mixer 6, SRE04-
+dient Descent (SGD) as the optimizer 4. We start training with a
+10, Switchboard-2 Phase I-III and Switchboard Cellular Part 1, 2,
+learning rate of 0.01 and it decays twice to 0.0001. The batch size is
+and the majority of the dataset are 8kHz telephone conversations.
+set as 8 and we train our model on NVidia GTX 1080 Ti for around
+For speaker recognition, we usually use single channel audios that
+4 days. The scaling factor α in equation 1 is set to 1.0 for training.
+contain only one person. While in our experiment, we sum up both
+During adaptation, we use a learning rate of 4 · 10−5 and α is set to
+channels to create a large diarization dataset. The ground truth di-
+arization label is generated by applying SAD on single channels.3 0.1. The speaker embedding dimension is 128.
+We also used the same data augmentation technique as [21] and the
+train sets are augmented with music, noise and reverberation from 3.4. Experimental Results
+the MUSAN [31] and the RIR [32] dataset. The augmented train set
+3.4.1. Experiments on Switchboard
+contains 10,574 hours of speech.
+SWBD DEV and SWBD TEST are sampled from the SWBD
+dataset (We exclude these audios from Mixer6 + SRE + SWBD). DER(%) DER(%) DER(%)
+Dataset System
+They contain around 100 5-minute audios and share no common c=0s c=0.1s c=0.25s
+speaker with the train set. Like Mixer 6 + SRE + SWBD, the overlap SWBD x-vector 15.39 9.51 4.66
+ratio of SWBD DEV and SWBD TEST is quite low. We create these DEV RPNSD 9.18 4.09 2.50
+two datasets to evaluate the system performance on similar data.
+SWBD x-vector 15.08 9.36 4.42
+The CALLHOME dataset is one of the best-known benchmarks
+TEST RPNSD 9.09 4.14 2.55
+for speaker diarization. As one part of 2000 NIST Speaker Recogni-
+tion Evaluation (LDC2001S97), the CALLHOME dataset contains
+Table 2: DERs (%) on SWBD DEV and SWBD TEST with different
+500 audios in 6 languages including Arabic, English, German,
+collars, the overlapped speech is also scored.
+Japanese, Mandarin, and Spanish. The number of speakers in each
+audio ranges from 2 to 7.
+In this experiment, we train RPNSD on Mixer 6 + SRE + SWBD
+We also use synthetic datasets (same as [25,26]) to evaluate RP-
+and use Kaldi’s x-vector model for CALLHOME as the baseline.5
+NSD’s performance on highly overlapped speech. The simulated
+mixtures are made by placing two speakers’ speech segments in a 4We refer the PyTorch implementation of Faster R-CNN in [36].
+5We also train a x-vector model on single channel data of Mixer 6 + SRE
+3In all experiments of this paper, we use the TDNN SAD model (http: + SWBD as a fair comparison but the performance is slightly worse than
+//kaldi-asr.org/models/m4) trained on the Fisher corpus. Kaldi’s diarization model (http://kaldi-asr.org/models/m6).DER(%) Score Overlap DER(%) Not Score Overlap
+System SAD Cluster
+c=0s c=0.1s c=0.25s c=0s c=0.1s c=0.25s
+x-vector oracle AHC with threshold 25.07 21.75 17.57 12.88 10.60 8.02
+x-vector oracle AHC with oracle # spk 24.13 20.76 16.54 11.63 9.33 6.73
+x-vector (+VB) oracle AHC with threshold 23.47 19.89 16.38 10.68 8.15 6.51
+x-vector (+VB) oracle AHC with oracle # spk 22.12 18.47 14.91 9.11 6.53 4.90
+x-vector TDNN SAD AHC with threshold 32.63 26.62 20.71 23.23 16.85 11.70
+x-vector TDNN SAD AHC with oracle # spk 32.20 26.13 20.14 22.53 16.10 10.90
+x-vector (+VB) TDNN SAD AHC with threshold 30.44 24.69 19.51 20.06 14.17 10.09
+x-vector (+VB) TDNN SAD AHC with oracle # spk 29.54 23.77 18.61 19.06 13.18 9.14
+RPNSD / K-means with oracle # spk 25.46 20.41 17.06 21.39 15.35 11.81
+Table 3: DERs (%) on CALLHOME with different scoring options
+As shown in Table 2, RPNSD signiﬁcantly reduces the DER from DER breakdown SAD error
+15.39% to 9.18% on SWBD DEV and 15.08% to 9.09% on SWBD System DER MI FA CF MI FA
+TEST. On SWBD TEST, the DER composition of the x-vector base- x-vector 32.20 18.6 5.1 8.6 4.2 5.3
+line is 8.9% (Miss) + 1.1% (False Alarm) + 5.0% (Speaker Confu- x-vector (+VB) 29.54 18.6 5.1 5.9 4.2 5.3
+sion) = 15.08% (with 2.8% Miss and 0.9% False Alarm for SAD). RPNSD 25.46 12.8 7.5 5.2 5.2 3.2
+For RPNSD, the DER composition is 4.0% (Miss) + 4.8% (False
+Alarm) + 0.3% (Speaker Confusion) = 9.09% (with 2.0% Miss and Table 4: The DER composition of different diarization systems on
+2.2% False Alarm for SAD). CALLHOME dataset. The DER includes Miss Error (MI), False
+Since RPNSD can handle the overlapped speech, the miss er- Alarm Error (FA), and Confusion Error (CF). The SAD error in-
+ror decreases from 8.9% to 4.0%. As a cost, the false alarm error cludes Miss (MI) and False Alarm (FA).
+increases from 1.1% to 4.8%. Surprisingly, the speaker confusion
+decreases largely from 5.0% to 0.3%. There might be two reasons
+for this. (1) Instead of making decisions on short segments, RP- 3.4.3. Experiments on Simulated Mixtures
+NSD makes use of longer context and extracts more discriminative
+According to our experience, standard diarization systems fail to per-
+speaker embeddings. (2) The training and testing condition are more
+form well on highly overlapped speech. Therefore we design exper-
+matched for RPNSD. Instead of training on single speaker data, we
+iments on simulated mixtures to evaluate the system performance
+are training on “diarization data” and testing on “diarization data”.
+on overlapped scenarios. As shown in Table 5, RPNSD achieves
+much lower DER than i-vector and x-vector systems. Compared
+with permutation-free loss based end-to-end systems [25, 26], the
+3.4.2. Experiments on CALLHOME
+performance of RPNSD is better than BLSTM-EEND but worse than
+SA-EEND. However, unlike these two systems, RPNSD does not
+The CALLHOME corpus is one of the best-known benchmarks for
+have any constraint on the number of speakers.
+speaker diarization. Since the CALLHOME corpus is quite small
+(with 17 hours of speech) and doesn’t specify dev/test splits, we fol-
+Simulated
+low the “pre-train and adapt” procedure and perform a 5-fold cross System
+β = 2 β = 3 β = 5
+validation on this dataset. We use the model in section 3.4.1 as the
+pre-trained model, adapt it on 4/5 of CALLHOME data and evaluate i-vector 33.74 30.93 25.96
+on the rest 1/5. Since our model does not use any segment boundary x-vector 28.77 24.46 19.78
+information, it is unfair to compare it with x-vector systems using the BLSTM-EEND 12.28 14.36 19.69
+oracle SAD label. Therefore we compare it with x-vector systems SA-EEND 7.91 8.51 9.51
+using TDNN SAD. As shown in Table 3, our system achieves bet- RPNSD 9.30 11.57 14.55
+ter results than x-vector systems with and w/o VB re-segmentation.
+It largely reduces the DER from 32.30% (or 29.54% after VB re- Table 5: DERs (%) on simulated mixtures with 0.25s collar, the
+segmentation) to 25.46%. The detailed DER breakdown is shown overlapped speech is also scored.
+in Table 4. Due to the ability to handle overlapped speech, RPNSD
+largely reduces the Miss Error from 18.6% to 12.8%. As a cost,
+the False Alarm Error increases from 5.1% to 7.5%. The Confusion 4. CONCLUSION
+Error of RPNSD is also lower than x-vector and x-vector (+VB).
+The DER result of RPNSD (25.46%) is even close to the x- In this paper, we propose a novel speaker diarization system RPNSD.
+vector system using the oracle SAD label (24.13%). If the oracle Taken an audio as the input, the model predicts speech segment pro-
+SAD label is used, the DER of RPNSD system must be lower than posals and speaker embeddings at the same time. With some simple
+25.46 − 3.2 = 22.26%6, which is better than the x-vector system post-processing (clustering and NMS), we can get the diarization
+(24.13%) and quite close to x-vector (+VB) (22.12%). prediction, which is much more convenient than the standard pro-
+cess. In addition to that, the RPNSD system solves the overlapping
+6This is because we can easily remove the False Alarm SAD error by problem in an elegant way. Our experimental results on Switch-
+labeling them as silence. It is more difﬁcult to handle the Miss SAD error in board, CALLHOME and synthetic mixtures reveal that the improve-
+this framework, but we can further reduce the DER for sure. ments of the RPNSD system are obvious and consistent.5. REFERENCES [18] Arsha Nagrani, Joon Son Chung, and Andrew Zisserman,
+“Voxceleb: A large-scale speaker identiﬁcation dataset,” Proc.
+[1] Douglas A Reynolds and P Torres-Carrasquillo, “Approaches Interspeech 2017, pp. 2616–2620, 2017.
+and applications of audio diarization,” in ICASSP. IEEE, 2005,
+[19] Joon Son Chung, Arsha Nagrani, and Andrew Zisserman,
+vol. 5, pp. v–953.
+“Voxceleb2: Deep speaker recognition,” Proc. Interspeech
+[2] Sue E Tranter and Douglas A Reynolds, “An overview of au- 2018, pp. 1086–1090, 2018.
+tomatic speaker diarization systems,” IEEE Transactions on
+[20] David Snyder et al., “Deep neural network embeddings for
+audio, speech, and language processing, vol. 14, no. 5, pp. text-independent speaker veriﬁcation.,” in Interspeech, 2017,
+1557–1565, 2006.
+pp. 999–1003.
+[3] Chuck Wooters and Marijn Huijbregts, “The ICSI RT07s [21] David Snyder et al., “X-vectors: Robust dnn embeddings for
+speaker diarization system,” in Multimodal Technologies for speaker recognition,” in ICASSP. IEEE, 2018, pp. 5329–5333.
+Perception of Humans, pp. 509–519. Springer, 2007.
+[22] Daniel Garcia-Romero, David Snyder, Gregory Sell, Daniel
+[4] Xavier Anguera, Simon Bozonnet, Nicholas Evans, Corinne Povey, and Alan McCree, “Speaker diarization using deep neu-
+Fredouille, Gerald Friedland, and Oriol Vinyals, “Speaker di- ral network embeddings,” in ICASSP. IEEE, 2017, pp. 4930–
+arization: A review of recent research,” IEEE Transactions on 4934.
+Audio, Speech, and Language Processing, vol. 20, no. 2, pp.
+[23] Patrick Kenny, “Bayesian analysis of speaker diarization with
+356–370, 2012.
+eigenvoice priors,” CRIM, Montreal, Technical Report, 2008.
+[5] Gregory Sell et al., “Diarization is hard: Some experiences
+[24] Mireia Diez, Luka´s Burget, and Pavel Matejka, “Speaker di-
+and lessons learned for the jhu team in the inaugural dihard
+arization based on bayesian HMM with eigenvoice priors.,” in
+challenge.,” in Interspeech, 2018, pp. 2808–2812.
+Odyssey, 2018, pp. 147–154.
+[6] Mireia D´ıez et al., “BUT System for DIHARD Speech Diariza- [25] Yusuke Fujita et al., “End-to-end neural speaker diarization
+tion Challenge 2018.,” in Interspeech, 2018, pp. 2798–2802. with permutation-free objectives,” in Proc. Interspeech, 2019.
+[7] Lei Sun et al., “Speaker diarization with enhancing speech for [26] Yusuke Fujita et al., “End-to-end neural speaker diarization
+the ﬁrst dihard challenge.,” in Interspeech, 2018, pp. 2793– with self-attention,” in Proc. ASRU, 2019 (to appear).
+2797.
+[27] Shaoqing Ren, Kaiming He, Ross Girshick, and Jian Sun,
+[8] Ignacio Vin˜als et al., “Estimation of the Number of Speakers “Faster r-cnn: Towards real-time object detection with region
+with Variational Bayesian PLDA in the DIHARD Diarization proposal networks,” in Advances in neural information pro-
+Challenge.,” in Interspeech, 2018, pp. 2803–2807. cessing systems, 2015, pp. 91–99.
+[9] Patrick Kenny, Gilles Boulianne, Pierre Ouellet, and Pierre [28] Chieh-Chi Kao, Weiran Wang, Ming Sun, and Chao Wang,
+Dumouchel, “Joint factor analysis versus eigenchannels in “R-crnn: Region-based convolutional recurrent neural network
+speaker recognition,” IEEE Transactions on Audio, Speech, for audio event detection,” Proc. Interspeech 2018, pp. 1358–
+and Language Processing, vol. 15, no. 4, pp. 1435–1447, 2007. 1362, 2018.
+[10] Najim Dehak, Patrick J Kenny, Re´da Dehak, Pierre Du- [29] Kaiming He, Georgia Gkioxari, Piotr Dolla´r, and Ross Gir-
+mouchel, and Pierre Ouellet, “Front-end factor analysis for shick, “Mask r-cnn,” in Proceedings of the IEEE international
+speaker veriﬁcation,” IEEE Transactions on Audio, Speech, conference on computer vision, 2017, pp. 2961–2969.
+and Language Processing, vol. 19, no. 4, pp. 788–798, 2010. [30] Ross Girshick, “Fast r-cnn,” in Proceedings of the IEEE inter-
+[11] Gregory Sell and Daniel Garcia-Romero, “Speaker diariza- national conference on computer vision, 2015, pp. 1440–1448.
+tion with plda i-vector scoring and unsupervised calibration,” [31] David Snyder, Guoguo Chen, and Daniel Povey, “Mu-
+in 2014 IEEE Spoken Language Technology Workshop (SLT). san: A music, speech, and noise corpus,” arXiv preprint
+IEEE, 2014, pp. 413–417. arXiv:1510.08484, 2015.
+[12] Gregory Sell and Daniel Garcia-Romero, “Diarization reseg- [32] Tom Ko et al., “A study on data augmentation of reverberant
+mentation in the factor analysis subspace,” in ICASSP. IEEE, speech for robust speech recognition,” in ICASSP. IEEE, 2017,
+2015, pp. 4794–4798. pp. 5220–5224.
+[13] Ehsan Variani, Xin Lei, Erik McDermott, Ignacio Lopez [33] Aonan Zhang, Quan Wang, Zhenyao Zhu, John Paisley, and
+Moreno, and Javier Gonzalez-Dominguez, “Deep neural net- Chong Wang, “Fully supervised speaker diarization,” in
+works for small footprint text-dependent speaker veriﬁcation,” ICASSP. IEEE, 2019, pp. 6301–6305.
+in ICASSP. IEEE, 2014, pp. 4052–4056. [34] Daniel Povey et al., “The kaldi speech recognition toolkit,”
+[14] Georg Heigold, Ignacio Moreno, Samy Bengio, and Noam in IEEE 2011 workshop on automatic speech recognition and
+Shazeer, “End-to-end text-dependent speaker veriﬁcation,” in understanding. IEEE Signal Processing Society, 2011, number
+ICASSP. IEEE, 2016, pp. 5115–5119. CONF.
+[15] Li Wan, Quan Wang, Alan Papir, and Ignacio Lopez Moreno, [35] Simon JD Prince and James H Elder, “Probabilistic lin-
+“Generalized end-to-end loss for speaker veriﬁcation,” in ear discriminant analysis for inferences about identity,” in
+ICASSP. IEEE, 2018, pp. 4879–4883. 2007 IEEE 11th International Conference on Computer Vision.
+IEEE, 2007, pp. 1–8.
+[16] Quan Wang et al., “Speaker diarization with lstm,” in ICASSP.
+IEEE, 2018, pp. 5239–5243. [36] Jianwei Yang, Jiasen Lu, Dhruv Batra, and Devi Parikh,
+“A faster pytorch implementation of faster r-cnn,”
+[17] Chao Li et al., “Deep speaker: an end-to-end neural speaker
+https://github.com/jwyang/faster-rcnn.pytorch, 2017.
+embedding system,” arXiv preprint arXiv:1705.02304, 2017.
